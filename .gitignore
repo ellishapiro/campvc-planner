@@ -4,3 +4,4 @@ data/schedule.prev.json
 node_modules/
 *.log
 .DS_Store
+__pycache__/
