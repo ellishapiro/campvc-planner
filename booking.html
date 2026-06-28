@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Camp VC - Booking List</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="theme.js"></script>
+</head>
+<body>
+  <div class="topbar">
+    <h1>Camp VC 2026 <span class="sub">booking list</span></h1>
+    <div class="nav">
+      <a href="index.html">My picks</a>
+      <a href="results.html">Group calendar</a>
+      <a href="booking.html" class="active">Booking list</a>
+      <button id="themeToggle" class="themebtn" type="button">Light mode</button>
+      <span class="local-flag" id="localFlag" hidden>local mode - not shared yet</span>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div id="status" class="hint">Loading...</div>
+    <div id="main" hidden>
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <label class="fld">Show
+          <select id="who"><option value="">Everyone</option></select>
+        </label>
+        <div class="row" style="gap:8px">
+          <button id="copyBtn">Copy this list</button>
+          <span class="hint">Tick things off as you book them (saved on this device).</span>
+        </div>
+      </div>
+      <div id="content"></div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="data/schedule.js"></script>
+  <script src="store.js"></script>
+  <script src="engine.js"></script>
+  <script src="booking.js"></script>
+</body>
+</html>

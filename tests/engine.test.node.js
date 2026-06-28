@@ -91,12 +91,21 @@ function check(desc, cond) {
   picks.Elli[offsite.id] = "must";
   picks.Elli[neighbour.id] = "must";
   const r = Engine.compute(schedule, picks, {}, config);
-  const hasOff = r.byPerson.Elli.all.some(p => p.activityId === offsite.id);
-  const placedNeighbourSame = r.byPerson.Elli.all.some(
-    p => p.activityId === neighbour.id && p.day === nInst.day && p.start_min === nInst.start_min);
-  check("off-site is booked", hasOff);
-  check("neighbour within buffer is NOT placed at the clashing instance",
-    !placedNeighbourSame || (nInst.start_min - oi.end_min >= 30));
+  const sched = r.byPerson.Elli.all;
+  check("off-site is booked", sched.some(p => p.activityId === offsite.id));
+  // The real guarantee: nothing in the final schedule sits within 30min of the
+  // off-site activity (buffer respected), whichever instances were chosen.
+  const off = sched.find(p => p.offsite);
+  let violation = false;
+  if (off) {
+    sched.forEach(p => {
+      if (p === off || p.day !== off.day) return;
+      const gap = p.start_min >= off.end_min ? p.start_min - off.end_min
+        : (off.start_min >= p.end_min ? off.start_min - p.end_min : -1);
+      if (gap < 30) violation = true; // overlap or within buffer
+    });
+  }
+  check("off-site buffer (30min) respected in final schedule", !violation);
 })();
 
 // Scenario D: drop-in is earmarked on the calendar but never in booking lists.
@@ -122,6 +131,40 @@ function check(desc, cond) {
   const r = Engine.compute(schedule, picks, { pins: { [arch.id]: key } }, config);
   const e = r.byPerson.Elli.all.find(p => p.activityId === arch.id);
   check("Archery placed at pinned instance", e && e.day === target.day && e.start_min === target.start_min);
+})();
+
+// Scenario F: a flexible activity relocates to make room for a constrained one.
+(function () {
+  console.log("\n[F] Relocation - flexible activity yields its slot");
+  const fake = {
+    days: ["D1"],
+    activities: [
+      { id: "A", name: "A-flex", location: "", offsite: false, paid: false, categories: [], kind: "repeating",
+        instances: [
+          { day: "D1", start_min: 600, end_min: 650, label: "D1 10:00-10:50" },
+          { day: "D1", start_min: 840, end_min: 890, label: "D1 14:00-14:50" }], windows: [] },
+      { id: "B", name: "B-tight", location: "", offsite: false, paid: false, categories: [], kind: "repeating",
+        instances: [
+          { day: "D1", start_min: 600, end_min: 650, label: "D1 10:00-10:50" },
+          { day: "D1", start_min: 630, end_min: 680, label: "D1 10:30-11:20" }], windows: [] },
+    ],
+  };
+  // A is must (placed first); B is want and only has early slots clashing with A.
+  const r = Engine.compute(fake, { P: { A: "must", B: "want" } }, {}, config);
+  const ids = r.byPerson.P.all.map(p => p.activityId).sort();
+  check("both A and B are scheduled (A moved aside)", ids.join(",") === "A,B");
+  check("nothing dropped", r.byPerson.P.dropped.length === 0);
+})();
+
+// Scenario G: drop-ins are actually earmarked on the calendar (regression).
+(function () {
+  console.log("\n[G] Drop-ins get earmarked (not just 'if time')");
+  const dropins = schedule.activities.filter(a => a.kind === "dropin" && (a.windows || []).length).slice(0, 2);
+  const picks = { Elli: {} };
+  dropins.forEach(a => { picks.Elli[a.id] = "want"; });
+  const r = Engine.compute(schedule, picks, {}, config);
+  check("both drop-ins earmarked on the calendar", r.byPerson.Elli.dropins.length === 2);
+  check("none fell through to 'if time'", r.byPerson.Elli.ifTime.length === 0);
 })();
 
 console.log("\n" + pass + " passed, " + fail + " failed");

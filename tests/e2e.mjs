@@ -184,6 +184,27 @@ async function main() {
     check("unsaved edit preserved after round-trip", await cdp.evalp(pressed("Forest Bathing", "want")));
     check("unsaved flag still shown after round-trip", await cdp.evalp("!document.getElementById('dirtyFlag').hidden"));
 
+    // ---------- BOOKING LIST (third tab) ----------
+    console.log("\n[booking] phase-first checklist");
+    await cdp.navigate(base + "/booking.html");
+    await cdp.waitFor("!document.getElementById('main').hidden", "booking rendered");
+    check("Phase 1 (Paid) section present", await cdp.evalp("/Phase 1/.test(document.getElementById('content').textContent)"));
+    check("Phase 2 (Free) section present", await cdp.evalp("/Phase 2/.test(document.getElementById('content').textContent)"));
+    check("has bookable items with checkboxes", await cdp.evalp("document.querySelectorAll('.bkitem input[type=checkbox]').length>0"));
+    await cdp.evalp("(function(){document.querySelector('.bkitem input[type=checkbox]').click();return true;})()");
+    check("ticking an item persists (marked booked)", await cdp.evalp("Object.keys(JSON.parse(localStorage.getItem('campvc_booked')||'{}')).length>0"));
+    await shot(cdp, "3-booking.png");
+
+    // ---------- THEME: light/dark toggle ----------
+    console.log("\n[theme] light/dark toggle");
+    await cdp.evalp("document.getElementById('themeToggle').click()");
+    check("theme override applied (light)", await cdp.evalp("document.documentElement.getAttribute('data-theme')==='light'"));
+    check("theme choice persisted", await cdp.evalp("localStorage.getItem('campvc_theme')==='light'"));
+    await cdp.navigate(base + "/results.html");
+    await cdp.waitFor("!document.getElementById('main').hidden", "results (light)");
+    check("theme persists across pages", await cdp.evalp("document.documentElement.getAttribute('data-theme')==='light'"));
+    await shot(cdp, "4-results-light.png");
+
     await ws.close();
   } finally {
     chrome.kill();

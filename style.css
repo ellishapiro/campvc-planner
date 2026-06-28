@@ -14,6 +14,19 @@
   --radius: 12px;
   --shadow: 0 2px 10px rgba(0,0,0,.3);
 }
+/* Light theme - applied when chosen explicitly, or by system pref when unset. */
+:root[data-theme="light"] {
+  --bg: #f4f6f9; --panel: #ffffff; --panel-2: #eef1f5; --line: #d6dbe2;
+  --ink: #1b2027; --ink-dim: #5c6675; --accent-2: #0e7ab0;
+  --shadow: 0 2px 10px rgba(20,30,50,.12);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --bg: #f4f6f9; --panel: #ffffff; --panel-2: #eef1f5; --line: #d6dbe2;
+    --ink: #1b2027; --ink-dim: #5c6675; --accent-2: #0e7ab0;
+    --shadow: 0 2px 10px rgba(20,30,50,.12);
+  }
+}
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 body {
@@ -28,7 +41,7 @@ a { color: var(--accent-2); }
 /* ---- Header / nav ---- */
 .topbar {
   position: sticky; top: 0; z-index: 30;
-  background: rgba(15,18,22,.95);
+  background: var(--panel);
   backdrop-filter: blur(6px);
   border-bottom: 1px solid var(--line);
   padding: 10px 14px;
@@ -43,8 +56,11 @@ a { color: var(--accent-2); }
 }
 .nav a.active { color: var(--ink); background: var(--panel-2); border-color: var(--accent); }
 .local-flag {
-  margin-left: auto; font-size: 11px; color: var(--paid);
+  margin-left: 8px; font-size: 11px; color: var(--paid);
   border: 1px solid var(--paid); border-radius: 999px; padding: 2px 8px;
+}
+.themebtn {
+  margin-left: auto; font-size: 12px; padding: 5px 11px; border-radius: 999px; cursor: pointer;
 }
 
 .wrap { max-width: 1200px; margin: 0 auto; padding: 14px; }
@@ -108,7 +124,7 @@ label.fld { display: flex; flex-direction: column; gap: 3px; font-size: 11px; co
 /* ---- Save bar ---- */
 .savebar {
   position: sticky; bottom: 0; z-index: 25; margin-top: 16px;
-  background: rgba(15,18,22,.96); border-top: 1px solid var(--line);
+  background: var(--panel); border-top: 1px solid var(--line);
   padding: 12px 14px; display: flex; align-items: center; gap: 12px;
 }
 .btn-primary { background: var(--accent); color: #2a0014; border-color: var(--accent); font-weight: 700; cursor: pointer; padding: 11px 18px; }
@@ -170,6 +186,13 @@ label.fld { display: flex; flex-direction: column; gap: 3px; font-size: 11px; co
 .flag { color: var(--must); font-size: 12px; }
 .pri-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
 .pri-dot.must { background: var(--must); } .pri-dot.want { background: var(--want); } .pri-dot.iffree { background: var(--iffree); }
+
+/* ---- Booking list ---- */
+.bkitem { display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+.bkitem:last-child { border-bottom: 0; }
+.bkitem input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px; flex: 0 0 auto; }
+.bkbody { font-size: 13px; }
+.bkbody.booked { text-decoration: line-through; opacity: .5; }
 
 /* ---- Adjust panel ---- */
 .adjust { margin-top: 18px; }
