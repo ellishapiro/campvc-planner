@@ -9,7 +9,7 @@ window.CONFIG = {
   // Paste the Google Apps Script web-app URL here after deploying it (see README).
   // Until it's set, the site runs in LOCAL mode: picks are kept in this browser
   // only (localStorage) so you can try everything before wiring up the backend.
-  appsScriptUrl: "",
+  appsScriptUrl: "https://script.google.com/macros/s/AKfycby-vwqPxWtult_bQNDQQq4xeP8ZuAevzfDZvLZShz-vdKtslTexDkfAR3sQUecS31Ykvw/exec",
 
   // Minimum break between any two booked activities, in minutes. 0 = back-to-back
   // allowed. Raise it to force breathing room everywhere.
