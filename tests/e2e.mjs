@@ -134,13 +134,13 @@ async function main() {
     await shot(cdp, "1-picks.png");
 
     // ---------- PICKS: person 2 ----------
-    console.log("\n[picks] Friend 2");
-    await cdp.evalp("(function(){var s=document.getElementById('who');s.value='Friend 2';s.dispatchEvent(new Event('change'));return true;})()");
-    await cdp.waitFor("!document.getElementById('saveBtn').disabled", "Friend 2 picks loaded");
+    console.log("\n[picks] Abs");
+    await cdp.evalp("(function(){var s=document.getElementById('who');s.value='Abs';s.dispatchEvent(new Event('change'));return true;})()");
+    await cdp.waitFor("!document.getElementById('saveBtn').disabled", "Abs picks loaded");
     await click("Archery", "want");           // shared with Elli
     await click("Climbing Wall", "must");     // shared
     await cdp.evalp("document.getElementById('saveBtn').click()");
-    await cdp.waitFor("/saved/.test(document.getElementById('saveStatus').textContent)", "Friend 2 saved");
+    await cdp.waitFor("/saved/.test(document.getElementById('saveStatus').textContent)", "Abs saved");
 
     // ---------- RESULTS ----------
     console.log("\n[results]");
@@ -168,6 +168,21 @@ async function main() {
     await cdp.evalp("(function(){var i=document.querySelector('#adjustBody input[type=number]');i.value='30';i.dispatchEvent(new Event('change'));return true;})()");
     await cdp.waitFor("/saved/.test((document.getElementById('knobStatus')||{}).textContent||'')", "knob saved");
     check("break knob persisted to store", await cdp.evalp("(JSON.parse(localStorage.getItem('campvc_knobs'))||{}).breakMinutes===30"));
+
+    // ---------- CACHING: draft survives tabbing between views ----------
+    console.log("\n[caching] draft survives tabbing + unsaved flag");
+    const pressed = (name, v) => `(function(){var r=[].slice.call(document.querySelectorAll('.act')).filter(function(x){return x.querySelector('.nm').textContent.indexOf(${JSON.stringify(name)})===0;})[0];return !!r&&r.querySelector('.seg button[data-v="'+${JSON.stringify(v)}+'"]').getAttribute('aria-pressed')==='true';})()`;
+    await cdp.navigate(base + "/index.html");
+    check("name restored without re-selecting", await cdp.evalp("document.getElementById('who').value==='Abs'"));
+    check("picks restored (Climbing Wall=must)", await cdp.evalp(pressed("Climbing Wall", "must")));
+    check("no unsaved flag right after restore", await cdp.evalp("document.getElementById('dirtyFlag').hidden"));
+    await click("Forest Bathing", "want");                 // an unsaved edit
+    check("unsaved flag shows after an edit", await cdp.evalp("!document.getElementById('dirtyFlag').hidden"));
+    await cdp.navigate(base + "/results.html");
+    await cdp.waitFor("!document.getElementById('main').hidden", "results again");
+    await cdp.navigate(base + "/index.html");
+    check("unsaved edit preserved after round-trip", await cdp.evalp(pressed("Forest Bathing", "want")));
+    check("unsaved flag still shown after round-trip", await cdp.evalp("!document.getElementById('dirtyFlag').hidden"));
 
     await ws.close();
   } finally {

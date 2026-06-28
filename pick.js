@@ -5,7 +5,8 @@
   var CONFIG = window.CONFIG;
   var acts = schedule.activities;
 
-  var state = { name: "", picks: {}, loading: false };
+  var state = { name: "", picks: {}, savedPicks: {}, loading: false };
+  var DRAFT_KEY = "campvc_draft"; // per-tab session cache so tabbing between views keeps edits
 
   var $ = function (id) { return document.getElementById(id); };
   function fmt(m) { var h = Math.floor(m / 60), x = m % 60; return (h < 10 ? "0" : "") + h + ":" + (x < 10 ? "0" : "") + x; }
@@ -115,7 +116,7 @@
         seg.querySelectorAll("button").forEach(function (b) {
           b.setAttribute("aria-pressed", state.picks[a.id] === b.dataset.v ? "true" : "false");
         });
-        updateCount(); markDirty();
+        updateCount(); afterEdit();
         var det = row.closest("details");
         if (det) {
           var picked = det.querySelectorAll('.seg button[aria-pressed="true"]').length;
@@ -135,30 +136,76 @@
       ? "<strong>" + esc(state.name) + "</strong> - " + pickedCount() + " picked"
       : "Pick your name to start.";
   }
-  function markDirty() {
+  function setStatus(msg, cls) { var s = $("saveStatus"); s.textContent = msg; s.className = "status " + (cls || ""); }
+
+  // ---- draft cache + unsaved-changes flag ----
+  function clone(o) { return JSON.parse(JSON.stringify(o || {})); }
+  function equalPicks(a, b) {
+    var ka = Object.keys(a), kb = Object.keys(b);
+    if (ka.length !== kb.length) return false;
+    return ka.every(function (k) { return a[k] === b[k]; });
+  }
+  function isDirty() { return !!state.name && !equalPicks(state.picks, state.savedPicks); }
+  function saveDraft() {
+    try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ name: state.name, picks: state.picks, savedPicks: state.savedPicks })); }
+    catch (e) { /* private mode / disabled storage - draft just won't persist */ }
+  }
+  function updateDirty() {
+    var f = $("dirtyFlag");
+    if (isDirty()) {
+      f.hidden = false;
+      f.textContent = "● Unsaved changes - tap Save so they show on the group calendar";
+      $("saveBtn").classList.add("attn");
+    } else {
+      f.hidden = true;
+      $("saveBtn").classList.remove("attn");
+    }
+  }
+  // call after any edit: persist the draft, refresh the flag, keep Save enabled
+  function afterEdit() {
     $("saveBtn").disabled = !state.name;
     setStatus("", "");
+    saveDraft();
+    updateDirty();
   }
-  function setStatus(msg, cls) { var s = $("saveStatus"); s.textContent = msg; s.className = "status " + (cls || ""); }
+  function restoreDraft() {
+    var d;
+    try { d = JSON.parse(sessionStorage.getItem(DRAFT_KEY)); } catch (e) { d = null; }
+    if (!d || !d.name) return false;
+    $("who").value = d.name;
+    if ($("who").value !== d.name) return false; // name no longer in the configured list
+    state.name = d.name;
+    state.picks = d.picks || {};
+    state.savedPicks = d.savedPicks || {};
+    $("saveBtn").disabled = false;
+    updateCount(); render(); updateDirty();
+    if (isDirty()) setStatus("restored your unsaved changes from this session", "busy");
+    return true;
+  }
 
   // Name change -> load that person's saved picks
   $("who").addEventListener("change", function () {
     state.name = this.value;
-    if (!state.name) { state.picks = {}; updateCount(); render(); $("saveBtn").disabled = true; return; }
+    if (!state.name) {
+      state.picks = {}; state.savedPicks = {};
+      sessionStorage.removeItem(DRAFT_KEY);
+      updateCount(); render(); updateDirty(); $("saveBtn").disabled = true; return;
+    }
     setStatus("loading your saved picks...", "busy");
     state.loading = true;
     window.Store.getPicks().then(function (all) {
-      state.picks = all[state.name] ? JSON.parse(JSON.stringify(all[state.name])) : {};
+      state.picks = all[state.name] ? clone(all[state.name]) : {};
+      state.savedPicks = clone(state.picks);
       state.loading = false;
       setStatus(Object.keys(state.picks).length ? "loaded your saved picks" : "", "ok");
       $("saveBtn").disabled = false;
-      updateCount(); render();
+      updateCount(); render(); saveDraft(); updateDirty();
     }).catch(function () {
       state.loading = false;
-      state.picks = {};
+      state.picks = {}; state.savedPicks = {};
       setStatus("could not load saved picks - starting fresh", "err");
       $("saveBtn").disabled = false;
-      updateCount(); render();
+      updateCount(); render(); saveDraft(); updateDirty();
     });
   });
 
@@ -172,11 +219,17 @@
     setStatus("saving...", "busy");
     window.Store.savePicks(state.name, state.picks).then(function (res) {
       $("saveBtn").disabled = false;
-      if (res.ok) setStatus("saved - your picks are in. You can close this or keep editing.", "ok");
-      else setStatus("NOT saved - check your connection and tap Save again.", "err");
+      if (res.ok) {
+        state.savedPicks = clone(state.picks);
+        saveDraft(); updateDirty();
+        setStatus("saved - your picks are in. You can close this or keep editing.", "ok");
+      } else {
+        setStatus("NOT saved - check your connection and tap Save again.", "err");
+      }
     });
   });
 
-  updateCount();
-  render();
+  // Restore an in-progress session (e.g. after tabbing to the calendar and back);
+  // otherwise start fresh.
+  if (!restoreDraft()) { updateCount(); render(); }
 })();

@@ -64,6 +64,8 @@ select { min-width: 120px; }
 label.fld { display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: var(--ink-dim); }
 .pickbar { display: flex; align-items: center; gap: 12px; margin-top: 8px; font-size: 13px; color: var(--ink-dim); }
 .pickbar strong { color: var(--ink); }
+.dirty { color: var(--paid); font-weight: 600; }
+.btn-primary.attn { box-shadow: 0 0 0 2px var(--paid); }
 
 /* ---- Activity list ---- */
 .cat { margin-top: 18px; }
