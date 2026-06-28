@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Camp VC - Group Calendar</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="topbar">
+    <h1>Camp VC 2026 <span class="sub">group calendar</span></h1>
+    <div class="nav">
+      <a href="index.html">My picks</a>
+      <a href="results.html" class="active">Group calendar</a>
+      <span class="local-flag" id="localFlag" hidden>local mode - not shared yet</span>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div id="status" class="hint">Loading...</div>
+
+    <div id="main" hidden>
+      <div class="daytabs" id="dayTabs"></div>
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div class="legend">
+          <span><span class="sw" style="background:var(--must)"></span>Must do</span>
+          <span><span class="sw" style="background:var(--want)"></span>Want</span>
+          <span><span class="sw" style="background:var(--iffree)"></span>If free</span>
+          <span><span class="sw" style="background:#6fb1c9"></span>Drop-in (earmarked)</span>
+          <span><span class="sw" style="border:2px solid var(--paid);background:transparent"></span>Paid (border)</span>
+          <span>&#8599; = split from group</span>
+        </div>
+        <label class="fld" style="flex-direction:row;gap:6px;align-items:center">
+          <input type="checkbox" id="showRef"> Show full schedule column
+        </label>
+      </div>
+
+      <div class="calwrap"><div class="cal" id="cal"></div></div>
+
+      <h2 style="margin-top:22px;font-size:17px">Everyone's booking lists</h2>
+      <p class="hint">Phase 1 (Paid) books first; Phase 2 (Free) opens a week later. Drop-ins aren't booked - just turn up.</p>
+      <div class="grid2" id="people"></div>
+
+      <details class="adjust" id="adjust">
+        <summary>Adjust the schedule (shared with everyone)</summary>
+        <div class="body" id="adjustBody"></div>
+      </details>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="data/schedule.js"></script>
+  <script src="store.js"></script>
+  <script src="engine.js"></script>
+  <script src="results.js"></script>
+</body>
+</html>

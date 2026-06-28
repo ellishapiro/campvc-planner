@@ -1,0 +1,31 @@
+// Camp VC planner - configuration. Edit this file, then re-deploy / refresh.
+// Loaded as a plain global (no build step) so the site works on GitHub Pages
+// and when opening the .html files directly.
+window.CONFIG = {
+  // The people planning together. These names appear in the picks dropdown and
+  // as the calendar columns. Add up to ~6.
+  friends: ["Elli", "Abs", "Jess", "Mummy"],
+
+  // Paste the Google Apps Script web-app URL here after deploying it (see README).
+  // Until it's set, the site runs in LOCAL mode: picks are kept in this browser
+  // only (localStorage) so you can try everything before wiring up the backend.
+  appsScriptUrl: "",
+
+  // Minimum break between any two booked activities, in minutes. 0 = back-to-back
+  // allowed. Raise it to force breathing room everywhere.
+  breakMinutes: 0,
+
+  // Extra buffer added before/after off-site activities (the climbing/rafting/
+  // canoeing trips), on top of breakMinutes.
+  offsiteBufferMinutes: 30,
+
+  // How long to earmark on the calendar for a wanted drop-in activity.
+  dropInSlotMinutes: 45,
+
+  // Don't earmark drop-ins before this hour (keeps "all day" drop-ins out of dawn).
+  dropInEarliestHour: 9,
+
+  // Fallback calendar bounds (hours) if they can't be derived from the data.
+  dayStartHourFallback: 8,
+  dayEndHourFallback: 23,
+};

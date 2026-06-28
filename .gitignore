@@ -1,0 +1,6 @@
+_verify/
+tests/_shots/
+data/schedule.prev.json
+node_modules/
+*.log
+.DS_Store

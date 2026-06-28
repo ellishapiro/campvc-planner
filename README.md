@@ -1,0 +1,182 @@
+# Camp VC 2026 - Group Session Planner
+
+A tiny, no-server web app for a group of friends to express interest in festival
+sessions, get matched onto the same instances of repeating activities, avoid
+clashes, and walk away with a focused, priority-ordered booking list for each
+person - ready for the moment booking opens.
+
+- **Picks page** (`index.html`) - each friend ticks what they fancy.
+- **Group calendar** (`results.html`) - live per-friend calendar + booking lists,
+  computed in the browser from everyone's picks.
+
+It runs as static files on **GitHub Pages** and stores picks in a **Google Sheet**
+via a small **Google Apps Script**. No build step, no framework, no database.
+
+> **You can try it right now with no setup.** Open `index.html` (via a local
+> server - see below) and it runs in **local mode**: picks are saved in your
+> browser only. Wire up the Google Sheet when you want everyone to share data.
+
+---
+
+## How it works
+
+| Piece | What it does |
+|-------|--------------|
+| `build_schedule.py` | Turns the festival xlsx into `data/schedule.json` + `data/schedule.js`. Re-run whenever the schedule changes. |
+| `engine.js` | The matchmaking + clash + drop-in engine. Pure, deterministic, testable. |
+| `index.html` / `pick.js` | Picks page. |
+| `results.html` / `results.js` | Group calendar, booking lists, and the Adjust panel. |
+| `store.js` | Talks to the Apps Script (or localStorage in local mode). |
+| `config.js` | **The file you edit** - names, the Apps Script URL, and the knobs. |
+| `apps-script/Code.gs` | Paste into Google Apps Script (the "server"). |
+
+### Key behaviours
+
+- **Repeating activities** (e.g. Archery x34) are picked as the *activity*; the
+  engine chooses one instance for the group that maximises who can go together
+  without clashing, and lists **backup** instances in case it sells out.
+- **Priorities**: every pick is *must-do / want / if-free*. Clashes are resolved
+  by priority (lower-priority loser is flagged, not silently dropped).
+- **Two booking phases**: each person's list is split **Phase 1 (Paid)** and
+  **Phase 2 (Free)** - because the festival books paid first, free a week later.
+- **Off-site trips** (climbing/rafting/canoeing) automatically get a travel
+  **buffer** before/after.
+- **Drop-ins** aren't booked (you just turn up) - they're **earmarked** on the
+  calendar but kept out of the booking lists.
+- **Adjust panel** (on the results page) gives a few shared knobs: a global
+  break, pin an activity to a set time, or force a gap around an activity.
+
+---
+
+## Keeping the schedule up to date
+
+The source spreadsheet `..\CampVC_2026_Full_Schedule.xlsx` is produced by the
+sibling **`campvc-schedule`** project, which pulls Camp VC's live Guidebook data
+(see `..\campvc-schedule\README.md`). One command here does the whole cycle -
+check the live schedule, regenerate the workbook if it changed, rebuild the
+planner's data, and **flag exactly what changed**:
+
+```powershell
+# from the campvc-planner folder
+powershell -ExecutionPolicy Bypass -File update_schedule.ps1            # check, and update if changed
+powershell -ExecutionPolicy Bypass -File update_schedule.ps1 -CheckOnly # just tell me if anything changed
+powershell -ExecutionPolicy Bypass -File update_schedule.ps1 -Force     # rebuild even if unchanged
+```
+
+The change report calls out, since the last build:
+
+- **NEW EVENTS** - activities/sessions that have appeared,
+- **REMOVED EVENTS** - activities that have gone,
+- **TIMING CHANGES** - added/removed session times for an existing activity,
+- **PAID/FREE CHANGES**.
+
+It prints to the console and is saved to `data/CHANGES.md`. Worth running
+`-CheckOnly` before each booking phase opens.
+
+Run it before each booking phase, and again the night before - the festival does
+edit times. If anything material moved, **commit & push** so everyone's calendar
+updates.
+
+### Doing it by hand / just the planner step
+
+```powershell
+python build_schedule.py ..\CampVC_2026_Full_Schedule.xlsx           # rebuild + report
+python build_schedule.py ..\CampVC_2026_Full_Schedule.xlsx --check   # report only, write nothing (exit 1 = changed)
+```
+
+`build_schedule.py` needs Python with `openpyxl` (`pip install openpyxl`). Activity
+ids are derived from name+location and stay stable across rebuilds, so existing
+picks keep working; if an activity someone picked is removed/retimed it's flagged
+in the change report (and in the results page) rather than lost. The previous
+build is archived to `data/schedule.prev.json` so a diff is always reproducible.
+
+## Tests
+
+```bash
+node tests/engine.test.node.js   # unit tests for the matchmaking/clash engine
+node tests/e2e.mjs               # full browser end-to-end (drives headless Chrome)
+```
+
+The **engine** tests check matchmaking, clash resolution, off-site buffers,
+drop-in handling, and the pin knob - no browser needed.
+
+The **e2e** test is a real end-to-end run with zero extra dependencies (uses
+Node 22's built-in `fetch` + `WebSocket` to drive headless Chrome): it opens the
+picks page, selects two people, ticks activities, saves, opens the results page,
+and asserts the calendar + booking lists rendered - then writes screenshots to
+`tests/_shots/` (handy for eyeballing the UI). Exit code 0 = all assertions
+passed. Needs Chrome or Edge installed.
+
+---
+
+## One-time setup (to share data across friends)
+
+### 1. Create the Google Sheet + Apps Script
+
+1. Create a new Google Sheet (any name).
+2. **Extensions -> Apps Script**. Delete the placeholder, paste in the contents
+   of `apps-script/Code.gs`, and save.
+3. **Deploy -> New deployment -> Web app**:
+   - *Execute as*: **Me**
+   - *Who has access*: **Anyone**
+   - Deploy, authorise when prompted, and **copy the Web app URL**.
+
+   (The `Picks` and `Knobs` tabs are created automatically on first use.)
+
+### 2. Point the app at it
+
+In `config.js`:
+
+```js
+window.CONFIG = {
+  friends: ["Elli", "Sam", "Jo", "Alex"],   // your group (up to ~6)
+  appsScriptUrl: "https://script.google.com/macros/s/AKfyc.../exec",  // paste here
+  breakMinutes: 0,
+  offsiteBufferMinutes: 30,
+  dropInSlotMinutes: 45,
+  dropInEarliestHour: 9,
+};
+```
+
+Setting `appsScriptUrl` switches the app out of local mode - picks now save to
+the shared Sheet.
+
+### 3. Publish on GitHub Pages
+
+1. Create a **public** repo on github.com and push these files.
+2. **Settings -> Pages -> Build from branch -> main / root**.
+3. Share two links with the group:
+   - Picks: `https://<you>.github.io/<repo>/`
+   - Calendar: `https://<you>.github.io/<repo>/results.html`
+
+That's it. Friends open the picks link, choose their name, tick activities, and
+save. Anyone opening the calendar link sees the live group schedule. Nudge awkward
+placements from the **Adjust** panel - those changes are shared with everyone.
+
+---
+
+## Trying it locally
+
+Browsers block some things on `file://`, so serve the folder:
+
+```bash
+python -m http.server 8099
+# then open http://localhost:8099/index.html
+```
+
+With `appsScriptUrl` empty this is **local mode** (your browser only) - perfect
+for a dry run before wiring up the Sheet.
+
+---
+
+## Notes / limits (v1)
+
+- The matchmaker is a fast greedy algorithm - great for a handful of people. It
+  finds a valid, clash-free plan almost always; "perfect" preference-tuning is
+  what the Adjust knobs are for.
+- Deferred for later: reconciling Phase 2 around what you actually got in Phase 1;
+  drag-drop calendar editing; cost totals.
+- On-site walking-distance zones are now feasible: the site map
+  (`..\CampVC_2026_Site_Map.jpg`, pulled by the `campvc-schedule` project) exists,
+  so venues could be grouped into zones (a one-time, build-time enrichment) to make
+  breaks location-aware beyond the current off-site buffer. Not yet built.

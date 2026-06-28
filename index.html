@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Camp VC - My Picks</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="topbar">
+    <h1>Camp VC 2026 <span class="sub">plan together</span></h1>
+    <div class="nav">
+      <a href="index.html" class="active">My picks</a>
+      <a href="results.html">Group calendar</a>
+      <span class="local-flag" id="localFlag" hidden>local mode - not shared yet</span>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="controls">
+      <div class="row">
+        <label class="fld">Who are you?
+          <select id="who"><option value="">- choose your name -</option></select>
+        </label>
+        <input type="search" id="search" placeholder="Search activities...">
+        <label class="fld">Category
+          <select id="fCat"><option value="">All</option></select>
+        </label>
+        <label class="fld">Day
+          <select id="fDay"><option value="">All</option></select>
+        </label>
+        <label class="fld">Type
+          <select id="fKind">
+            <option value="">All</option>
+            <option value="paid">Paid only</option>
+            <option value="free">Free only</option>
+            <option value="repeating">Repeating</option>
+            <option value="oneoff">One-off</option>
+            <option value="dropin">Drop-in</option>
+          </select>
+        </label>
+      </div>
+      <div class="pickbar">
+        <span id="pickCount">Pick your name to start.</span>
+        <span class="hint">Tap a priority on anything you fancy. Skip the rest.</span>
+      </div>
+    </div>
+
+    <div id="list"></div>
+  </div>
+
+  <div class="savebar">
+    <button class="btn-primary" id="saveBtn" disabled>Save my picks</button>
+    <span class="status" id="saveStatus"></span>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="data/schedule.js"></script>
+  <script src="store.js"></script>
+  <script src="pick.js"></script>
+</body>
+</html>
