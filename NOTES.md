@@ -93,13 +93,15 @@ verify migrations after any change that alters ids.
   run a few rounds and **keep the best-scoring round** (`globalScore`).
 - **Explicit togetherness UX**: per-activity "Do these together?" in `results.js`
   (`renderShared`, a collapsed `details`), which pins an instance via `knobs.pins`.
-  Locking is always allowed; the row shows a **warning from the actual result** if
-  someone can't make the locked time (their equal/higher-priority picks clash), and
-  lets you try another instance. Status + per-instance "who's on it" come from
-  exact placements (`byActivity[id].instances[].here`, `.notPlaced`), NOT a
-  prediction - a true per-instance feasibility check would need a re-solve per
-  instance (~550ms each), too slow to do on render. The abstract global dial was
-  removed (unintuitive); `config.togetherness` remains the implicit baseline.
+  A LOCKED activity is **force-placed** for everyone who wants it: in `solve()` its
+  item weight becomes `LOCK_W` (5000) - above any want, below a must (10000) - so
+  the solver drops lower/equal picks and relocates flexible ones to fit it, but
+  never gives up a real must. Locked if-free picks are pulled into the B&B too (not
+  the greedy fill). Status + per-instance "who's on it" come from exact placements
+  (`byActivity[id].instances[].here`, `.notPlaced`); if someone still can't make a
+  locked time it's because a must of theirs clashes, and the row warns and lets you
+  try another instance. The abstract global dial was removed (unintuitive);
+  `config.togetherness` remains the implicit baseline for un-locked co-location.
 - **Knobs**: `breakMinutes`, `pins` (activity -> instanceKey), `gaps` (forced gap),
   `togetherness`. Knobs are a generic blob saved to the Sheet, shared by everyone.
 - **Drop-ins** (window activities) are earmarked into free gaps within open hours

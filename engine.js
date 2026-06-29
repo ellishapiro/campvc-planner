@@ -85,16 +85,26 @@
     });
 
     // ---- per-person solve: exact B&B over must+want, then greedy if-free ----
+    // A LOCKED activity (pinned via "Do these together?") is force-placed for
+    // everyone who wants it: it sits just below a must, so the solver will drop
+    // lower/equal picks (and relocate flexible ones) to fit it, but never gives up
+    // a real must for it.
+    var LOCK_W = 5000;
     function solve(n) {
       var picks = picksByName[n];
-      function tier(pr) {
-        var out = [];
-        for (var id in picks) if (picks[id] === pr && scheduled(acts[id]))
-          out.push({ a: acts[id], w: covWeight(pr), insts: candInsts(acts[id]) });
-        return out;
+      // Items in the exact solve: every must/want pick, plus any LOCKED pick of
+      // any tier (a locked if-free still gets force-placed). If-free that isn't
+      // locked is left for the greedy fill below.
+      var items = [];
+      for (var id in picks) {
+        if (!scheduled(acts[id])) continue;
+        var pr = picks[id];
+        if (pr === "must" || pr === "want" || pins[id]) {
+          var w = pins[id] ? (pr === "must" ? covWeight("must") : LOCK_W) : covWeight(pr);
+          items.push({ a: acts[id], w: w, insts: candInsts(acts[id]) });
+        }
       }
-      var items = tier("must").concat(tier("want"))
-        .sort(function (x, y) { return (y.w - x.w) || (x.insts.length - y.insts.length); });
+      items.sort(function (x, y) { return (y.w - x.w) || (x.insts.length - y.insts.length); });
 
       var best = { score: -1, set: [] }, calls = 0;
       function fitsList(inst, a, list) { for (var k = 0; k < list.length; k++) if (clash(inst, a, list[k].inst, list[k].a)) return false; return true; }
@@ -121,7 +131,7 @@
       // if-free: greedy into remaining gaps, preferring the consensus instance.
       function fitsAll(inst, a) { for (var k = 0; k < chosen.length; k++) if (clash(inst, a, chosen[k].inst, chosen[k].a)) return false; return true; }
       var iff = [];
-      for (var id in picks) if (picks[id] === "iffree" && scheduled(acts[id])) iff.push(acts[id]);
+      for (var id in picks) if (picks[id] === "iffree" && !pins[id] && scheduled(acts[id])) iff.push(acts[id]);
       iff.sort(function (x, y) { return x.instances.length - y.instances.length; });
       iff.forEach(function (a) {
         var order = candInsts(a).slice().sort(function (p, q) {
