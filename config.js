@@ -4,7 +4,7 @@
 window.CONFIG = {
   // The people planning together. These names appear in the picks dropdown and
   // as the calendar columns. Add up to ~6.
-  friends: ["Elli", "Abs", "Jess", "Mummy"],
+  friends: ["Abs", "Elli", "Jess", "Mummy"],
 
   // Paste the Google Apps Script web-app URL here after deploying it (see README).
   // Until it's set, the site runs in LOCAL mode: picks are kept in this browser
