@@ -1754,7 +1754,7 @@
      "start_min": 900,
      "end_min": 950,
      "label": "Saturday 15:00-15:50",
-     "location": "FLAT GROUND B",
+     "location": "FLAT GROUND A",
      "capacity": 10
     },
     {
@@ -1762,7 +1762,7 @@
      "start_min": 900,
      "end_min": 950,
      "label": "Saturday 15:00-15:50",
-     "location": "FLAT GROUND A",
+     "location": "FLAT GROUND B",
      "capacity": 10
     },
     {
@@ -1802,7 +1802,7 @@
      "start_min": 660,
      "end_min": 710,
      "label": "Sunday 11:00-11:50",
-     "location": "FLAT GROUND B",
+     "location": "FLAT GROUND A",
      "capacity": 10
     },
     {
@@ -1810,7 +1810,7 @@
      "start_min": 660,
      "end_min": 710,
      "label": "Sunday 11:00-11:50",
-     "location": "FLAT GROUND A",
+     "location": "FLAT GROUND B",
      "capacity": 10
     },
     {
@@ -2879,17 +2879,17 @@
     },
     {
      "day": "Sunday",
-     "start_min": 795,
-     "end_min": 845,
-     "label": "Sunday 13:15-14:05",
+     "start_min": 615,
+     "end_min": 665,
+     "label": "Sunday 10:15-11:05",
      "location": "AUTO TENT",
      "capacity": 15
     },
     {
      "day": "Sunday",
-     "start_min": 1335,
-     "end_min": 1440,
-     "label": "Sunday 22:15-11:05",
+     "start_min": 795,
+     "end_min": 845,
+     "label": "Sunday 13:15-14:05",
      "location": "AUTO TENT",
      "capacity": 15
     }
@@ -8700,7 +8700,7 @@
    "kind": "oneoff",
    "booking": true,
    "external": false,
-   "description": "Money chats that aren’t a snore. Sara Maxwell is back with a session on knowing your worth, getting real about money, and taking some of the shame, panic, and mystery out of finances. A mix of honest conversation, practical thinking, and gentle financial confidence-building for anyone who wants to feel a bit more in control.",
+   "description": "Money chats that aren’t a snore. Sara Maxwell is back with a session on knowing your worth, getting real about money, and taking some of the shame, panic, and mystery out of finances. A mix of honest conversation, practical thinking, and gentle financial confidence-building for anyone who wants to feel a bit more in control. Note that this session does not cover any regulated financial advice.",
    "categories": [
     "INSPIRATION & CONFIDENCE"
    ],
