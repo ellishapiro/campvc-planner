@@ -438,6 +438,24 @@
       });
     });
 
+    // Recompute couldn't-fit reasons against the FINAL schedule, listing every
+    // activity that blocks it (a dropped pick usually clashes with several).
+    names.forEach(function (n) {
+      dropped[n].forEach(function (d) {
+        if (/bumped|moved aside|pinned/.test(d.reason || "")) return; // keep intentional reasons
+        var a = acts[d.activityId];
+        if (!a || !a.instances || !a.instances.length) { d.reason = d.reason || "no clash-free time"; return; }
+        var blockers = {};
+        a.instances.forEach(function (inst) {
+          sched[n].forEach(function (p) { if (overlaps(p, candFromInstance(a, inst))) blockers[p.name] = true; });
+        });
+        var list = Object.keys(blockers);
+        d.reason = list.length
+          ? "clashes with " + list.slice(0, 4).join(", ") + (list.length > 4 ? " and " + (list.length - 4) + " more" : "")
+          : "no clash-free time";
+      });
+    });
+
     var anyPicks = names.some(function (n) { return Object.keys(picksByName[n]).length > 0; });
 
     return {
