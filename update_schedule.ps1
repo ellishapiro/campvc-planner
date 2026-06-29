@@ -85,6 +85,10 @@ Section 'Rebuilding planner data and flagging changes'
 Push-Location $planner
 try { python build_schedule.py "$schedProj" } finally { Pop-Location }
 
+# Re-stamp asset versions so browsers fetch the new schedule data (not a cached copy).
+Push-Location $planner
+try { python stamp_version.py } finally { Pop-Location }
+
 Write-Host "`nDone. Review the change report above (also saved to data\CHANGES.md)." -ForegroundColor Green
 Write-Host "If the build flagged any NEW no-registration activities, hand them to Claude" -ForegroundColor Green
 Write-Host "to classify (bookable vs turn-up) - not a job for you." -ForegroundColor Green

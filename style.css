@@ -180,7 +180,9 @@ label.fld { display: flex; flex-direction: column; gap: 3px; font-size: 11px; co
   line-height: 1.4; padding: 0 4px; border-radius: 4px; background: #10131a; color: #ffd479;
 }
 .block.paid .bt { padding-left: 16px; }
-.block.dropin { background: repeating-linear-gradient(45deg, #6fb1c9, #6fb1c9 6px, #5aa0ba 6px, #5aa0ba 12px); color: #06222e; }
+.block.dropin { background: #5ec2b0; color: #06302a; border: 2px dashed #2c7a6c; }
+.block .droptag { display: inline-block; font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .03em; background: rgba(0,0,0,.22); color: #eafff9; border-radius: 4px; padding: 0 4px; margin-left: 4px; }
 .block.split::after { content: "↗"; position: absolute; top: 2px; right: 4px; font-size: 10px; }
 
 /* ---- Booking lists / group view ---- */

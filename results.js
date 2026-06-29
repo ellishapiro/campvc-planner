@@ -75,8 +75,17 @@
     cal.innerHTML = "";
     var day = schedule.days[state.day];
     var b = state.result.bounds;
-    var startB = Math.floor(b.start / 60) * 60;
-    var endB = Math.ceil(b.end / 60) * 60;
+    // Range covers every block on this day (so evening drop-in earmarks show),
+    // falling back to the schedule bounds when the day is empty.
+    var dayItems = [];
+    NAMES.forEach(function (n) {
+      var p = state.result.byPerson[n];
+      p.all.concat(p.dropins).forEach(function (x) { if (x.day === day) dayItems.push(x); });
+    });
+    var minS = b.start, maxE = b.end;
+    dayItems.forEach(function (x) { if (x.start_min < minS) minS = x.start_min; if (x.end_min > maxE) maxE = x.end_min; });
+    var startB = Math.floor(minS / 60) * 60;
+    var endB = Math.ceil(maxE / 60) * 60;
     var H = (endB - startB) * PX;
 
     var cols = "52px repeat(" + NAMES.length + ", minmax(116px,1fr))";
@@ -135,8 +144,9 @@
     b.style.top = (x.start_min - startB) * PX + "px";
     b.style.height = Math.max((x.end_min - x.start_min) * PX, 22) + "px";
     var withTxt = x.withWhom && x.withWhom.length ? " &middot; with " + x.withWhom.map(esc).join(", ") : "";
-    b.innerHTML = '<div class="bt">' + esc(x.name) + "</div><div class=\"bm\">" +
-      fmt(x.start_min) + "-" + fmt(x.end_min) + (x.type === "dropin" ? " (drop-in)" : withTxt) + "</div>";
+    var tag = x.type === "dropin" ? '<span class="droptag">drop-in &middot; flexible</span>' : "";
+    b.innerHTML = '<div class="bt">' + esc(x.name) + tag + "</div><div class=\"bm\">" +
+      fmt(x.start_min) + "-" + fmt(x.end_min) + (x.type === "dropin" ? " &middot; go anytime around here" : withTxt) + "</div>";
     b.title = x.name + " - " + x.day + " " + fmt(x.start_min) + "-" + fmt(x.end_min) +
       (x.location ? " @ " + x.location : "");
     return b;
@@ -164,7 +174,7 @@
         card.appendChild(dd);
       }
       if (p.ifTime.length) {
-        card.appendChild(el("div", "phase hint", "If you have time: " + p.ifTime.map(function (x) { return esc(x.name); }).join(", ")));
+        card.appendChild(el("div", "phase hint", "Wanted drop-ins with no free gap (turn up if you can squeeze them in): " + p.ifTime.map(function (x) { return esc(x.name); }).join(", ")));
       }
       if (p.dropped.length) {
         // group the couldn't-fit list by priority (must -> want -> if-free) for readability

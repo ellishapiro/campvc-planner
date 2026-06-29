@@ -61,6 +61,7 @@
 
     var bounds = dayBounds(schedule, config);
     var dropinEarliest = Math.max(bounds.start, (config.dropInEarliestHour || 9) * 60);
+    var dropinLatest = (config.dayEndHourFallback || 23) * 60;  // evening drop-ins (cabaret, DJ) run later than the last bookable session
 
     function reqGap(aId, bId) {
       var g = breakMin;
@@ -316,9 +317,9 @@
         var s = toMin(w.start);
         var e = toMin(w.end);
         if (s == null) s = dropinEarliest;
-        if (e == null) e = bounds.end;
+        if (e == null) e = dropinLatest;
         s = Math.max(s, dropinEarliest);
-        e = Math.min(e, bounds.end);
+        e = Math.min(e, dropinLatest);
         if (e - s < 1) return;
         if (!map[w.day] || s < map[w.day][0]) {
           map[w.day] = map[w.day] ? [Math.min(map[w.day][0], s), Math.max(map[w.day][1], e)] : [s, e];
