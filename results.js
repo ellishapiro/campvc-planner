@@ -136,6 +136,17 @@
     }
   }
 
+  // Readable full availability window for a drop-in (its real open hours).
+  function pmin(t) { var m = /^(\d{1,2}):(\d{2})$/.exec(String(t || "").trim()); return m ? (+m[1] * 60 + +m[2]) : null; }
+  function winText(w) {
+    var s = pmin(w.start), e = pmin(w.end);
+    if (s === 0) s = null; // "00:00" means open from the start of the day
+    if (s != null && e != null) return fmt(s) + "-" + fmt(e);
+    if (e != null) return "until " + fmt(e);
+    if (s != null) return "from " + fmt(s);
+    return "all day";
+  }
+
   function blockEl(x, startB) {
     var cls = "block " + (x.type === "dropin" ? "dropin" : (x.priority || "none"));
     if (x.paid) cls += " paid";
@@ -145,8 +156,15 @@
     b.style.height = Math.max((x.end_min - x.start_min) * PX, 22) + "px";
     var withTxt = x.withWhom && x.withWhom.length ? " &middot; with " + x.withWhom.map(esc).join(", ") : "";
     var tag = x.type === "dropin" ? '<span class="droptag">drop-in &middot; flexible</span>' : "";
-    b.innerHTML = '<div class="bt">' + esc(x.name) + tag + "</div><div class=\"bm\">" +
-      fmt(x.start_min) + "-" + fmt(x.end_min) + (x.type === "dropin" ? " &middot; go anytime around here" : withTxt) + "</div>";
+    var bm;
+    if (x.type === "dropin") {
+      var act = actById[x.activityId] || {};
+      var w = (act.windows || []).filter(function (z) { return z.day === x.day; })[0];
+      bm = "earmarked " + fmt(x.start_min) + "-" + fmt(x.end_min) + (w ? " &middot; open " + winText(w) : " &middot; go anytime");
+    } else {
+      bm = fmt(x.start_min) + "-" + fmt(x.end_min) + withTxt;
+    }
+    b.innerHTML = '<div class="bt">' + esc(x.name) + tag + '</div><div class="bm">' + bm + "</div>";
     b.title = x.name + " - " + x.day + " " + fmt(x.start_min) + "-" + fmt(x.end_min) +
       (x.location ? " @ " + x.location : "");
     return b;

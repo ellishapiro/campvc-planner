@@ -71,8 +71,9 @@
 
   function bookingNote(a) {
     if (a.kind === "dropin") return "Just turn up - no booking needed.";
-    if (a.external) return "Booking is off-app, via a link in the Guidebook app (opens when booking opens).";
-    return a.paid ? "Paid - books in phase 1 (from 4 July)." : "Included - books in phase 2 (from 11 July).";
+    if (a.external) return "Book OFF-APP via the partner link" + (a.paid ? " (paid, opens 4 July)" : " (opens 11 July)") +
+      ". 'Add to schedule' in the app does NOT secure your space - complete the third-party booking first.";
+    return a.paid ? "Paid - books in the app, phase 1 (from 4 July)." : "Included - books in the app, phase 2 (from 11 July).";
   }
 
   function matches(a) {

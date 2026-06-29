@@ -84,6 +84,16 @@ def is_external_bookable(name):
     return load_overrides().get(norm(name)) == "bookable"
 
 
+# Paid activities are booked through a third-party PARTNER LINK (off-app), not in
+# the festival app - the description spells this out. Free/included activities
+# book in-app. Detect the off-app ones from that booking-instructions wording.
+_PARTNER_RE = re.compile(r"partner'?s?\s+link|third[\s-]?party|booking instructions|book and pay", re.I)
+
+
+def books_off_app(description):
+    return bool(_PARTNER_RE.search(description or ""))
+
+
 def load_inputs(sched_dir):
     with open(os.path.join(sched_dir, "rows.json"), encoding="utf-8") as f:
         rows = json.load(f)
@@ -189,7 +199,8 @@ def build(sched_dir):
         total_places = None if (unlimited or not caps) else sum(caps)
         out.append({
             "id": a["id"], "name": a["name"], "offsite": a["offsite"], "paid": a["paid"],
-            "phase": 1 if a["paid"] else 2, "kind": kind, "external": a["external"],
+            "phase": 1 if a["paid"] else 2, "kind": kind,
+            "external": a["external"] or books_off_app(a["description"]),
             "description": a["description"], "categories": a["categories"],
             "maxPerSession": max(caps) if caps else None, "totalPlaces": total_places,
             "instances": [{"day": s["day"], "start_min": s["start_min"], "end_min": s["end_min"],

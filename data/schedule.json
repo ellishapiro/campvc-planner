@@ -162,7 +162,7 @@
    "paid": true,
    "phase": 1,
    "kind": "repeating",
-   "external": false,
+   "external": true,
    "description": "The incredible team from Balance Your Being are offering 1-1 Reiki, Crystal Healing, Blissweave & Rahanni treatments throughout the weekend. We suggest booking ahead online, but some walk-in spaces may be available - so pop over and say hi to the team! Scroll down for more info on each incredible treatment. Paid Activity Booking Instructions Click the third-party link above to book and pay for your space. Important Notes - By booking with a third party, you agree to their terms and conditions, including refund and cancellation policies. - Clicking “Add to schedule” will not secure your space; you must complete the third-party booking first. - Any queries regarding paid activities should be directed to the activity provider. Blissweave Bliss Weaving is a complete guided transformation method, a gentle personal growth modality that helps you reconnect with yourself, your inner wisdom, and the next loving step in your life. Through visioning, breathing, feeling, and simple aligned action, Bliss Weaving helps you soften what feels stuck and begin weaving more clarity, confidence, joy, and connection into your everyday world. Crystal Healing Re-align your chakras and wellbeing with a crystal prescription specific to your needs. When crystals are placed on the body or within the auric field, they help to alleviate physical, emotional, mental, and spiritual ailments by removing energy blockages or negative energy within the chakras and affected areas. Each session consists of a consultation, chakra re-alignment, and a bespoke crystal prescription. Reiki Restore your body’s life force energy through this ancient Japanese practice. Reiki is Japanese for ‘universal life energy’ and is based on the belief that this energy flows freely within each of us. When we become stressed or ill, this energy can become blocked in certain parts of the body, stopping the natural flow, which can lead to further health problems. Rahanni Rahanni, meaning ‘of one heart’, is a divine healing modality that allows us to open the heart and move through challenging times. A wonderful taster session of this gentle energy, which connects with the Angels, Archangels, and Ascended Masters of Earth, whom we individually call upon.",
    "categories": [
     "WELLNESS"
@@ -954,7 +954,7 @@
    "paid": true,
    "phase": 1,
    "kind": "repeating",
-   "external": false,
+   "external": true,
    "description": "In these 25-minute taster sessions, you&#x27;ll master the basics of riding the quad, before tackling obstacles such as tight corners, log balances and see-saws. The focus is on skill, control and confidence rather than speed. Choose between 90cc automatic quads, which are smaller and easier to handle, or more powerful 250cc semi-automatic quads. Please note that the 90cc quads have a rider weight limit of 13 stone, while the 250cc quads have a weight limit of 25 stone. Riders must have sufficient strength and mobility in both hands and feet to safely operate the controls, including braking, acceleration and gear changes where applicable. Quad biking can be physically demanding, so participants should be comfortable gripping handlebars and have a reasonable level of core strength. Helmets with visors are provided and must be worn. They weigh aprx 1.35 kg. If you have your own off-road helmet, you&#x27;re welcome to bring it. Flat, sturdy footwear such as trainers, boots, or wellies must be worn. Sandals, Crocs, and other open-toed footwear are not permitted. Participants must also wear long sleeves and full-length trousers. Riders who demonstrate the required skill and control during their taster session will be invited to book onto the more advanced off-road trail, exploring the site&#x27;s beautiful and rugged terrain. Trail sessions cannot be booked in advance, as riders must first demonstrate their ability in the field. Taster Experience – £25 Off-Road Experience – £25 Paid Activity Booking Instructions 1) Click t he partner link to book and pay for your space. Bookings open 10am, Sat 4th July. 2) Once booked and paid, click “Add to schedule” to add it to your planner. Important! - By booking with a third party, you agree to their terms and conditions, including refund and cancellation policies. - Clicking “Add to schedule” will not secure your space; you must complete the third-party booking first. - Any queries regarding paid activities should be directed to the activity provider.",
    "categories": [
     "QUAD BIKING"
@@ -1520,7 +1520,7 @@
    "paid": true,
    "phase": 1,
    "kind": "repeating",
-   "external": false,
+   "external": true,
    "description": "Island Feather are back with an incredible range of massage services, including a 25-minute seated massage (£35) and 50-minute Massage Therapy Session (£65). For 50 minute treatments choose from Deep/Soft Tissue, Clinical Massage, or a treatment focused on specific/a combination areas - including neck, shoulders, back, legs, hands and feet. Paid Activity Booking Instructions Click here to book 25 minute sessions. Click here to book 50 minute sessions. Important Notes: - By booking with a third party, you agree to their terms and conditions, including refund and cancellation policies. - Clicking “Add to schedule” will not secure your space; you must complete the third-party booking first. - Any queries regarding paid activities should be directed to the activity provider.",
    "categories": [
     "WELLNESS"
@@ -1860,7 +1860,7 @@
    "paid": true,
    "phase": 1,
    "kind": "repeating",
-   "external": false,
+   "external": true,
    "description": "An introduction to riding a BMX pump track, led by 9-time BMX World Champion and Olympian Shanaze Reade and her elite coaching team. Learn the fundamentals of body and pedal position, cornering, and pumping to maintain momentum around the track. The track is set up in stages, allowing more confident riders to progress onto trickier sections as they build skills. You must be able to ride a bike confidently while standing on the pedals, but no BMX experience is required. Please arrive to the session warmed up and ready to ride. For example, a brief jog around the site and some lunges would work! Trainers only. No crocs or sandals. Helmet, elbow pads, knee pads and long fingered gloves must be worn and are available for loan. Suitable trainers only, no sandals or crocs. Riders who succesfully complete the beginners lesson will be welcome to come back and ride the track during the Open Sessions. Booking Instructions: 1) Click this link to book and pay for your space. Bookings open from 10am on Sat 4th July. 2) Once confirmed, click “Add to schedule” in the app to add it to your planner. Important notes: - By booking with a third party, you agree to their terms and conditions, including refund and cancellation policies. -“Add to schedule” will not secure your space, you must complete the third-party booking first.",
    "categories": [
     "BMX & MOUNTAIN BIKING"
@@ -2040,7 +2040,7 @@
    "paid": true,
    "phase": 1,
    "kind": "repeating",
-   "external": false,
+   "external": true,
    "description": "We’re absolutely stoked to bring you guys a beautiful six-person wood-fired sauna, complete with two cold plunges built into the hillside at our stunning event site. You’ll be blown away by the views! 50 minute session: £35 per person. Booking instructions 1) Click this link to book and pay for your space. Bookings open from 10am on Sat 4th July. 2) Once confirmed, click “Add to schedule” in the app to add it to your planner. Important notes: - By booking with a third party, you agree to their terms and conditions, including refund and cancellation policies. -“Add to schedule” will not secure your space, you must complete the third-party booking first.",
    "categories": [
     "WELLNESS"
@@ -2325,7 +2325,7 @@
    "paid": true,
    "phase": 1,
    "kind": "repeating",
-   "external": false,
+   "external": true,
    "description": "Not for complete beginners. This session is for those with riding experience (not necessarily on a dirt bike) who can already operate a bike with a clutch and gears. If you are a complete beginner, then check out Desert Rose’s eBike Xperience instead! This enduro bike taster session gives riders a feel for riding these amazing bikes across the terrain at Camp VC. The Desert Rose team will run you through the core principles and exercises of riding off-road, getting on and off the bikes, body positioning, bike-handling, clutch control and optimising braking skills for loose and uneven terrain. £70 for 2 hours. Paid Activity Booking Instructions: 1) Bookings open from 10 am on Saturday, 4th July. Please click here to be taken to the booking platform. 2) Click the third-party link above to book and pay for your space. 3) Once booked and paid, click “Add to schedule” to add it to your planner. Important! Please Read: By booking with a third party, you agree to their terms and conditions, including refund and cancellation policies. Clicking “Add to schedule” will not secure your space; you must complete the third-party booking first. Any queries regarding paid activities should be directed to the activity provider. You must sign the waiver you&#x27;ll receive by email directly from Desert Rose to participate. Riders are encouraged to bring their own kit where possible: A full face helmet, MX kit jersey and trousers, MX riding boots, riding gloves A limited amount of riding kit will be available on-site through the FOX kit loans on a first-come, first-served basis. Wear whatever you like under your kit, as long as you&#x27;re comfortable (fitness gear always works well) PLEASE ARRIVE AT THE MEET POINT AT LEAST 15 MINUTES EARLY TO BE COLLECTED BY THE TEAM",
    "categories": [
     "MOTO"
@@ -2407,7 +2407,7 @@
    "paid": true,
    "phase": 1,
    "kind": "repeating",
-   "external": false,
+   "external": true,
    "description": "This session is for complete beginners to riding motorcycles, but you must be able to ride a bicycle to participate . If you already have some riding experience (but are new to off-road), check out the Inch Perfect &#x27;Beginner to Trials Racing&#x27; session instead! Ride out for the very first time and get to grips with overall bike control. You&#x27;ll ride an electric (EM) trials bike, which means you&#x27;ll get going straight away, without having to master clutch and gears! £109 for 2 hours. Paid Activity Booking Instructions: 1) Bookings open from 10 am on Saturday, 4th July. Please click here to be taken to the booking platform. 2) Click the third-party link above to book and pay for your space. 3) Once booked and paid, click “Add to schedule” to add it to your planner. Important! Please Read: By booking with a third party, you agree to their terms and conditions, including refund and cancellation policies. Clicking “Add to schedule” will not secure your space; you must complete the third-party booking first. Any queries regarding paid activities should be directed to the activity provider. You must sign the waiver you&#x27;ll receive by email directly from Inch Perfect to participate. Inch Perfect provide bikes, insurance, helmets, boots, pants and jerseys in a broad range of sizes. Wear whatever you like under the kit, as long as you&#x27;re comfortable (fitness gear always works well) PLEASE ARRIVE AT THE MEETING POINT AT LEAST 15 MINUTES BEFORE YOUR START TIME",
    "categories": [
     "MOTO"
@@ -2481,7 +2481,7 @@
    "paid": true,
    "phase": 1,
    "kind": "repeating",
-   "external": false,
+   "external": true,
    "description": "This session is for those with existing road or track riding experience (i.e., already confident with gears) but are new to trials riding. If you are a complete beginner but can ride a bicycle, check out the Inch Perfect &#x27;Absolute Beginner&#x27; session instead! Start on flat ground with some simple trial skills, including body position, balance, and bike handling. Progress through the course to experience more challenging obstacle navigation and advanced bike control. £109 for 2 hours. Paid Activity Booking Instructions: 1) Bookings open from 10 am on Saturday, 4th July. Please click here to be taken to the booking platform. 2) Click the third-party link above to book and pay for your space. 3) Once booked and paid, click “Add to schedule” to add it to your planner. Important! Please Read: By booking with a third party, you agree to their terms and conditions, including refund and cancellation policies. Clicking “Add to schedule” will not secure your space; you must complete the third-party booking first. Any queries regarding paid activities should be directed to the activity provider. You must sign the waiver you&#x27;ll receive by email directly from Inch Perfect to participate. Inch Perfect provide bikes, insurance, helmets, boots, pants and jerseys in a broad range of sizes. Wear whatever you like under the kit, as long as you&#x27;re comfortable (fitness gear always works well) PLEASE ARRIVE AT THE MEETING POINT AT LEAST 15 MINUTES BEFORE YOUR START TIME",
    "categories": [
     "MOTO"
@@ -2531,7 +2531,7 @@
    "paid": true,
    "phase": 1,
    "kind": "repeating",
-   "external": false,
+   "external": true,
    "description": "This is a paid-for experience operated by Bearded Men Adventures. Discover the stunning local scenery and experience the thrill of rock climbing and abseiling. A shuttle to / from Camp VC is included in the £55 cost. Suitable for mixed abilities, from beginner to more experienced climbers. Participants should meet at the pick-up point in the Camp VC car park at the agreed start time. Do not head directly to the Panorama Walk destination. Paid Activity Booking Instructions 1) Click our partner&#x27;s link to book and pay for your space. Bookings open from 10am on Sat 4th July. 2) Once confirmed, click “Add to schedule” in the app to add it to your planner. Important notes: - By booking with a third party, you agree to their terms and conditions, including refund and cancellation policies. -“Add to schedule” will not secure your space, you must complete the third-party booking first. -Queries regarding paid activities should be directed to the activity provider.",
    "categories": [
     "ADVENTURE"
@@ -2915,7 +2915,7 @@
    "paid": true,
    "phase": 1,
    "kind": "repeating",
-   "external": false,
+   "external": true,
    "description": "This session is for complete beginners to riding motorcycles, but you must be able to ride a bicycle to participate . If you already have some riding experience (but are new to off-road), check out the Desert Rose &#x27;Enduro Taster’ session instead! This eBike Xperience is an opportunity for those new to motorbike riding to get out there on two wheels! Designed to give you confidence in bike handling and control, whilst getting used to the power and braking of the bikes on the CAMP VC terrain. With an expanded fleet of newly launched eBike dirt bikes, you’ll be among the very first in the UK to try out these incredible bikes! £35 for 1 hour. Paid Activity Booking Instructions: 1) Bookings open from 10 am on Saturday, 4th July. Please click here to be taken to the booking platform. 2) Click the third-party link above to book and pay for your space. 3) Once booked and paid, click “Add to schedule” to add it to your planner. Important! Please Read: By booking with a third party, you agree to their terms and conditions, including refund and cancellation policies. Clicking “Add to schedule” will not secure your space; you must complete the third-party booking first. Any queries regarding paid activities should be directed to the activity provider. You must sign the waiver you&#x27;ll receive by email directly from Desert Rose to participate. Riders are encouraged to bring their own kit where possible: A full face helmet, MX kit jersey and trousers, MX riding boots, riding gloves A limited amount of riding kit will be available on-site through the FOX kit loans on a first-come, first-served basis. Wear whatever you like under your kit, as long as you&#x27;re comfortable (fitness gear always works well) PLEASE ARRIVE AT THE MEET POINT AT LEAST 15 MINUTES EARLY TO BE COLLECTED BY THE TEAM",
    "categories": [
     "MOTO"
@@ -3029,7 +3029,7 @@
    "paid": true,
    "phase": 1,
    "kind": "repeating",
-   "external": false,
+   "external": true,
    "description": "This is a paid-for activity operated by Bearded Men Adventures at the incredible rapids at LLangollen&#x27;s River Dee. A shuttle to / from Camp VC is included in the £70 cost. Participants should meet at the pick-up point in the Camp VC car park at the agreed start time. Do not head directly to the River Dee. Paid Activity Booking Instructions 1) Click this third-party link to book and pay for your space. Bookings open from 10am on Sat 4th July. 2) Once confirmed, click “Add to schedule” in the app to add it to your planner. Important notes: By booking with a third party, you agree to their terms and conditions, including refund and cancellation policies. “Add to schedule” will not secure your space, you must complete the third-party booking first. Queries regarding paid activities should be directed to the activity provider.",
    "categories": [
     "ADVENTURE"
@@ -3071,7 +3071,7 @@
    "paid": true,
    "phase": 1,
    "kind": "repeating",
-   "external": false,
+   "external": true,
    "description": "All too often, society makes us self-conscious, and we can lose sight of just how amazing and miraculous our bodies really are. Lu, Sassy, and Sarah have teamed up at CAMP VC to show folks of all shapes and sizes that they are beautiful. Partnering with YOU underwear, book a private, exclusive photoshoot session on the bus and get your own personal portraits as a reminder and celebration of a weekend full of self-love. £99 per photoshoot. Get the pics and keep the underwear! Bookings open from 10 am on Saturday, 4th July. Please click here to be taken to the booking platform . Paid Activity Booking Instructions: 1) Click the third-party link above to book and pay for your space. 2) Once booked and paid, click “Add to schedule” to add it to your planner. Important Notes: By booking with a third party, you agree to their terms and conditions, including refund and cancellation policies. Clicking “Add to schedule” will not secure your space; you must complete the third-party booking first. Any queries regarding paid activities should be directed to the activity provider.",
    "categories": [
     "INSPIRATION & CONFIDENCE"
@@ -3449,7 +3449,7 @@
    "paid": true,
    "phase": 1,
    "kind": "repeating",
-   "external": false,
+   "external": true,
    "description": "This session is for complete beginners to riding motorcycles, but you must be able to ride a bicycle to participate . (If you already have some riding experience, check out the other moto school classes for non-beginners.) Get your very first taste of motorcycle riding on a 125cc Honda CRF mini dirt bike! In this workshop designed for total beginners, you’ll learn the very basics of riding, from gears, bike controls and bike handling. The Days on the Dirt team will have you burning around on your 125 in no time, and you’ll leave feeling capable of riding a motorcycle. £65 for 1.5 hours (plus £2 booking fee) Paid Activity Booking Instructions: 1) Bookings open from 10 am on Saturday, 4th July. Please click here to be taken to the booking platform. 2) Click the third-party link above to book and pay for your space. 3) Once booked and paid, click “Add to schedule” to add it to your planner. Important! Please Read: By booking with a third party, you agree to their terms and conditions, including refund and cancellation policies. Clicking “Add to schedule” will not secure your space; you must complete the third-party booking first. Any queries regarding paid activities should be directed to the activity provider. You must sign the waiver you&#x27;ll receive by email directly from Inch Perfect to participate. Days on the Dirt provide bikes, insurance, helmets, boots, pants and jerseys in a broad range of sizes. A limited amount of riding kit will be available on-site through the FOX kit loans on a first-come, first-served basis. Wear whatever you like under the kit, as long as you&#x27;re comfortable (fitness gear always works well) PLEASE ARRIVE AT THE MEETING POINT AT LEAST 15 MINUTES BEFORE YOUR START TIME",
    "categories": [
     "MOTO"
@@ -5925,7 +5925,7 @@
    "paid": true,
    "phase": 1,
    "kind": "dropin",
-   "external": false,
+   "external": true,
    "description": "During this two-hour circle, we’ll celebrate our achievements, move through stuck emotions, make some noise, shake off what we’re carrying, and reconnect with ourselves through somatic and healing practices. Our smaller group size allows for a more nurturing and connected experience than the larger festival workshops, ensuring every participant feels seen, supported, and able to engage at a level that feels comfortable for them. Expect laughter, maybe a few tears, plenty of support, and a goody bag worth over £20, leaving you feeling truly looked after. Spaces are intentionally limited to maintain the intimacy and quality of the experience. We ask that you show up as you are and leave as yourself. Paid Activity Booking Instructions 1) Click t his link to book and pay for your space. Bookings open 10 am, Sat 4th July. 2) Once booked and paid, click “Add to schedule” to add it to your planner. Important! - By booking with a third party, you agree to their terms and conditions, including refund and cancellation policies. - Clicking “Add to schedule” will not secure your space; you must complete the third-party booking first. - Any queries regarding paid activities should be directed to the activity provider. About your hosts Leading the workshop are Bec and Raichelle. Raichelle is a horse-mad Reiki and Blissweave practitioner who is passionate about bringing calm, relaxation and bliss to her healing work. With a keen interest in nature and the natural world, she weaves these elements into the nurturing support she provides through her sessions. Bec is a neurospicy anime geek and, through Balance Your Being, teaches Reiki, Crystal Healing and Rahanni, as well as delivering workshops on stress, hormones, meditation and coaching. She is a passionate advocate for mental and menstrual health and, alongside Raichelle, has facilitated healing circles, women&#x27;s circles, menstrual health support circles, Reiki shares, wellbeing workshops and one-to-one sessions. Together, they create safe nooks for people to show up, connect with themselves, and process emotions in a healthy and empowering way.",
    "categories": [
     "WELLNESS"
@@ -7872,7 +7872,7 @@
    "paid": true,
    "phase": 1,
    "kind": "repeating",
-   "external": false,
+   "external": true,
    "description": "This class is open to riders who already have off-road or trials experience and good bike control skills. This session is not open to absolute beginners or beginners to trails, but check out the other Inch Perfect sessions if that&#x27;s you! Seasoned dirt-rider looking to progress your skills? We&#x27;ve got you! Get ready for some advanced tuition and higher-level skills training to master the art of the wheelie on one of our specialist trials bikes. £109 for 2 hours. Paid Activity Booking Instructions: 1) Bookings open from 10am on Saturday, 4th July. Please click here to be taken to the booking platform. 2) Click the third-party link above to book and pay for your space. 3) Once booked and paid, click “Add to schedule” to add it to your planner. Important! Please Read: By booking with a third party, you agree to their terms and conditions, including refund and cancellation policies. Clicking “Add to schedule” will not secure your space; you must complete the third-party booking first. Any queries regarding paid activities should be directed to the activity provider. You must sign the waiver you&#x27;ll receive by email directly from Inch Perfect to participate. Inch Perfect provide bikes, insurance, helmets, boots, pants and jerseys in a broad range of sizes. Wear whatever you like under the kit, as long as you&#x27;re comfortable (fitness gear always works well)",
    "categories": [
     "MOTO"
@@ -8494,7 +8494,7 @@
    "paid": true,
    "phase": 1,
    "kind": "oneoff",
-   "external": false,
+   "external": true,
    "description": "During this beginner small group workshop, you will cover the fundamentals of mountain biking, including: Correct Body Position Vision Effective Braking Intro to Cornering Momentum Perfect for beginners, but open to all skill levels and abilities. £20 for 1.5 hours Paid Activity Booking Instructions: 1) Bookings open from 10 am on Saturday, 4th July. 2) Click here to book and pay for your space. 3) Once booked and paid, click “Add to schedule” to add it to your planner. Important! Please Read: Spaces are very limited to ensure a quality coaching experience Options to bring your own bike to the session, or arrange to use one provided - please select the right choice for you on the booking platform Wear weather- and cycling-appropriate clothing Wear full shoes suitable for mountain biking - no heels, sandals, or open-toe shoes By booking with a third party, you agree to their terms and conditions, including refund and cancellation policies. Clicking “Add to schedule” will not secure your space; you must complete the third-party booking first. Any queries regarding paid activities should be directed to the activity provider.",
    "categories": [
     "BMX & MOUNTAIN BIKING"
@@ -8632,7 +8632,7 @@
    "paid": true,
    "phase": 1,
    "kind": "oneoff",
-   "external": false,
+   "external": true,
    "description": "This is an intermediate small-group coaching session for those who have already hit blue grade trails as a minimum, and would be fantastic for those who&#x27;ve started on red trails but have never had any professional coaching. Not yet? Check out the Beginner Workshop. Already nailing it? Check out the Advanced Session instead! This session focuses on skills to progress and improve your flow on the trails. Body Position Vision Effective Braking Cornering Momentum Pumping and Line Choice £20 for 1.5 hours Paid Activity Booking Instructions: 1) Bookings open from 10 am on Saturday, 4th July. 2) Click here to book and pay for your space. 3) Once booked and paid, click “Add to schedule” to add it to your planner. Important! Please Read: Spaces are very limited to ensure a quality coaching experience Options to bring your own bike to the session, or arrange to use one provided - please select the right choice for you on the booking platform Wear weather- and cycling-appropriate clothing Wear full shoes suitable for mountain biking - no heels, sandals, or open-toe shoes By booking with a third party, you agree to their terms and conditions, including refund and cancellation policies. Clicking “Add to schedule” will not secure your space; you must complete the third-party booking first. Any queries regarding paid activities should be directed to the activity provider. PLEASE ARRIVE AT THE MEETING POINT AT LEAST 10 MINUTES BEFORE YOUR SESSION STARTS",
    "categories": [
     "BMX & MOUNTAIN BIKING"
@@ -8842,7 +8842,7 @@
    "paid": true,
    "phase": 1,
    "kind": "oneoff",
-   "external": false,
+   "external": true,
    "description": "This is an advanced small-group coaching session for those who have hit red grade trails as a minimum. Ideal for those ready to progress who&#x27;ve never had any professional coaching. Not hit red trails just yet? Check out the Beginner or Intermediate Workshops instead. You&#x27;ll learn advanced skills to progress and improve your flow on the trails, including: Cornering Correct Body Position Effective Braking Line Choice Intro to jumps and drops £20 for 1.5 hours Paid Activity Booking Instructions: 1) Bookings open from 10 am on Saturday, 4th July. 2) Click here to book and pay for your space. 3) Once booked and paid, click “Add to schedule” to add it to your planner. Important! Please Read: Spaces are very limited to ensure a quality coaching experience Options to bring your own bike and helmet to the session, or arrange to use one provided - please select the right choice for you on the booking platform Wear weather- and cycling-appropriate clothing Wear full shoes suitable for mountain biking - no heels, sandals, or open-toe shoes By booking with a third party, you agree to their terms and conditions, including refund and cancellation policies. Clicking “Add to schedule” will not secure your space; you must complete the third-party booking first. Any queries regarding paid activities should be directed to the activity provider. PLEASE ARRIVE AT THE MEETING POINT AT LEAST 10 MINUTES BEFORE YOUR SESSION STARTS",
    "categories": [
     "BMX & MOUNTAIN BIKING"
