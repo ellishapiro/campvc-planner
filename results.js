@@ -172,7 +172,9 @@
   function blockEl(x, startB) {
     var isWindow = x.type === "dropin";
     var booking = isWindow && x.booking; // window that needs booking (appointment)
-    var cls = "block " + (isWindow ? (booking ? "appt" : "dropin") : (x.priority || "none"));
+    // Background always carries priority; drop-in/appointment is a border cue.
+    var cls = "block " + (x.priority || "none");
+    if (isWindow) cls += booking ? " appt" : " dropin";
     if (x.paid) cls += " paid";
     var b = el("div", cls);
     b.style.top = (x.start_min - startB) * PX + "px";

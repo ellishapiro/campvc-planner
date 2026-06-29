@@ -151,7 +151,8 @@ label.fld { display: flex; flex-direction: column; gap: 3px; font-size: 11px; co
 .daytabs button { cursor: pointer; }
 .daytabs button.active { background: var(--accent); color: #2a0014; border-color: var(--accent); font-weight: 700; }
 .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--ink-dim); margin: 8px 0 14px; }
-.legend .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 5px; }
+.legend .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 5px; box-sizing: border-box; }
+.legend .legsep { color: var(--ink-dim); opacity: .8; border-left: 1px solid var(--line); padding-left: 14px; }
 
 .calwrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); }
 .cal { position: relative; display: grid; }
@@ -189,9 +190,13 @@ label.fld { display: flex; flex-direction: column; gap: 3px; font-size: 11px; co
   line-height: 1.4; padding: 0 4px; border-radius: 4px; background: #10131a; color: #ffd479;
 }
 .block.paid .bt { padding-left: 16px; }
-.block.dropin { background: #5ec2b0; color: #06302a; border: 2px dashed #2c7a6c; }
-.block.appt { background: #c7a653; color: #2a1d00; border: 2px dashed #8a6a1f; }
-.block .droptag.book { background: rgba(0,0,0,.3); color: #ffe9b0; }
+/* Drop-in / appointment keep the priority fill; type is shown by the border +
+   tag, so priority is never hidden. Dashed = provisional earmark you turn up to;
+   solid amber = an appointment you have to book. */
+.block.dropin { border: 2px dashed rgba(16,19,26,.5); }
+.block.dropin .bm { opacity: .95; }
+.block.appt { border: 2px solid #7a5e12; }
+.block .droptag.book { background: rgba(0,0,0,.32); color: #ffe9b0; }
 .block .droptag { display: inline-block; font-size: 9px; font-weight: 700; text-transform: uppercase;
   letter-spacing: .03em; background: rgba(0,0,0,.22); color: #eafff9; border-radius: 4px; padding: 0 4px; margin-left: 4px; }
 .block.split::after { content: "↗"; position: absolute; top: 2px; right: 4px; font-size: 10px; }
