@@ -200,6 +200,12 @@ label.fld { display: flex; flex-direction: column; gap: 3px; font-size: 11px; co
 .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 16px; }
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; }
 .card h3 { margin: 0 0 8px; font-size: 15px; }
+details.card { align-self: start; }
+details.card > summary { cursor: pointer; list-style: none; font-size: 15px; }
+details.card > summary::-webkit-details-marker { display: none; }
+details.card > summary::before { content: "\25B8"; margin-right: 7px; color: var(--ink-dim); }
+details.card[open] > summary::before { content: "\25BE"; }
+details.card[open] > summary { margin-bottom: 10px; }
 .phase { margin-top: 10px; }
 .phase h4 { margin: 0 0 6px; font-size: 12px; color: var(--ink-dim); text-transform: uppercase; letter-spacing: .04em; }
 .bk { padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 13px; }

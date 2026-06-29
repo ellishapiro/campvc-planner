@@ -206,9 +206,15 @@
     NAMES.forEach(function (n) {
       var p = state.result.byPerson[n];
       var hasAny = p.all.length || p.dropins.length || p.ifTime.length || p.dropped.length;
-      var card = el("div", "card");
-      card.appendChild(el("h3", null, esc(n)));
-      if (!hasAny) { card.appendChild(el("div", "hint", "No picks yet.")); wrap.appendChild(card); return; }
+      // Collapsible per person - expanded on wide screens, collapsed on mobile.
+      var card = el("details", "card");
+      card.open = window.innerWidth > 700;
+      var toBook = p.paid.length + p.free.length;
+      var sum = el("summary");
+      sum.innerHTML = "<strong>" + esc(n) + "</strong>" +
+        (hasAny ? ' <span class="hint">- ' + toBook + " to book, " + p.all.length + " scheduled</span>" : ' <span class="hint">- no picks yet</span>');
+      card.appendChild(sum);
+      if (!hasAny) { wrap.appendChild(card); return; }
 
       card.appendChild(phaseBlock("Phase 1 - Paid (book first)", p.paid));
       card.appendChild(phaseBlock("Phase 2 - Free (book a week later)", p.free));

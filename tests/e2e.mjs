@@ -155,7 +155,7 @@ async function main() {
     await cdp.waitFor("!document.getElementById('main').hidden", "results rendered");
     const blocks = await cdp.evalp("document.querySelectorAll('#cal .block').length");
     check("calendar has blocks", blocks > 0);
-    check("Elli has a booking card", await cdp.evalp("[].some.call(document.querySelectorAll('.card h3'),function(h){return h.textContent==='Elli';})"));
+    check("Elli has a booking card", await cdp.evalp("[].some.call(document.querySelectorAll('#people .card summary'),function(h){return /Elli/.test(h.textContent);})"));
     // Archery should be shared - appears with a 'with' note somewhere
     check("a shared session shows 'with' someone", await cdp.evalp("[].some.call(document.querySelectorAll('.bk .with'),function(w){return /with/.test(w.textContent);})"));
     check("off-site appears in a booking list", await cdp.evalp("/off-site/i.test(document.getElementById('people').textContent)"));
