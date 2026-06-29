@@ -25,6 +25,16 @@ window.CONFIG = {
   // Don't earmark drop-ins before this hour (keeps "all day" drop-ins out of dawn).
   dropInEarliestHour: 9,
 
+  // Festival open hours (the Main Event Site). Outside these the calendar is
+  // greyed out and no drop-ins are earmarked. Empty = no bound that side
+  // (it runs continuously overnight in the middle). Friday opens noon (first
+  // activities 12:30); Sunday closes 16:30 (last activities 16:00).
+  festivalHours: {
+    Friday:   { open: "12:00", close: "" },
+    Saturday: { open: "",      close: "" },
+    Sunday:   { open: "",      close: "16:30" },
+  },
+
   // Fallback calendar bounds (hours) if they can't be derived from the data.
   dayStartHourFallback: 8,
   dayEndHourFallback: 23,

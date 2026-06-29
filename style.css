@@ -165,8 +165,15 @@ label.fld { display: flex; flex-direction: column; gap: 3px; font-size: 11px; co
 .cal .timecol { border-left: 0; }
 .cal .hourline { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--line); }
 .cal .hourlbl { position: absolute; left: 4px; font-size: 11px; color: var(--ink-dim); }
+.cal .closed {
+  position: absolute; left: 0; right: 0; z-index: 1;
+  background: repeating-linear-gradient(45deg, rgba(120,130,140,.16), rgba(120,130,140,.16) 8px, rgba(120,130,140,.06) 8px, rgba(120,130,140,.06) 16px);
+}
+.cal .closed span {
+  position: sticky; top: 0; display: block; font-size: 10px; color: var(--ink-dim); padding: 3px 5px;
+}
 .block {
-  position: absolute; left: 3px; right: 3px; border-radius: 8px; padding: 4px 6px;
+  position: absolute; left: 3px; right: 3px; border-radius: 8px; padding: 4px 6px; z-index: 2;
   font-size: 11px; overflow: hidden; border: 2px solid transparent; box-shadow: var(--shadow);
   color: #10131a;
 }

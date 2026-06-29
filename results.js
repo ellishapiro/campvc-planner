@@ -97,6 +97,22 @@
     NAMES.forEach(function (n) { cal.appendChild(el("div", "colhead", esc(n))); });
     if (state.showRef) cal.appendChild(el("div", "colhead", "Full schedule"));
 
+    // Festival open/close for this day - grey out before opening / after closing.
+    var fh = (CONFIG.festivalHours || {})[day] || {};
+    var openMin = pmin(fh.open), closeMin = pmin(fh.close);
+    function addClosed(col, withLabel) {
+      if (openMin != null && openMin > startB) {
+        var d = el("div", "closed"); d.style.top = "0px"; d.style.height = (openMin - startB) * PX + "px";
+        if (withLabel) d.innerHTML = '<span>site opens ' + fmt(openMin) + "</span>";
+        col.appendChild(d);
+      }
+      if (closeMin != null && closeMin < endB) {
+        var d2 = el("div", "closed"); d2.style.top = (closeMin - startB) * PX + "px"; d2.style.height = (endB - closeMin) * PX + "px";
+        if (withLabel) d2.innerHTML = '<span>site closed ' + fmt(closeMin) + "</span>";
+        col.appendChild(d2);
+      }
+    }
+
     // Time column
     var tc = el("div", "timecol"); tc.style.height = H + "px";
     for (var m = startB; m <= endB; m += 60) {
@@ -107,11 +123,12 @@
     cal.appendChild(tc);
 
     // Person columns
-    NAMES.forEach(function (n) {
+    NAMES.forEach(function (n, ni) {
       var col = el("div", "col"); col.style.height = H + "px";
       for (var m2 = startB; m2 <= endB; m2 += 60) {
         var l = el("div", "hourline"); l.style.top = (m2 - startB) * PX + "px"; col.appendChild(l);
       }
+      addClosed(col, ni === 0);
       var p = state.result.byPerson[n];
       var items = p.all.concat(p.dropins).filter(function (x) { return x.day === day; });
       items.forEach(function (x) { col.appendChild(blockEl(x, startB)); });

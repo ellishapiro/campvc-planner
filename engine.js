@@ -373,6 +373,8 @@
       });
     });
 
+    function festOpen(day) { var t = toMin(((config.festivalHours || {})[day] || {}).open); return t == null ? 0 : t; }
+    function festClose(day) { var t = toMin(((config.festivalHours || {})[day] || {}).close); return t == null ? 24 * 60 : t; }
     function availabilityByDay(a) {
       var map = {};
       (a.windows || []).forEach(function (w) {
@@ -380,8 +382,8 @@
         var e = toMin(w.end);
         if (s == null) s = dropinEarliest;
         if (e == null) e = dropinLatest;
-        s = Math.max(s, dropinEarliest);
-        e = Math.min(e, dropinLatest);
+        s = Math.max(s, dropinEarliest, festOpen(w.day));   // not before the site opens
+        e = Math.min(e, dropinLatest, festClose(w.day));    // not after it closes
         if (e - s < 1) return;
         if (!map[w.day] || s < map[w.day][0]) {
           map[w.day] = map[w.day] ? [Math.min(map[w.day][0], s), Math.max(map[w.day][1], e)] : [s, e];
