@@ -4,6 +4,15 @@
 // saved per device. Loaded in <head> so there's no flash of the wrong theme.
 (function () {
   "use strict";
+
+  // Register the network-first service worker so updates appear without a hard
+  // refresh (GitHub Pages' 10-minute HTML cache otherwise hides them).
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("sw.js").catch(function () {});
+    });
+  }
+
   var KEY = "campvc_theme";
   var saved = null;
   try { saved = localStorage.getItem(KEY); } catch (e) {}

@@ -150,10 +150,9 @@
   function blockEl(x, startB) {
     var cls = "block " + (x.type === "dropin" ? "dropin" : (x.priority || "none"));
     if (x.paid) cls += " paid";
-    if (x.split) cls += " split";
     var b = el("div", cls);
     b.style.top = (x.start_min - startB) * PX + "px";
-    b.style.height = Math.max((x.end_min - x.start_min) * PX, 22) + "px";
+    b.style.height = Math.max((x.end_min - x.start_min) * PX, 30) + "px";
     var withTxt = x.withWhom && x.withWhom.length ? " &middot; with " + x.withWhom.map(esc).join(", ") : "";
     var tag = x.type === "dropin" ? '<span class="droptag">drop-in &middot; flexible</span>' : "";
     var bm;
@@ -214,8 +213,12 @@
   // A drop-in row, styled like the other list rows (priority dot + name + tag).
   function dropRow(x, whenText) {
     var dot = x.priority ? '<span class="pri-dot ' + x.priority + '"></span>' : "";
-    return el("div", "bk", dot + esc(x.name) +
-      ' <span class="badge drop">drop-in</span><div class="when">' + esc(whenText) + "</div>");
+    var tag = x.booking
+      ? '<span class="badge book">book a slot' + (x.external ? " off-app" : "") + "</span>"
+      : '<span class="badge drop">drop-in</span>';
+    var note = x.booking && x.external ? '<div class="bnote">books off-app (partner link)</div>' : "";
+    return el("div", "bk", dot + esc(x.name) + " " + tag +
+      '<div class="when">' + esc(whenText) + "</div>" + note);
   }
 
   function phaseBlock(title, items) {
@@ -228,10 +231,9 @@
       var withTxt = x.withWhom && x.withWhom.length ? '<div class="with">with ' + x.withWhom.map(esc).join(", ") + "</div>" : "";
       var bkp = (x.kind === "repeating" && x.backups && x.backups.length)
         ? '<div class="bkp">backup: ' + x.backups.map(esc).join("; ") + "</div>" : "";
-      var split = x.split ? ' <span class="flag">(split from group)</span>' : "";
       var act = actById[x.activityId] || {};
-      var ext = act.external ? '<div class="bnote">books off-app (link in the app)</div>' : "";
-      line.innerHTML = dot + "<strong>" + esc(x.name) + "</strong>" + split +
+      var ext = act.external ? '<div class="bnote">books off-app (partner link)</div>' : "";
+      line.innerHTML = dot + "<strong>" + esc(x.name) + "</strong>" +
         '<div class="when">' + x.day + " " + fmt(x.start_min) + "-" + fmt(x.end_min) +
         (x.location ? " &middot; " + esc(x.location) : "") + (x.offsite ? " &middot; off-site" : "") + "</div>" +
         withTxt + ext + bkp;

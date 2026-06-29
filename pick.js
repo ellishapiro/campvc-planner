@@ -57,20 +57,27 @@
     return bits.join(" &middot; ");
   }
 
+  // One tag for HOW you get it, plus paid / off-site. (Session counts are in the
+  // detail line; "free, book in app" is the default and needs no tag.)
   function badges(a) {
     var b = "";
     if (a.paid) b += '<span class="badge paid">Paid</span>';
-    else b += '<span class="badge">Free</span>';
+    if (a.kind === "dropin") {
+      b += a.booking ? '<span class="badge book">Book a slot</span>'
+                     : '<span class="badge drop">Drop-in &middot; anytime</span>';
+    } else if (!a.booking) {
+      b += '<span class="badge turnup">Turn up &middot; no booking</span>';
+    }
+    if (a.external) b += '<span class="badge off">books off-app</span>';
     if (a.offsite) b += '<span class="badge off">Off-site</span>';
-    if (a.external) b += '<span class="badge off">Books off-app</span>';
-    if (a.kind === "repeating") b += '<span class="badge rep">Repeats &times;' + a.instances.length + '</span>';
-    if (a.kind === "dropin") b += '<span class="badge drop">Drop-in &middot; just turn up</span>';
-    if (a.maxPerSession && a.maxPerSession > 0 && a.maxPerSession <= 12) b += '<span class="badge lim">Limited &middot; ' + a.maxPerSession + '/session</span>';
     return b;
   }
 
   function bookingNote(a) {
-    if (a.kind === "dropin") return "Just turn up - no booking needed.";
+    if (a.kind === "dropin" && !a.booking) return "Just turn up - no booking needed.";
+    if (a.kind === "dropin" && a.booking) return "Book a slot/appointment" +
+      (a.external ? " off-app via the partner link" : " in the app") + (a.paid ? " (paid)" : "") + " - within the open hours.";
+    if (!a.booking) return "No booking - just turn up on time.";
     if (a.external) return "Book OFF-APP via the partner link" + (a.paid ? " (paid, opens 4 July)" : " (opens 11 July)") +
       ". 'Add to schedule' in the app does NOT secure your space - complete the third-party booking first.";
     return a.paid ? "Paid - books in the app, phase 1 (from 4 July)." : "Included - books in the app, phase 2 (from 11 July).";

@@ -124,8 +124,10 @@
         mine.forEach(function (it) {
           var when = it.p.type === "iftime" ? "no free slot - turn up if you can" : (it.p.day + " " + fmt(it.p.start_min) + "-" + fmt(it.p.end_min));
           var dot = it.p.priority ? '<span class="pri-dot ' + it.p.priority + '"></span>' : "";
-          grp.appendChild(el("div", "bk", dot + esc(it.p.name) +
-            ' <span class="badge drop">drop-in</span><div class="when">' + when + "</div>"));
+          var tag = it.p.booking
+            ? '<span class="badge book">book a slot' + (it.p.external ? " off-app" : "") + "</span>"
+            : '<span class="badge drop">drop-in</span>';
+          grp.appendChild(el("div", "bk", dot + esc(it.p.name) + " " + tag + '<div class="when">' + when + "</div>"));
         });
         d.appendChild(grp);
       });
@@ -144,14 +146,13 @@
     var body = el("div", state.booked[k] ? "bkbody booked" : "bkbody");
     var act = actById[p.activityId] || {};
     var withTxt = p.withWhom && p.withWhom.length ? '<span class="with"> &middot; with ' + p.withWhom.map(esc).join(", ") + "</span>" : "";
-    var split = p.split ? ' <span class="flag">(split from group)</span>' : "";
     var limited = (act.totalPlaces != null && act.totalPlaces <= 60)
       ? ' <span class="badge lim">limited &middot; ~' + act.totalPlaces + " places</span>" : "";
-    var ext = act.external ? '<div class="bnote">Books off-app - via a link in the Guidebook app.</div>' : "";
+    var ext = act.external ? '<div class="bnote">Books off-app - via the partner link.</div>' : "";
     var bkp = (p.kind === "repeating" && p.backups && p.backups.length)
       ? '<div class="bkp">if full, backup: ' + p.backups.map(esc).join("; ") + "</div>" : "";
     var dot = p.priority ? '<span class="pri-dot ' + p.priority + '"></span>' : "";
-    body.innerHTML = dot + "<strong>" + esc(p.name) + "</strong>" + split + limited +
+    body.innerHTML = dot + "<strong>" + esc(p.name) + "</strong>" + limited +
       '<div class="when">' + p.day + " " + fmt(p.start_min) + "-" + fmt(p.end_min) +
       (p.location ? " &middot; " + esc(p.location) : "") + (p.offsite ? " &middot; off-site" : "") + withTxt + "</div>" + ext + bkp;
     row.appendChild(cb); row.appendChild(body);

@@ -85,7 +85,7 @@
    "offsite": false,
    "paid": true,
    "phase": 1,
-   "kind": "repeating",
+   "kind": "dropin",
    "booking": true,
    "external": false,
    "description": "We&#x27;ve got seven incredible artists in our very own Tattoo Studio this year, each offering exclusive \"once in a lifetime\" Camp VC flash. Perfect for those already inked and those considering THEIR VERY FIRST TATTOO!!! We recommend booking your slot online in advance, but there will also be a limited number of walk-up appointments available. Click here to book . If you haven&#x27;t booked ahead, just swing by and see what&#x27;s available!",
@@ -94,33 +94,27 @@
    ],
    "maxPerSession": null,
    "totalPlaces": null,
-   "instances": [
+   "instances": [],
+   "windows": [
     {
      "day": "Friday",
-     "start_min": 0,
-     "end_min": 1260,
-     "label": "Friday 00:00-21:00",
-     "location": "VC TATTOO STUDIO",
-     "capacity": -1
+     "start": "00:00",
+     "end": "21:00",
+     "location": "VC TATTOO STUDIO"
     },
     {
      "day": "Saturday",
-     "start_min": 600,
-     "end_min": 1260,
-     "label": "Saturday 10:00-21:00",
-     "location": "VC TATTOO STUDIO",
-     "capacity": -1
+     "start": "10:00",
+     "end": "21:00",
+     "location": "VC TATTOO STUDIO"
     },
     {
      "day": "Sunday",
-     "start_min": 600,
-     "end_min": 900,
-     "label": "Sunday 10:00-15:00",
-     "location": "VC TATTOO STUDIO",
-     "capacity": -1
+     "start": "10:00",
+     "end": "15:00",
+     "location": "VC TATTOO STUDIO"
     }
-   ],
-   "windows": []
+   ]
   },
   {
    "id": "calm-space",
@@ -165,7 +159,7 @@
    "offsite": false,
    "paid": true,
    "phase": 1,
-   "kind": "repeating",
+   "kind": "dropin",
    "booking": true,
    "external": true,
    "description": "The incredible team from Balance Your Being are offering 1-1 Reiki, Crystal Healing, Blissweave & Rahanni treatments throughout the weekend. We suggest booking ahead online, but some walk-in spaces may be available - so pop over and say hi to the team! Scroll down for more info on each incredible treatment. Paid Activity Booking Instructions Click the third-party link above to book and pay for your space. Important Notes - By booking with a third party, you agree to their terms and conditions, including refund and cancellation policies. - Clicking “Add to schedule” will not secure your space; you must complete the third-party booking first. - Any queries regarding paid activities should be directed to the activity provider. Blissweave Bliss Weaving is a complete guided transformation method, a gentle personal growth modality that helps you reconnect with yourself, your inner wisdom, and the next loving step in your life. Through visioning, breathing, feeling, and simple aligned action, Bliss Weaving helps you soften what feels stuck and begin weaving more clarity, confidence, joy, and connection into your everyday world. Crystal Healing Re-align your chakras and wellbeing with a crystal prescription specific to your needs. When crystals are placed on the body or within the auric field, they help to alleviate physical, emotional, mental, and spiritual ailments by removing energy blockages or negative energy within the chakras and affected areas. Each session consists of a consultation, chakra re-alignment, and a bespoke crystal prescription. Reiki Restore your body’s life force energy through this ancient Japanese practice. Reiki is Japanese for ‘universal life energy’ and is based on the belief that this energy flows freely within each of us. When we become stressed or ill, this energy can become blocked in certain parts of the body, stopping the natural flow, which can lead to further health problems. Rahanni Rahanni, meaning ‘of one heart’, is a divine healing modality that allows us to open the heart and move through challenging times. A wonderful taster session of this gentle energy, which connects with the Angels, Archangels, and Ascended Masters of Earth, whom we individually call upon.",
@@ -174,33 +168,27 @@
    ],
    "maxPerSession": null,
    "totalPlaces": null,
-   "instances": [
+   "instances": [],
+   "windows": [
     {
      "day": "Friday",
-     "start_min": 30,
-     "end_min": 1080,
-     "label": "Friday 00:30-18:00",
-     "location": "BALANCE YOUR BEING TENT",
-     "capacity": -1
+     "start": "00:30",
+     "end": "18:00",
+     "location": "BALANCE YOUR BEING TENT"
     },
     {
      "day": "Saturday",
-     "start_min": 480,
-     "end_min": 1080,
-     "label": "Saturday 08:00-18:00",
-     "location": "BALANCE YOUR BEING TENT",
-     "capacity": -1
+     "start": "08:00",
+     "end": "18:00",
+     "location": "BALANCE YOUR BEING TENT"
     },
     {
      "day": "Sunday",
-     "start_min": 480,
-     "end_min": 960,
-     "label": "Sunday 08:00-16:00",
-     "location": "BALANCE YOUR BEING TENT",
-     "capacity": -1
+     "start": "08:00",
+     "end": "16:00",
+     "location": "BALANCE YOUR BEING TENT"
     }
-   ],
-   "windows": []
+   ]
   },
   {
    "id": "baddies-book-swap",
@@ -415,7 +403,7 @@
    "offsite": false,
    "paid": false,
    "phase": 2,
-   "kind": "repeating",
+   "kind": "dropin",
    "booking": true,
    "external": false,
    "description": "No booking required, just rock up whenever you fancy during opening hours.",
@@ -425,33 +413,27 @@
    ],
    "maxPerSession": null,
    "totalPlaces": null,
-   "instances": [
+   "instances": [],
+   "windows": [
     {
      "day": "Friday",
-     "start_min": 720,
-     "end_min": 1110,
-     "label": "Friday 12:00-18:30",
-     "location": "AXE THROWING RANGE",
-     "capacity": -1
+     "start": "12:00",
+     "end": "18:30",
+     "location": "AXE THROWING RANGE"
     },
     {
      "day": "Saturday",
-     "start_min": 540,
-     "end_min": 1110,
-     "label": "Saturday 09:00-18:30",
-     "location": "AXE THROWING RANGE",
-     "capacity": -1
+     "start": "09:00",
+     "end": "18:30",
+     "location": "AXE THROWING RANGE"
     },
     {
      "day": "Sunday",
-     "start_min": 540,
-     "end_min": 960,
-     "label": "Sunday 09:00-16:00",
-     "location": "AXE THROWING RANGE",
-     "capacity": -1
+     "start": "09:00",
+     "end": "16:00",
+     "location": "AXE THROWING RANGE"
     }
-   ],
-   "windows": []
+   ]
   },
   {
    "id": "climbing-wall",
@@ -1535,7 +1517,7 @@
    "offsite": false,
    "paid": true,
    "phase": 1,
-   "kind": "repeating",
+   "kind": "dropin",
    "booking": true,
    "external": true,
    "description": "Island Feather are back with an incredible range of massage services, including a 25-minute seated massage (£35) and 50-minute Massage Therapy Session (£65). For 50 minute treatments choose from Deep/Soft Tissue, Clinical Massage, or a treatment focused on specific/a combination areas - including neck, shoulders, back, legs, hands and feet. Paid Activity Booking Instructions Click here to book 25 minute sessions. Click here to book 50 minute sessions. Important Notes: - By booking with a third party, you agree to their terms and conditions, including refund and cancellation policies. - Clicking “Add to schedule” will not secure your space; you must complete the third-party booking first. - Any queries regarding paid activities should be directed to the activity provider.",
@@ -1544,33 +1526,27 @@
    ],
    "maxPerSession": null,
    "totalPlaces": null,
-   "instances": [
+   "instances": [],
+   "windows": [
     {
      "day": "Friday",
-     "start_min": 750,
-     "end_min": 1080,
-     "label": "Friday 12:30-18:00",
-     "location": "MASSAGE TENT",
-     "capacity": -1
+     "start": "12:30",
+     "end": "18:00",
+     "location": "MASSAGE TENT"
     },
     {
      "day": "Saturday",
-     "start_min": 480,
-     "end_min": 1080,
-     "label": "Saturday 08:00-18:00",
-     "location": "MASSAGE TENT",
-     "capacity": -1
+     "start": "08:00",
+     "end": "18:00",
+     "location": "MASSAGE TENT"
     },
     {
      "day": "Sunday",
-     "start_min": 480,
-     "end_min": 1080,
-     "label": "Sunday 08:00-18:00",
-     "location": "MASSAGE TENT",
-     "capacity": -1
+     "start": "08:00",
+     "end": "18:00",
+     "location": "MASSAGE TENT"
     }
-   ],
-   "windows": []
+   ]
   },
   {
    "id": "she-shreds-hair-beauty",
@@ -1693,7 +1669,7 @@
     "SKATEBOARDING"
    ],
    "maxPerSession": 12,
-   "totalPlaces": 238,
+   "totalPlaces": 228,
    "instances": [
     {
      "day": "Friday",
@@ -1734,14 +1710,6 @@
      "label": "Friday 17:00-17:50",
      "location": "FLAT GROUND A",
      "capacity": 12
-    },
-    {
-     "day": "Saturday",
-     "start_min": 0,
-     "end_min": 300,
-     "label": "Saturday 00:00-05:00",
-     "location": "FLAT GROUND A",
-     "capacity": 10
     },
     {
      "day": "Saturday",
@@ -1872,7 +1840,14 @@
      "capacity": 12
     }
    ],
-   "windows": []
+   "windows": [
+    {
+     "day": "Saturday",
+     "start": "00:00",
+     "end": "05:00",
+     "location": "FLAT GROUND A"
+    }
+   ]
   },
   {
    "id": "beginners-bmx",
@@ -2687,14 +2662,6 @@
    "totalPlaces": null,
    "instances": [
     {
-     "day": "Friday",
-     "start_min": 780,
-     "end_min": 1020,
-     "label": "Friday 13:00-17:00",
-     "location": "BAD BITCH ASSEMBLY",
-     "capacity": -1
-    },
-    {
      "day": "Saturday",
      "start_min": 600,
      "end_min": 720,
@@ -2711,7 +2678,14 @@
      "capacity": -1
     }
    ],
-   "windows": []
+   "windows": [
+    {
+     "day": "Friday",
+     "start": "13:00",
+     "end": "17:00",
+     "location": "BAD BITCH ASSEMBLY"
+    }
+   ]
   },
   {
    "id": "self-love-revolution-bus",
@@ -2719,42 +2693,36 @@
    "offsite": false,
    "paid": false,
    "phase": 2,
-   "kind": "repeating",
+   "kind": "dropin",
    "booking": true,
    "external": false,
    "description": "The Self Love Revolution Bus is back, baby! Open all weekend, visit Susie , Lu&#x27;s gorgeous, 32-foot, vintage American bus, and meet the incredible Self Love Revolution team. Bring a drink and have a natter! Great for solo attendees, but open to all. NOTE: No booking is required for drop-in activities. Come along during the opening hours, and we&#x27;ll allocate spaces on a first-come, first-served basis.",
    "categories": [
     "INSPIRATION & CONFIDENCE"
    ],
-   "maxPerSession": 15,
-   "totalPlaces": 45,
-   "instances": [
+   "maxPerSession": null,
+   "totalPlaces": null,
+   "instances": [],
+   "windows": [
     {
      "day": "Friday",
-     "start_min": 780,
-     "end_min": 1080,
-     "label": "Friday 13:00-18:00",
-     "location": "SELF LOVE REVOLUTION BUS",
-     "capacity": 15
+     "start": "13:00",
+     "end": "18:00",
+     "location": "SELF LOVE REVOLUTION BUS"
     },
     {
      "day": "Saturday",
-     "start_min": 600,
-     "end_min": 1080,
-     "label": "Saturday 10:00-18:00",
-     "location": "SELF LOVE REVOLUTION BUS",
-     "capacity": 15
+     "start": "10:00",
+     "end": "18:00",
+     "location": "SELF LOVE REVOLUTION BUS"
     },
     {
      "day": "Sunday",
-     "start_min": 600,
-     "end_min": 960,
-     "label": "Sunday 10:00-16:00",
-     "location": "SELF LOVE REVOLUTION BUS",
-     "capacity": 15
+     "start": "10:00",
+     "end": "16:00",
+     "location": "SELF LOVE REVOLUTION BUS"
     }
-   ],
-   "windows": []
+   ]
   },
   {
    "id": "the-unshrunk-collection",
@@ -2762,42 +2730,36 @@
    "offsite": false,
    "paid": false,
    "phase": 2,
-   "kind": "repeating",
+   "kind": "dropin",
    "booking": true,
    "external": false,
    "description": "Come and meet Marva, our Menopause Coach & Formulator. Having almost died after being misdiagnosed during perimenopause, Marva set about creating her own solutions to her health condition. Sitting at her mum&#x27;s kitchen table, unable to walk, she started using recipes & knowledge handed down from her ancestors in the Caribbean to create a range of natural products to ease her symptoms. The Unshrunk Collection will be available to purchase at the bus all weekend. NOTE: No booking is required for drop-in activities. Come along during the opening hours, and we&#x27;ll allocate spaces on a first-come, first-served basis",
    "categories": [
     "WELLNESS"
    ],
-   "maxPerSession": 15,
-   "totalPlaces": 45,
-   "instances": [
+   "maxPerSession": null,
+   "totalPlaces": null,
+   "instances": [],
+   "windows": [
     {
      "day": "Friday",
-     "start_min": 780,
-     "end_min": 1080,
-     "label": "Friday 13:00-18:00",
-     "location": "SELF LOVE REVOLUTION BUS",
-     "capacity": 15
+     "start": "13:00",
+     "end": "18:00",
+     "location": "SELF LOVE REVOLUTION BUS"
     },
     {
      "day": "Saturday",
-     "start_min": 600,
-     "end_min": 1080,
-     "label": "Saturday 10:00-18:00",
-     "location": "SELF LOVE REVOLUTION BUS",
-     "capacity": 15
+     "start": "10:00",
+     "end": "18:00",
+     "location": "SELF LOVE REVOLUTION BUS"
     },
     {
      "day": "Sunday",
-     "start_min": 600,
-     "end_min": 960,
-     "label": "Sunday 10:00-16:00",
-     "location": "SELF LOVE REVOLUTION BUS",
-     "capacity": 15
+     "start": "10:00",
+     "end": "16:00",
+     "location": "SELF LOVE REVOLUTION BUS"
     }
-   ],
-   "windows": []
+   ]
   },
   {
    "id": "whimsical-wardrobe-of-dreams",
@@ -2805,42 +2767,36 @@
    "offsite": false,
    "paid": false,
    "phase": 2,
-   "kind": "repeating",
+   "kind": "dropin",
    "booking": true,
    "external": false,
    "description": "Step into Lu’s Whimsical Wardrobe of Dreams and into a world of freedom, love and joy! Through whimsy, play, and dress-up, we invite you to connect with your inner child and transport yourself to a time before we all became conditioned to give too much of a fuck about what people think. Before we were told how to dress, how to behave, and how to age. Get dressed up! Be brave! Feel wild! And take all the selfies your whimsical heart desires! NOTE: No booking is required for drop-in activities. Come along during the opening hours, and we&#x27;ll allocate spaces on a first-come, first-served basis",
    "categories": [
     "INSPIRATION & CONFIDENCE"
    ],
-   "maxPerSession": 15,
-   "totalPlaces": 45,
-   "instances": [
+   "maxPerSession": null,
+   "totalPlaces": null,
+   "instances": [],
+   "windows": [
     {
      "day": "Friday",
-     "start_min": 780,
-     "end_min": 1080,
-     "label": "Friday 13:00-18:00",
-     "location": "SELF LOVE REVOLUTION BUS",
-     "capacity": 15
+     "start": "13:00",
+     "end": "18:00",
+     "location": "SELF LOVE REVOLUTION BUS"
     },
     {
      "day": "Saturday",
-     "start_min": 600,
-     "end_min": 1080,
-     "label": "Saturday 10:00-18:00",
-     "location": "SELF LOVE REVOLUTION BUS",
-     "capacity": 15
+     "start": "10:00",
+     "end": "18:00",
+     "location": "SELF LOVE REVOLUTION BUS"
     },
     {
      "day": "Sunday",
-     "start_min": 600,
-     "end_min": 1020,
-     "label": "Sunday 10:00-17:00",
-     "location": "SELF LOVE REVOLUTION BUS",
-     "capacity": 15
+     "start": "10:00",
+     "end": "17:00",
+     "location": "SELF LOVE REVOLUTION BUS"
     }
-   ],
-   "windows": []
+   ]
   },
   {
    "id": "adhd-sorry-not-sorry",
@@ -2936,7 +2892,7 @@
     {
      "day": "Sunday",
      "start_min": 1335,
-     "end_min": 665,
+     "end_min": 1440,
      "label": "Sunday 22:15-11:05",
      "location": "AUTO TENT",
      "capacity": 15
@@ -4405,7 +4361,7 @@
    "offsite": false,
    "paid": false,
    "phase": 2,
-   "kind": "repeating",
+   "kind": "oneoff",
    "booking": true,
    "external": false,
    "description": "What&#x27;s the Most ADHD thing you’ve done this week? Laura Reynolds, award-winning podcaster, will be at the bus all weekend long celebrating neurodiversity, interviewing people for her podcast, and answering any questions you may have about ADHD. Think lemonade-stand-meets-podcast! NOTE: No booking is required for drop-in activities. Come along during the opening hours, and we&#x27;ll allocate spaces on a first-come, first-served basis",
@@ -4414,7 +4370,7 @@
     "DROP-IN ACTIVITIES"
    ],
    "maxPerSession": 15,
-   "totalPlaces": 45,
+   "totalPlaces": 15,
    "instances": [
     {
      "day": "Friday",
@@ -4423,25 +4379,22 @@
      "label": "Friday 14:30-18:00",
      "location": "SELF LOVE REVOLUTION BUS",
      "capacity": 15
-    },
+    }
+   ],
+   "windows": [
     {
      "day": "Saturday",
-     "start_min": 600,
-     "end_min": 1020,
-     "label": "Saturday 10:00-17:00",
-     "location": "SELF LOVE REVOLUTION BUS",
-     "capacity": 15
+     "start": "10:00",
+     "end": "17:00",
+     "location": "SELF LOVE REVOLUTION BUS"
     },
     {
      "day": "Sunday",
-     "start_min": 600,
-     "end_min": 960,
-     "label": "Sunday 10:00-16:00",
-     "location": "SELF LOVE REVOLUTION BUS",
-     "capacity": 15
+     "start": "10:00",
+     "end": "16:00",
+     "location": "SELF LOVE REVOLUTION BUS"
     }
-   ],
-   "windows": []
+   ]
   },
   {
    "id": "advanced-ramp-tricks-skateboarding",
@@ -5858,7 +5811,7 @@
     "MAKE & CREATE"
    ],
    "maxPerSession": 40,
-   "totalPlaces": 240,
+   "totalPlaces": 200,
    "instances": [
     {
      "day": "Friday",
@@ -5899,17 +5852,16 @@
      "label": "Sunday 09:30-10:20",
      "location": "BAR & MOTO TENT",
      "capacity": 40
-    },
-    {
-     "day": "Sunday",
-     "start_min": 630,
-     "end_min": 1400,
-     "label": "Sunday 10:30-23:20",
-     "location": "BAR & MOTO TENT",
-     "capacity": 40
     }
    ],
-   "windows": []
+   "windows": [
+    {
+     "day": "Sunday",
+     "start": "10:30",
+     "end": "23:20",
+     "location": "BAR & MOTO TENT"
+    }
+   ]
   },
   {
    "id": "merit-patch-making",
@@ -6753,7 +6705,7 @@
    "offsite": false,
    "paid": false,
    "phase": 2,
-   "kind": "dropin",
+   "kind": "oneoff",
    "booking": false,
    "external": false,
    "description": "What are you in the mood for? WAP? RATM? On Friday night, you&#x27;re the DJ!",
@@ -6762,15 +6714,17 @@
    ],
    "maxPerSession": null,
    "totalPlaces": null,
-   "instances": [],
-   "windows": [
+   "instances": [
     {
      "day": "Friday",
-     "start": "23:00",
-     "end": "00:30",
-     "location": "BIG TOP TENT"
+     "start_min": 1380,
+     "end_min": 1440,
+     "label": "Friday 23:00-00:30",
+     "location": "BIG TOP TENT",
+     "capacity": -1
     }
-   ]
+   ],
+   "windows": []
   },
   {
    "id": "sunrise-aqueduct-canoeing",
@@ -7204,42 +7158,36 @@
    "offsite": false,
    "paid": false,
    "phase": 2,
-   "kind": "repeating",
+   "kind": "dropin",
    "booking": true,
    "external": false,
    "description": "Curious Coco creates beautiful, one-of-a-kind items and vintage pieces at their small studio in the heart of Digbeth, Birmingham’s creative hub. Made with love just for you - come and purchase unique, reworked pre-loved garments, sparkly sequinned kimonos, or capes.",
    "categories": [
     "STYLE & BEAUTY"
    ],
-   "maxPerSession": 15,
-   "totalPlaces": 45,
-   "instances": [
+   "maxPerSession": null,
+   "totalPlaces": null,
+   "instances": [],
+   "windows": [
     {
      "day": "Saturday",
-     "start_min": 600,
-     "end_min": 1080,
-     "label": "Saturday 10:00-18:00",
-     "location": "SELF LOVE REVOLUTION BUS",
-     "capacity": 15
+     "start": "10:00",
+     "end": "18:00",
+     "location": "SELF LOVE REVOLUTION BUS"
     },
     {
      "day": "Sunday",
-     "start_min": 600,
-     "end_min": 960,
-     "label": "Sunday 10:00-16:00",
-     "location": "SELF LOVE REVOLUTION BUS",
-     "capacity": 15
+     "start": "10:00",
+     "end": "16:00",
+     "location": "SELF LOVE REVOLUTION BUS"
     },
     {
      "day": "Sunday",
-     "start_min": 780,
-     "end_min": 1080,
-     "label": "Sunday 13:00-18:00",
-     "location": "SELF LOVE REVOLUTION BUS",
-     "capacity": 15
+     "start": "13:00",
+     "end": "18:00",
+     "location": "SELF LOVE REVOLUTION BUS"
     }
-   ],
-   "windows": []
+   ]
   },
   {
    "id": "intro-to-reiki",
@@ -7673,7 +7621,7 @@
     {
      "day": "Sunday",
      "start_min": 1395,
-     "end_min": 725,
+     "end_min": 1440,
      "label": "Sunday 23:15-12:05",
      "location": "SELF LOVE REVOLUTION TENT",
      "capacity": 15
@@ -8557,7 +8505,7 @@
     {
      "day": "Saturday",
      "start_min": 1320,
-     "end_min": 30,
+     "end_min": 1440,
      "label": "Saturday 22:00-00:30",
      "location": "BIG TOP TENT",
      "capacity": -1
@@ -8749,7 +8697,7 @@
    "offsite": false,
    "paid": false,
    "phase": 2,
-   "kind": "repeating",
+   "kind": "oneoff",
    "booking": true,
    "external": false,
    "description": "Exhale deeply and join us for an hour of peaceful life drawing exercises, designed to help you let go of your inhibitions and find your creative flow while drawing a live model. Suitable for everyone who wants to give their creative brain a massage! Open to all levels and abilities - no experience required.",
@@ -8757,16 +8705,8 @@
     "MAKE & CREATE"
    ],
    "maxPerSession": 40,
-   "totalPlaces": 80,
+   "totalPlaces": 40,
    "instances": [
-    {
-     "day": "Sunday",
-     "start_min": 615,
-     "end_min": 1395,
-     "label": "Sunday 10:15-23:15",
-     "location": "CRAFT TENT 1",
-     "capacity": 40
-    },
     {
      "day": "Sunday",
      "start_min": 765,
@@ -8776,7 +8716,14 @@
      "capacity": 40
     }
    ],
-   "windows": []
+   "windows": [
+    {
+     "day": "Sunday",
+     "start": "10:15",
+     "end": "23:15",
+     "location": "CRAFT TENT 1"
+    }
+   ]
   },
   {
    "id": "self-defense",

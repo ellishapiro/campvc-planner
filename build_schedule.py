@@ -103,10 +103,10 @@ def is_open_window(start_raw, end_raw, start_min, end_min, name):
         return True
     if end_min is None or str(end_raw or "").strip() == "":
         return True
-    if end_min <= start_min:           # crosses midnight / not a normal block
+    if end_min > start_min and (end_min - start_min) >= 180:  # long open window (Calm Space, salons...)
         return True
-    if (end_min - start_min) >= 180:   # long open window (Calm Space, salons...)
-        return True
+    # (an event that crosses midnight, e.g. 23:00-00:30, is a real late session,
+    #  not an open window - it's handled as a slot capped at midnight.)
     if re.search(r"drop.?in", name or "", re.I):
         return True
     return False
@@ -203,12 +203,22 @@ def build(sched_dir):
         a["external"] = a["external"] or external
         a["booking"] = a["booking"] or needs_booking
 
-        if scheduled and start_min is not None:
+        # A real discrete SLOT has a daytime start (not a 00:00 placeholder) and,
+        # on-site, a sensible length. Off-site trips may run long. Everything else
+        # (long open windows like a massage tent, or junk midnight rows) is a
+        # WINDOW - either earmarked (drop-in) or shown as a bookable appointment.
+        crosses_midnight = end_min is not None and end_min <= start_min
+        real_slot = (scheduled and start_min is not None and start_min > 0
+                     and (offsite or end_min is None or crosses_midnight or (end_min - start_min) < 240))
+        if real_slot:
+            disp_end = end_min                       # for the label (real end, e.g. 00:30)
+            sched_end = (24 * 60 if crosses_midnight  # runs into the night - cap at midnight for layout
+                         else (end_min if end_min is not None else start_min + 50))
             a["slots"].append({
                 "day": day, "day_index": DAY_INDEX.get(day, 9), "start_min": start_min,
-                "end_min": end_min if end_min is not None else start_min + 50,
+                "end_min": sched_end,
                 "label": f"{day} {fmt_time(start_min)}"
-                         + (f"-{fmt_time(end_min)}" if end_min is not None else ""),
+                         + (f"-{fmt_time(disp_end)}" if disp_end is not None else ""),
                 "location": loc or "Off-site", "capacity": cap if isinstance(cap, int) else None})
         else:
             a["windows"].append({"day": day, "start": str(r.get("Start") or "").strip(),

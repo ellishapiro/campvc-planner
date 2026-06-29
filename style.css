@@ -111,6 +111,8 @@ label.fld { display: flex; flex-direction: column; gap: 3px; font-size: 11px; co
 .badge.rep { color: var(--accent-2); border-color: var(--accent-2); }
 .badge.drop { color: var(--iffree); border-color: var(--iffree); }
 .badge.lim { color: var(--must); border-color: var(--must); }
+.badge.turnup { color: var(--accent-2); border-color: var(--accent-2); }
+.badge.book { color: var(--paid); border-color: var(--paid); }
 
 .infobtn { background: none; border: 0; color: var(--accent-2); cursor: pointer; font-size: 14px; padding: 0 4px; vertical-align: middle; }
 .actdetails { border: 1px solid var(--line); border-top: 0; background: var(--bg); padding: 10px 14px; font-size: 13px; color: var(--ink-dim); }
