@@ -53,6 +53,7 @@
   function renderAll() {
     buildDayTabs();
     renderCalendar();
+    renderShared();
     renderPeople();
     fixSticky();
   }
@@ -202,6 +203,66 @@
     return b;
   }
 
+  // ---------- "Do these together?" - per-activity shared-time locking ----------
+  // Togetherness is an explicit, per-activity choice (it pins the chosen instance
+  // for everyone) rather than an abstract global dial. Only repeating activities
+  // with 2+ interested people can be locked - one-offs have no choice to make.
+  function renderShared() {
+    var wrap = $("shared"); if (!wrap) return; wrap.innerHTML = "";
+    state.knobs.pins = state.knobs.pins || {};
+    var pins = state.knobs.pins;
+    var acts = Object.keys(state.result.byActivity)
+      .map(function (id) { return state.result.byActivity[id]; })
+      .filter(function (a) { return a.kind === "repeating" && a.people.length >= 2; })
+      .sort(function (x, y) { return (y.people.length - x.people.length) || x.name.localeCompare(y.name); });
+    if (!acts.length) {
+      wrap.appendChild(el("p", "hint", "Nothing yet that two or more of you both want - this fills in as people add picks."));
+      return;
+    }
+    acts.forEach(function (a) {
+      var pinned = !!pins[a.id];
+      var row = el("div", "share" + (pinned ? " locked" : ""));
+      var head = el("div", "share-head");
+      head.innerHTML = "<strong>" + esc(a.name) + "</strong>" +
+        ' <span class="hint">- ' + a.people.length + " want this: " + a.people.map(esc).join(", ") + "</span>";
+      row.appendChild(head);
+
+      // current state: are the interested people landing on one instance?
+      var allTogether = a.groupCount >= a.people.length;
+      var status = el("div", "share-status");
+      if (pinned) {
+        var pl = (a.instances.filter(function (i) { return i.key === pins[a.id]; })[0] || {}).label || a.chosenLabel;
+        status.innerHTML = '<span class="lock">&#128274; Locked</span> everyone to <strong>' + esc(pl) + "</strong>";
+      } else if (allTogether) {
+        status.innerHTML = (a.people.length === 2 ? "Both" : "All " + a.people.length) +
+          " are on the same session (" + esc(a.chosenLabel) + ") already.";
+      } else {
+        status.innerHTML = '<span class="warn">Split</span> - ' + a.groupCount + " of " + a.people.length +
+          " on " + esc(a.chosenLabel) + ", the rest elsewhere.";
+      }
+      row.appendChild(status);
+
+      // control: pick an instance + lock / unlock
+      var ctl = el("div", "share-ctl");
+      var sel = el("select");
+      a.instances.forEach(function (i) { sel.appendChild(new Option(i.label, i.key)); });
+      sel.value = pinned ? pins[a.id] : a.chosenKey;
+      ctl.appendChild(sel);
+      var btn = el("button", null, pinned ? "Update lock" : "Lock this time for everyone");
+      btn.addEventListener("click", function () {
+        state.knobs.pins[a.id] = sel.value; persist();
+      });
+      ctl.appendChild(btn);
+      if (pinned) {
+        var un = el("button", "linkbtn", "Unlock");
+        un.addEventListener("click", function () { delete state.knobs.pins[a.id]; persist(); });
+        ctl.appendChild(un);
+      }
+      row.appendChild(ctl);
+      wrap.appendChild(row);
+    });
+  }
+
   // ---------- People / booking lists ----------
   function renderPeople() {
     var wrap = $("people"); wrap.innerHTML = "";
@@ -297,26 +358,9 @@
     body.appendChild(el("p", "hint",
       "Changes here are shared with everyone (saved to the group sheet) and the schedule recomputes live."));
 
-    // Togetherness dial
-    var tog = el("div", "knobrow");
-    tog.innerHTML = "<span>Keeping the group together:</span>";
-    var ti = el("select");
-    [
-      ["0", "Off - everyone's own best plan"],
-      ["1", "When it's free (default)"],
-      ["10", "Prefer together (may drop a 'want')"],
-      ["30", "Strongly together"],
-    ].forEach(function (o) { ti.appendChild(new Option(o[1], o[0])); });
-    var curTog = (state.knobs.togetherness != null ? state.knobs.togetherness : CONFIG.togetherness);
-    if (curTog == null) curTog = 1;
-    ti.value = String(curTog);
-    ti.addEventListener("change", function () {
-      state.knobs.togetherness = parseInt(ti.value, 10); persist();
-    });
-    tog.appendChild(ti);
-    body.appendChild(tog);
     body.appendChild(el("p", "hint",
-      "A 'must do' is never sacrificed to keep people together - this only trades lower-priority picks."));
+      "To put people on the same session, use “Do these together?” above - it's per activity. " +
+      "By default the engine already co-locates friends when it costs nobody a pick."));
 
     // Global break
     var brk = el("div", "knobrow");
