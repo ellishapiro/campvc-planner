@@ -213,45 +213,73 @@
     var pins = state.knobs.pins;
     var acts = Object.keys(state.result.byActivity)
       .map(function (id) { return state.result.byActivity[id]; })
-      .filter(function (a) { return a.kind === "repeating" && a.people.length >= 2; })
-      .sort(function (x, y) { return (y.people.length - x.people.length) || x.name.localeCompare(y.name); });
+      .filter(function (a) { return a.kind === "repeating" && a.people.length >= 2; });
     if (!acts.length) {
       wrap.appendChild(el("p", "hint", "Nothing yet that two or more of you both want - this fills in as people add picks."));
       return;
     }
+    function isSplit(a) { return !pins[a.id] && a.groupCount < a.people.length; }
+    // Actionable first: split (needs a decision), then locked, then already-together.
+    function rank(a) { return isSplit(a) ? 0 : (pins[a.id] ? 1 : 2); }
+    acts.sort(function (x, y) { return (rank(x) - rank(y)) || (y.people.length - x.people.length) || x.name.localeCompare(y.name); });
+    var nSplit = acts.filter(isSplit).length, nLocked = acts.filter(function (a) { return pins[a.id]; }).length;
+
+    // Collapsible so the section doesn't add a wall of scrolling.
+    var box = el("details", "card");
+    box.open = state.sharedOpen || false;
+    box.addEventListener("toggle", function () { state.sharedOpen = box.open; });
+    var sum = el("summary");
+    sum.innerHTML = "<strong>Do these together?</strong> " +
+      '<span class="hint">- ' + acts.length + " activity(ies) 2+ of you want" +
+      (nSplit ? ", <span class='warn'>" + nSplit + " split</span>" : "") +
+      (nLocked ? ", " + nLocked + " locked" : "") + "</span>";
+    box.appendChild(sum);
+    box.appendChild(el("p", "hint", "Lock a shared time and everyone who's free then is put on that session. " +
+      "A 'must do' is never given up to do this."));
+
     acts.forEach(function (a) {
       var pinned = !!pins[a.id];
+      var total = a.people.length;
+      var byKey = {}; a.instances.forEach(function (i) { byKey[i.key] = i; });
       var row = el("div", "share" + (pinned ? " locked" : ""));
       var head = el("div", "share-head");
       head.innerHTML = "<strong>" + esc(a.name) + "</strong>" +
-        ' <span class="hint">- ' + a.people.length + " want this: " + a.people.map(esc).join(", ") + "</span>";
+        ' <span class="hint">- ' + total + " want this: " + a.people.map(esc).join(", ") + "</span>";
       row.appendChild(head);
 
-      // current state: are the interested people landing on one instance?
-      var allTogether = a.groupCount >= a.people.length;
+      // Status from ACTUAL placements (exact), not a prediction.
+      var here = (byKey[pinned ? pins[a.id] : a.chosenKey] || {}).here || [];
       var status = el("div", "share-status");
       if (pinned) {
-        var pl = (a.instances.filter(function (i) { return i.key === pins[a.id]; })[0] || {}).label || a.chosenLabel;
-        status.innerHTML = '<span class="lock">&#128274; Locked</span> everyone to <strong>' + esc(pl) + "</strong>";
-      } else if (allTogether) {
-        status.innerHTML = (a.people.length === 2 ? "Both" : "All " + a.people.length) +
-          " are on the same session (" + esc(a.chosenLabel) + ") already.";
+        var pl = (byKey[pins[a.id]] || {}).label || a.chosenLabel;
+        status.innerHTML = '<span class="lock">&#128274; Locked</span> to <strong>' + esc(pl) + "</strong> &middot; " +
+          (here.length ? "on it: " + here.map(esc).join(", ") : "nobody can make it") +
+          (a.notPlaced.length ? ' &middot; <span class="warn">' + a.notPlaced.map(esc).join(", ") +
+            " can't make this time (clash)</span> - try another below" : "");
+      } else if (a.groupCount >= total) {
+        status.innerHTML = (total === 2 ? "Both" : "All " + total) +
+          " are already on the same session (" + esc(a.chosenLabel) + ").";
       } else {
-        status.innerHTML = '<span class="warn">Split</span> - ' + a.groupCount + " of " + a.people.length +
-          " on " + esc(a.chosenLabel) + ", the rest elsewhere.";
+        // who's where right now
+        var spread = a.instances.filter(function (i) { return i.here.length; })
+          .map(function (i) { return i.here.map(esc).join(", ") + " on " + esc(i.label); });
+        status.innerHTML = '<span class="warn">Split</span> - ' + spread.join("; ") +
+          (a.notPlaced.length ? "; " + a.notPlaced.map(esc).join(", ") + " not placed" : "") +
+          ". Lock a time to pull together whoever's free.";
       }
       row.appendChild(status);
 
-      // control: pick an instance + lock / unlock
+      // control: pick an instance (showing who's currently on each) + lock / unlock
       var ctl = el("div", "share-ctl");
       var sel = el("select");
-      a.instances.forEach(function (i) { sel.appendChild(new Option(i.label, i.key)); });
+      a.instances.forEach(function (i) {
+        var note = i.here.length ? " - on it now: " + i.here.join(", ") : " - nobody yet";
+        sel.appendChild(new Option(i.label + note, i.key));
+      });
       sel.value = pinned ? pins[a.id] : a.chosenKey;
       ctl.appendChild(sel);
       var btn = el("button", null, pinned ? "Update lock" : "Lock this time for everyone");
-      btn.addEventListener("click", function () {
-        state.knobs.pins[a.id] = sel.value; persist();
-      });
+      btn.addEventListener("click", function () { state.knobs.pins[a.id] = sel.value; persist(); });
       ctl.appendChild(btn);
       if (pinned) {
         var un = el("button", "linkbtn", "Unlock");
@@ -259,8 +287,9 @@
         ctl.appendChild(un);
       }
       row.appendChild(ctl);
-      wrap.appendChild(row);
+      box.appendChild(row);
     });
+    wrap.appendChild(box);
   }
 
   // ---------- People / booking lists ----------

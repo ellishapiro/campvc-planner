@@ -91,10 +91,15 @@ verify migrations after any change that alters ids.
   "consensus" instance is rewarded; the dial (`together`, default 1) scales it.
   At default it only co-locates when free. The consensus loop can oscillate, so we
   run a few rounds and **keep the best-scoring round** (`globalScore`).
-- **Explicit togetherness UX**: the user-facing control is per-activity "Do these
-  together?" in `results.js` (`renderShared`), which just pins the chosen instance
-  via the existing `knobs.pins` mechanism. The abstract global dial was removed
-  from the Adjust panel (unintuitive); `config.togetherness` remains the baseline.
+- **Explicit togetherness UX**: per-activity "Do these together?" in `results.js`
+  (`renderShared`, a collapsed `details`), which pins an instance via `knobs.pins`.
+  Locking is always allowed; the row shows a **warning from the actual result** if
+  someone can't make the locked time (their equal/higher-priority picks clash), and
+  lets you try another instance. Status + per-instance "who's on it" come from
+  exact placements (`byActivity[id].instances[].here`, `.notPlaced`), NOT a
+  prediction - a true per-instance feasibility check would need a re-solve per
+  instance (~550ms each), too slow to do on render. The abstract global dial was
+  removed (unintuitive); `config.togetherness` remains the implicit baseline.
 - **Knobs**: `breakMinutes`, `pins` (activity -> instanceKey), `gaps` (forced gap),
   `togetherness`. Knobs are a generic blob saved to the Sheet, shared by everyone.
 - **Drop-ins** (window activities) are earmarked into free gaps within open hours

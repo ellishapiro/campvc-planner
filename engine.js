@@ -286,12 +286,24 @@
       var keys = Object.keys(counts).sort(function (x, y) { return counts[y] - counts[x]; });
       var chosenKey = keys[0] || consensus[a.id] || instanceKey(a.instances[0]);
       var chosenInst = a.instances.filter(function (i) { return instanceKey(i) === chosenKey; })[0] || a.instances[0];
+      // Exact current attendance per instance (who is actually placed there now).
+      function whoHere(key) {
+        return names.filter(function (n) {
+          return sched[n].some(function (p) { return p.activityId === a.id && instanceKey(p) === key; });
+        });
+      }
+      var placedSomewhere = names.filter(function (n) {
+        return sched[n].some(function (p) { return p.activityId === a.id; });
+      });
       byActivity[a.id] = {
         id: a.id, name: a.name, kind: a.kind, paid: a.paid, offsite: a.offsite,
         chosenLabel: chosenInst.label, chosenKey: chosenKey,
         people: people.map(function (p) { return p.name; }),
+        notPlaced: people.map(function (p) { return p.name; }).filter(function (n) { return placedSomewhere.indexOf(n) < 0; }),
         groupCount: keys.length ? counts[keys[0]] : 0,
-        backups: [], instances: a.instances.map(function (i) { return { key: instanceKey(i), label: i.label }; }),
+        backups: [], instances: a.instances.map(function (i) {
+          var k = instanceKey(i); return { key: k, label: i.label, here: whoHere(k) };
+        }),
       };
     });
 
