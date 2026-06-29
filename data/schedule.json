@@ -375,8 +375,8 @@
    "offsite": false,
    "paid": false,
    "phase": 2,
-   "kind": "oneoff",
-   "booking": true,
+   "kind": "dropin",
+   "booking": false,
    "external": false,
    "description": "A creative, immersive writing and art workshop where your expression and voice are transformed into visual form. Use the quick prompts to uncover your thoughts and truths, then transform these into bold, visual art through typography, collage and mark-making. Leave with a one-off artwork made from your own words that you can keep, gift, or swap with someone else! Open to all levels and abilities - no experience required. NOTE: No booking is required for drop-in activities. Come along during the opening hours, and we&#x27;ll allocate spaces on a first-come, first-served basis.",
    "categories": [
@@ -385,17 +385,15 @@
    ],
    "maxPerSession": null,
    "totalPlaces": null,
-   "instances": [
+   "instances": [],
+   "windows": [
     {
      "day": "Friday",
-     "start_min": 720,
-     "end_min": 780,
-     "label": "Friday 12:00-13:00",
-     "location": "CRAFT TENT DROP-IN",
-     "capacity": -1
+     "start": "12:00",
+     "end": "13:00",
+     "location": "CRAFT TENT DROP-IN"
     }
-   ],
-   "windows": []
+   ]
   },
   {
    "id": "axe-throwing",
@@ -404,7 +402,7 @@
    "paid": false,
    "phase": 2,
    "kind": "dropin",
-   "booking": true,
+   "booking": false,
    "external": false,
    "description": "No booking required, just rock up whenever you fancy during opening hours.",
    "categories": [
@@ -2296,8 +2294,8 @@
    "offsite": false,
    "paid": false,
    "phase": 2,
-   "kind": "oneoff",
-   "booking": true,
+   "kind": "dropin",
+   "booking": false,
    "external": false,
    "description": "Mandalas represent wholeness and unity and have been created cross-culturally for over 2000 years. Learn the basics to make your own mandala. With a focus on pattern development and freehand drawing, you&#x27;ll create your own mandala outline to colour in and decorate. Open to all levels and abilities - no experience required. NOTE: No booking is required for drop-in activities. Come along during the opening hours, and we&#x27;ll allocate spaces on a first-come, first-served basis.",
    "categories": [
@@ -2306,17 +2304,15 @@
    ],
    "maxPerSession": null,
    "totalPlaces": null,
-   "instances": [
+   "instances": [],
+   "windows": [
     {
      "day": "Friday",
-     "start_min": 780,
-     "end_min": 840,
-     "label": "Friday 13:00-14:00",
-     "location": "CRAFT TENT DROP-IN",
-     "capacity": -1
+     "start": "13:00",
+     "end": "14:00",
+     "location": "CRAFT TENT DROP-IN"
     }
-   ],
-   "windows": []
+   ]
   },
   {
    "id": "desert-rose-enduro-school-taster-session",
@@ -2651,7 +2647,7 @@
    "paid": false,
    "phase": 2,
    "kind": "repeating",
-   "booking": true,
+   "booking": false,
    "external": false,
    "description": "Refresh your wardrobe with the QueerSwap pop-up clothing swap! Drop items off at the swap tent on Friday and collect your swap tokens, then swing by Saturday or Sunday to find new treasures. 1 Item = 1 token. NOTE: Please ensure all items are clean and in good condition or better. We do not accept children&#x27;s clothing. Socks and undergarments must be new and in their original packaging. No booking is required for drop-in activities. Come along during the scheduled hours, and (if needed) we&#x27;ll allocate spaces on a first-come, first-served basis.",
    "categories": [
@@ -2694,7 +2690,7 @@
    "paid": false,
    "phase": 2,
    "kind": "dropin",
-   "booking": true,
+   "booking": false,
    "external": false,
    "description": "The Self Love Revolution Bus is back, baby! Open all weekend, visit Susie , Lu&#x27;s gorgeous, 32-foot, vintage American bus, and meet the incredible Self Love Revolution team. Bring a drink and have a natter! Great for solo attendees, but open to all. NOTE: No booking is required for drop-in activities. Come along during the opening hours, and we&#x27;ll allocate spaces on a first-come, first-served basis.",
    "categories": [
@@ -2731,7 +2727,7 @@
    "paid": false,
    "phase": 2,
    "kind": "dropin",
-   "booking": true,
+   "booking": false,
    "external": false,
    "description": "Come and meet Marva, our Menopause Coach & Formulator. Having almost died after being misdiagnosed during perimenopause, Marva set about creating her own solutions to her health condition. Sitting at her mum&#x27;s kitchen table, unable to walk, she started using recipes & knowledge handed down from her ancestors in the Caribbean to create a range of natural products to ease her symptoms. The Unshrunk Collection will be available to purchase at the bus all weekend. NOTE: No booking is required for drop-in activities. Come along during the opening hours, and we&#x27;ll allocate spaces on a first-come, first-served basis",
    "categories": [
@@ -2768,7 +2764,7 @@
    "paid": false,
    "phase": 2,
    "kind": "dropin",
-   "booking": true,
+   "booking": false,
    "external": false,
    "description": "Step into Lu’s Whimsical Wardrobe of Dreams and into a world of freedom, love and joy! Through whimsy, play, and dress-up, we invite you to connect with your inner child and transport yourself to a time before we all became conditioned to give too much of a fuck about what people think. Before we were told how to dress, how to behave, and how to age. Get dressed up! Be brave! Feel wild! And take all the selfies your whimsical heart desires! NOTE: No booking is required for drop-in activities. Come along during the opening hours, and we&#x27;ll allocate spaces on a first-come, first-served basis",
    "categories": [
@@ -3379,8 +3375,8 @@
    "offsite": false,
    "paid": false,
    "phase": 2,
-   "kind": "repeating",
-   "booking": true,
+   "kind": "dropin",
+   "booking": false,
    "external": false,
    "description": "Discover the timeless art of knitting! Practice the knit stitch, increases and decreases, and how to cast off a tiny project to take home with you. Open to all levels and abilities - no experience required. NOTE: Folks who want to refresh their knitting skills are very welcome to join, but it&#x27;s unlikely we&#x27;ll have the capacity to troubleshoot on your specific project No booking is required for drop-in activities. Come along during the opening hours, and we&#x27;ll allocate spaces on a first-come, first-served basis.",
    "categories": [
@@ -3389,25 +3385,21 @@
    ],
    "maxPerSession": null,
    "totalPlaces": null,
-   "instances": [
+   "instances": [],
+   "windows": [
     {
      "day": "Friday",
-     "start_min": 840,
-     "end_min": 900,
-     "label": "Friday 14:00-15:00",
-     "location": "CRAFT TENT DROP-IN",
-     "capacity": -1
+     "start": "14:00",
+     "end": "15:00",
+     "location": "CRAFT TENT DROP-IN"
     },
     {
      "day": "Sunday",
-     "start_min": 900,
-     "end_min": 960,
-     "label": "Sunday 15:00-16:00",
-     "location": "CRAFT TENT DROP-IN",
-     "capacity": -1
+     "start": "15:00",
+     "end": "16:00",
+     "location": "CRAFT TENT DROP-IN"
     }
-   ],
-   "windows": []
+   ]
   },
   {
    "id": "lino-cut-playful-landscapes",
@@ -3609,7 +3601,7 @@
    "paid": false,
    "phase": 2,
    "kind": "repeating",
-   "booking": true,
+   "booking": false,
    "external": false,
    "description": "Need a quick patch or want to add some flair to an item of clothing? Check out the QueerSwap repair and embroidery station, complete with tools to make simple textile repairs and instruction guides for visible mending and embroidery. NOTE: No booking is required for drop-in activities. Come along during the scheduled hours, and (if needed) we&#x27;ll allocate spaces on a first-come, first-served basis.",
    "categories": [
@@ -4318,8 +4310,8 @@
    "offsite": false,
    "paid": false,
    "phase": 2,
-   "kind": "repeating",
-   "booking": true,
+   "kind": "oneoff",
+   "booking": false,
    "external": false,
    "description": "Just how grippy is YOUR grip? The epic Strong Woman crew is back this year with their legendary Strong Woman Grip competition. See if you have what it takes to be CAMP VC&#x27;s 2026 winner by clocking the longest grip time on the leaderboard! Open to all levels and abilities - No experience required. NOTE: No booking is required for drop-in activities. Come along during the scheduled hours, and (if needed) we&#x27;ll allocate spaces on a first-come, first-served basis.",
    "categories": [
@@ -4329,22 +4321,6 @@
    "totalPlaces": null,
    "instances": [
     {
-     "day": "Friday",
-     "start_min": 870,
-     "end_min": 1050,
-     "label": "Friday 14:30-17:30",
-     "location": "RED BULL TENT",
-     "capacity": -1
-    },
-    {
-     "day": "Saturday",
-     "start_min": 630,
-     "end_min": 810,
-     "label": "Saturday 10:30-13:30",
-     "location": "RED BULL TENT",
-     "capacity": -1
-    },
-    {
      "day": "Sunday",
      "start_min": 810,
      "end_min": 930,
@@ -4353,7 +4329,20 @@
      "capacity": -1
     }
    ],
-   "windows": []
+   "windows": [
+    {
+     "day": "Friday",
+     "start": "14:30",
+     "end": "17:30",
+     "location": "RED BULL TENT"
+    },
+    {
+     "day": "Saturday",
+     "start": "10:30",
+     "end": "13:30",
+     "location": "RED BULL TENT"
+    }
+   ]
   },
   {
    "id": "ask-aunty-adhd",
@@ -4361,7 +4350,7 @@
    "offsite": false,
    "paid": false,
    "phase": 2,
-   "kind": "oneoff",
+   "kind": "dropin",
    "booking": true,
    "external": false,
    "description": "What&#x27;s the Most ADHD thing you’ve done this week? Laura Reynolds, award-winning podcaster, will be at the bus all weekend long celebrating neurodiversity, interviewing people for her podcast, and answering any questions you may have about ADHD. Think lemonade-stand-meets-podcast! NOTE: No booking is required for drop-in activities. Come along during the opening hours, and we&#x27;ll allocate spaces on a first-come, first-served basis",
@@ -4369,19 +4358,16 @@
     "INSPIRATION & CONFIDENCE",
     "DROP-IN ACTIVITIES"
    ],
-   "maxPerSession": 15,
-   "totalPlaces": 15,
-   "instances": [
+   "maxPerSession": null,
+   "totalPlaces": null,
+   "instances": [],
+   "windows": [
     {
      "day": "Friday",
-     "start_min": 870,
-     "end_min": 1080,
-     "label": "Friday 14:30-18:00",
-     "location": "SELF LOVE REVOLUTION BUS",
-     "capacity": 15
-    }
-   ],
-   "windows": [
+     "start": "14:30",
+     "end": "18:00",
+     "location": "SELF LOVE REVOLUTION BUS"
+    },
     {
      "day": "Saturday",
      "start": "10:00",
@@ -4614,8 +4600,8 @@
    "offsite": false,
    "paid": false,
    "phase": 2,
-   "kind": "repeating",
-   "booking": true,
+   "kind": "dropin",
+   "booking": false,
    "external": false,
    "description": "Explore how to create unique patches that will have you levelling up your wardrobe the minute you get home! Learn the techniques and tools to design, draw, and paint onto a denim patch. Unleash your creativity with your own design or take inspiration from our pre-drawn designs. Open to all levels and abilities - no experience required. NOTE: No booking is required for drop-in activities. Come along during the opening hours, and we&#x27;ll allocate spaces on a first-come, first-served basis.",
    "categories": [
@@ -4624,25 +4610,21 @@
    ],
    "maxPerSession": null,
    "totalPlaces": null,
-   "instances": [
+   "instances": [],
+   "windows": [
     {
      "day": "Friday",
-     "start_min": 900,
-     "end_min": 960,
-     "label": "Friday 15:00-16:00",
-     "location": "CRAFT TENT DROP-IN",
-     "capacity": -1
+     "start": "15:00",
+     "end": "16:00",
+     "location": "CRAFT TENT DROP-IN"
     },
     {
      "day": "Saturday",
-     "start_min": 540,
-     "end_min": 600,
-     "label": "Saturday 09:00-10:00",
-     "location": "CRAFT TENT DROP-IN",
-     "capacity": -1
+     "start": "09:00",
+     "end": "10:00",
+     "location": "CRAFT TENT DROP-IN"
     }
-   ],
-   "windows": []
+   ]
   },
   {
    "id": "cocktail-making-with-jimmy-s",
@@ -5289,8 +5271,8 @@
    "offsite": false,
    "paid": false,
    "phase": 2,
-   "kind": "repeating",
-   "booking": true,
+   "kind": "dropin",
+   "booking": false,
    "external": false,
    "description": "Create your own felt pin badge using simple stitching technique, colourful beads, and a safety pin to finish. Explore the use of shapes, colours, and textures to turn felt into a small-but-mighty statement piece that you&#x27;ll keep as a CAMP VC souvenir! Open to all levels and abilities - no experience required. NOTE: No booking is required for drop-in activities. Come along during the opening hours, and we&#x27;ll allocate spaces on a first-come, first-served basis.",
    "categories": [
@@ -5299,25 +5281,21 @@
    ],
    "maxPerSession": null,
    "totalPlaces": null,
-   "instances": [
+   "instances": [],
+   "windows": [
     {
      "day": "Friday",
-     "start_min": 960,
-     "end_min": 1020,
-     "label": "Friday 16:00-17:00",
-     "location": "CRAFT TENT DROP-IN",
-     "capacity": -1
+     "start": "16:00",
+     "end": "17:00",
+     "location": "CRAFT TENT DROP-IN"
     },
     {
      "day": "Sunday",
-     "start_min": 840,
-     "end_min": 900,
-     "label": "Sunday 14:00-15:00",
-     "location": "CRAFT TENT DROP-IN",
-     "capacity": -1
+     "start": "14:00",
+     "end": "15:00",
+     "location": "CRAFT TENT DROP-IN"
     }
-   ],
-   "windows": []
+   ]
   },
   {
    "id": "headline-moto-talk-patsy-quick",
@@ -6010,8 +5988,8 @@
    "offsite": false,
    "paid": false,
    "phase": 2,
-   "kind": "repeating",
-   "booking": true,
+   "kind": "dropin",
+   "booking": false,
    "external": false,
    "description": "What do you get when you combine LEGO and meditation? Lego-tation! Come chill with us at the Auto Tent for our laid-back Lego-tation sessions. Grab a drink, build a LEGO car, and connect with other awesome attendees while you&#x27;re at it. Stay for one build or keep going. It’s all at your pace. Open to all levels and abilities - no experience required. NOTE: No booking is required for drop-in activities. Come along during the opening hours, and we&#x27;ll allocate spaces on a first-come, first-served basis.",
    "categories": [
@@ -6020,33 +5998,27 @@
    ],
    "maxPerSession": null,
    "totalPlaces": null,
-   "instances": [
+   "instances": [],
+   "windows": [
     {
      "day": "Friday",
-     "start_min": 1035,
-     "end_min": 1145,
-     "label": "Friday 17:15-19:05",
-     "location": "AUTO TENT",
-     "capacity": -1
+     "start": "17:15",
+     "end": "19:05",
+     "location": "AUTO TENT"
     },
     {
      "day": "Saturday",
-     "start_min": 1035,
-     "end_min": 1145,
-     "label": "Saturday 17:15-19:05",
-     "location": "AUTO TENT",
-     "capacity": -1
+     "start": "17:15",
+     "end": "19:05",
+     "location": "AUTO TENT"
     },
     {
      "day": "Sunday",
-     "start_min": 675,
-     "end_min": 785,
-     "label": "Sunday 11:15-13:05",
-     "location": "AUTO TENT",
-     "capacity": -1
+     "start": "11:15",
+     "end": "13:05",
+     "location": "AUTO TENT"
     }
-   ],
-   "windows": []
+   ]
   },
   {
    "id": "bmx-open-track",
@@ -6329,7 +6301,7 @@
    "paid": false,
    "phase": 2,
    "kind": "oneoff",
-   "booking": true,
+   "booking": false,
    "external": false,
    "description": "It&#x27;s the legendary Friday Solo Social! Coming to CAMP VC on your own? We&#x27;ve got you! Grab a drink and then swing by the BBA tent for a chilled hang with other badass solo attendees. No awkward intros, just good people and even gooder times! NOTE: No booking is required for drop-in activities. Come along during the scheduled hours, and (if needed) we&#x27;ll allocate spaces on a first-come, first-served basis.",
    "categories": [
@@ -6580,7 +6552,7 @@
    "paid": false,
    "phase": 2,
    "kind": "repeating",
-   "booking": true,
+   "booking": false,
    "external": false,
    "description": "Bring your drink of choice and join us to cosy up by the Camp VC campfire and toast some marshmallows. Marshmallows are on the house, and vegan options are available. No need to book-in, just drop-by!",
    "categories": [
@@ -6644,7 +6616,7 @@
    "paid": false,
    "phase": 2,
    "kind": "repeating",
-   "booking": true,
+   "booking": false,
    "external": false,
    "description": "Need a little break from the evening entertainment or generally feeling a bit overwhelmed? Drop in to the BBA tent for some calm beats and play some cards, read a book, do some light crafts, or have a little chat. Our quiet, ND-friendly social sessions provide a moment of collective chill amongst the ever-exciting activity at CAMP VC. NOTE: No booking is required for drop-in activities. Come along during the scheduled hours, and (if needed) we&#x27;ll allocate spaces on a first-come, first-served basis.",
    "categories": [
@@ -7122,8 +7094,8 @@
    "offsite": false,
    "paid": false,
    "phase": 2,
-   "kind": "repeating",
-   "booking": true,
+   "kind": "dropin",
+   "booking": false,
    "external": false,
    "description": "Learn the basics of hand embroidery to create your CAMP VC customised tote bag. Follow the step-by-step process of embroidering the CAMP VC logo onto a tote bag, which you&#x27;ll then keep as a lovely souvenir! Open to all levels and abilities - no experience required. NOTE: No booking is required for drop-in activities. Come along during the opening hours, and we&#x27;ll allocate spaces on a first-come, first-served basis.",
    "categories": [
@@ -7132,25 +7104,21 @@
    ],
    "maxPerSession": null,
    "totalPlaces": null,
-   "instances": [
+   "instances": [],
+   "windows": [
     {
      "day": "Saturday",
-     "start_min": 600,
-     "end_min": 660,
-     "label": "Saturday 10:00-11:00",
-     "location": "CRAFT TENT DROP-IN",
-     "capacity": -1
+     "start": "10:00",
+     "end": "11:00",
+     "location": "CRAFT TENT DROP-IN"
     },
     {
      "day": "Sunday",
-     "start_min": 540,
-     "end_min": 600,
-     "label": "Sunday 09:00-10:00",
-     "location": "CRAFT TENT DROP-IN",
-     "capacity": -1
+     "start": "09:00",
+     "end": "10:00",
+     "location": "CRAFT TENT DROP-IN"
     }
-   ],
-   "windows": []
+   ]
   },
   {
    "id": "curious-coco-vintage-designs",
@@ -7803,8 +7771,8 @@
    "offsite": false,
    "paid": false,
    "phase": 2,
-   "kind": "repeating",
-   "booking": true,
+   "kind": "dropin",
+   "booking": false,
    "external": false,
    "description": "Level up your home decor with a whimsical portrait, starring your pet as your muse! Bring a picture of your pet to work from, and we&#x27;ll guide you to capture their likeness and accurately colour mix. You&#x27;ll leave with a one-of-a-kind pet portrait in acrylic paint. Open to all levels and abilities - no experience required. NOTE: No booking is required for drop-in activities. Come along during the opening hours, and we&#x27;ll allocate spaces on a first-come, first-served basis.",
    "categories": [
@@ -7813,25 +7781,21 @@
    ],
    "maxPerSession": null,
    "totalPlaces": null,
-   "instances": [
+   "instances": [],
+   "windows": [
     {
      "day": "Saturday",
-     "start_min": 780,
-     "end_min": 840,
-     "label": "Saturday 13:00-14:00",
-     "location": "CRAFT TENT DROP-IN",
-     "capacity": -1
+     "start": "13:00",
+     "end": "14:00",
+     "location": "CRAFT TENT DROP-IN"
     },
     {
      "day": "Sunday",
-     "start_min": 780,
-     "end_min": 840,
-     "label": "Sunday 13:00-14:00",
-     "location": "CRAFT TENT DROP-IN",
-     "capacity": -1
+     "start": "13:00",
+     "end": "14:00",
+     "location": "CRAFT TENT DROP-IN"
     }
-   ],
-   "windows": []
+   ]
   },
   {
    "id": "90s-friendship-bracelets-drop-in",
@@ -7839,8 +7803,8 @@
    "offsite": false,
    "paid": false,
    "phase": 2,
-   "kind": "repeating",
-   "booking": true,
+   "kind": "dropin",
+   "booking": false,
    "external": false,
    "description": "Let’s take it back to the 90’s with cute friendship bracelets! Whether you decide to make yours for a loved one, a new CAMP VC bestie, or yourself, we’ll supply you with all the funky colours, patterns and letters you need to create this perfect retro keepsake. NOTE: No booking is required for drop-in activities. Come along during the opening hours, and we&#x27;ll allocate spaces on a first-come, first-served basis.",
    "categories": [
@@ -7849,25 +7813,21 @@
    ],
    "maxPerSession": null,
    "totalPlaces": null,
-   "instances": [
+   "instances": [],
+   "windows": [
     {
      "day": "Saturday",
-     "start_min": 840,
-     "end_min": 900,
-     "label": "Saturday 14:00-15:00",
-     "location": "CRAFT TENT DROP-IN",
-     "capacity": -1
+     "start": "14:00",
+     "end": "15:00",
+     "location": "CRAFT TENT DROP-IN"
     },
     {
      "day": "Sunday",
-     "start_min": 660,
-     "end_min": 720,
-     "label": "Sunday 11:00-12:00",
-     "location": "CRAFT TENT DROP-IN",
-     "capacity": -1
+     "start": "11:00",
+     "end": "12:00",
+     "location": "CRAFT TENT DROP-IN"
     }
-   ],
-   "windows": []
+   ]
   },
   {
    "id": "plaster-casting",
@@ -8027,8 +7987,8 @@
    "offsite": false,
    "paid": false,
    "phase": 2,
-   "kind": "oneoff",
-   "booking": true,
+   "kind": "dropin",
+   "booking": false,
    "external": false,
    "description": "Join us for an extended, open studio session with no scheduled workshop. Your time is your own: relax and chat, get creative on something new, or continue working on any projects you started during the CAMP VC weekend. Perfect for those who love a bit of crafty parallel play! NOTE: No booking is required for drop-in activities. Come along during the opening hours, and we&#x27;ll allocate spaces on a first-come, first-served basis.",
    "categories": [
@@ -8037,17 +7997,15 @@
    ],
    "maxPerSession": null,
    "totalPlaces": null,
-   "instances": [
+   "instances": [],
+   "windows": [
     {
      "day": "Saturday",
-     "start_min": 900,
-     "end_min": 1080,
-     "label": "Saturday 15:00-18:00",
-     "location": "CRAFT TENT DROP-IN",
-     "capacity": -1
+     "start": "15:00",
+     "end": "18:00",
+     "location": "CRAFT TENT DROP-IN"
     }
-   ],
-   "windows": []
+   ]
   },
   {
    "id": "permission-slips",
@@ -8279,7 +8237,7 @@
    "paid": false,
    "phase": 2,
    "kind": "oneoff",
-   "booking": true,
+   "booking": false,
    "external": false,
    "description": "Get ready with us for the epic CAMP VC fancy dress night! Drop in to add the finishing touches to your outfit and unleash your creativity. We&#x27;ll have glitter, crafting supplies, and plenty of ideas to help make your costume even more extra ! NOTE: Perfect for solo attendees Face painting available during the session for a small additional charge No booking is required for drop-in activities. Come along during the opening hours and we&#x27;ll allocate spaces on a first-come, first-served basis.",
    "categories": [
@@ -8813,7 +8771,7 @@
    "paid": false,
    "phase": 2,
    "kind": "oneoff",
-   "booking": true,
+   "booking": false,
    "external": false,
    "description": "A creative, immersive writing and art workshop where your expression and voice are transformed into visual form. Use the quick prompts to uncover your thoughts and truths, then transform these into bold, visual art through typography, collage and mark-making. Leave with a one-off artwork made from your own words that you can keep, gift, or swap with someone else! Open to all levels and abilities - no experience required. NOTE: No booking is required for drop-in activities. Come along during the opening hours, and we&#x27;ll allocate spaces on a first-come, first-served basis.",
    "categories": [
@@ -8839,8 +8797,8 @@
    "offsite": false,
    "paid": false,
    "phase": 2,
-   "kind": "oneoff",
-   "booking": true,
+   "kind": "dropin",
+   "booking": false,
    "external": false,
    "description": "Explore how to use beads to embroider, stitch, and embellish to create unique decorative pieces. Follow the steps to learn the basics of bead embroidery techniques and create your own bead-embroidered motif. Open to all levels and abilities - no experience required. NOTE: No booking is required for drop-in activities. Come along during the opening hours, and we&#x27;ll allocate spaces on a first-come, first-served basis.",
    "categories": [
@@ -8849,17 +8807,15 @@
    ],
    "maxPerSession": null,
    "totalPlaces": null,
-   "instances": [
+   "instances": [],
+   "windows": [
     {
      "day": "Sunday",
-     "start_min": 720,
-     "end_min": 780,
-     "label": "Sunday 12:00-13:00",
-     "location": "CRAFT TENT DROP-IN",
-     "capacity": -1
+     "start": "12:00",
+     "end": "13:00",
+     "location": "CRAFT TENT DROP-IN"
     }
-   ],
-   "windows": []
+   ]
   },
   {
    "id": "intro-to-mini-ramps-skateboarding-longer-session",

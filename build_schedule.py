@@ -94,6 +94,17 @@ def books_off_app(description):
     return bool(_PARTNER_RE.search(description or ""))
 
 
+# Some activities carry a registration date but the description says you don't
+# need to book - those are really drop-ins. The description wins.
+_NOBOOK_RE = re.compile(
+    r"no booking (required|needed|necessary)|no need to book|just rock up"
+    r"|no booking is (required|needed)|don't need to book|no pre[\s-]?booking", re.I)
+
+
+def no_booking_required(description):
+    return bool(_NOBOOK_RE.search(description or ""))
+
+
 def is_open_window(start_raw, end_raw, start_min, end_min, name):
     """An open/all-day space you drop into anytime (vs a fixed-time session)."""
     s = str(start_raw or "").strip().lower()
@@ -177,7 +188,10 @@ def build(sched_dir):
         # an open all-day space (Calm Space) is neither - it's a window.
         partner = books_off_app(desc)
         ov = overrides.get(norm(name))
-        if reg:
+        if no_booking_required(desc):     # description explicitly says no booking - it's a drop-in/turn-up
+            needs_booking, external = False, False
+            scheduled = not is_open_window(r.get("Start"), r.get("End"), start_min, end_min, name)
+        elif reg:
             needs_booking, external, scheduled = True, partner, True
         elif partner or ov == "bookable":
             needs_booking, external, scheduled = True, True, True
