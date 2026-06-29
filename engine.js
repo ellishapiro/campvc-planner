@@ -224,7 +224,7 @@
         if (placeAt(p.name, a, chosen, p.priority, false)) return;
         if (pins[a.id]) {
           var cp = conflictFor(p.name, candFromInstance(a, chosen), false);
-          dropped[p.name].push({ activityId: a.id, name: a.name, reason: "pinned slot unavailable" + (cp ? " (clashes with " + cp.name + ")" : "") });
+          dropped[p.name].push({ activityId: a.id, name: a.name, priority: p.priority, reason: "pinned slot unavailable" + (cp ? " (clashes with " + cp.name + ")" : "") });
           return;
         }
         // 2) best alternative instance -> split from the group
@@ -236,7 +236,7 @@
         // 3) drop
         var clash = conflictFor(p.name, candFromInstance(a, chosen), false);
         dropped[p.name].push({
-          activityId: a.id, name: a.name,
+          activityId: a.id, name: a.name, priority: p.priority,
           reason: clash ? ("no clash-free time (clashes with " + clash.name + ")") : "no clash-free time",
         });
       });
@@ -254,6 +254,48 @@
         backups: backupsOf[a.id],
         instances: a.instances.map(function (i) { return { key: instanceKey(i), label: i.label }; }),
       };
+    });
+
+    // ---- Priority repair: never let a lower-priority booking crowd out a
+    //      higher-priority pick. If a dropped pick can take a slot where every
+    //      clashing booking is strictly lower priority, bump those and place it. ----
+    names.forEach(function (n) {
+      for (var guard = 0; guard < 200; guard++) {
+        var drops = dropped[n].slice().sort(function (x, y) {
+          return weightOf(picksByName[n][y.activityId]) - weightOf(picksByName[n][x.activityId]);
+        });
+        var did = false;
+        for (var di = 0; di < drops.length; di++) {
+          var d = drops[di], a = acts[d.activityId];
+          if (!a || a.kind === "dropin" || !a.instances.length) continue;
+          var myW = weightOf(picksByName[n][a.id]);
+          if (!myW) continue;
+          for (var ii = 0; ii < a.instances.length; ii++) {
+            var cf = candFromInstance(a, a.instances[ii]);
+            var confs = sched[n].filter(function (p) { return overlaps(p, cf); });
+            if (confs.length && confs.every(function (p) { return weightOf(p.priority) < myW; })) {
+              confs.forEach(function (p) {
+                sched[n] = sched[n].filter(function (q) { return q !== p; });
+                dropped[n].push({ activityId: p.activityId, name: p.name, priority: p.priority,
+                  reason: "bumped so a higher-priority pick (" + a.name + ") could fit" });
+              });
+              dropped[n] = dropped[n].filter(function (x) { return x.activityId !== a.id; });
+              place(n, a, a.instances[ii], "booking", picksByName[n][a.id], !isGroupPref(a, a.instances[ii]));
+              did = true;
+              break;
+            }
+          }
+          if (did) break;
+        }
+        if (!did) break;
+      }
+    });
+    // recompute group counts after any repair bumps
+    Object.keys(byActivity).forEach(function (id) {
+      var k = byActivity[id].chosenKey;
+      byActivity[id].groupCount = names.filter(function (n) {
+        return sched[n].some(function (p) { return p.activityId === id && instanceKey(p) === k; });
+      }).length;
     });
 
     // ---- Step 3: earmark drop-ins into free gaps ----

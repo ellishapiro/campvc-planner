@@ -144,6 +144,7 @@ label.fld { display: flex; flex-direction: column; gap: 3px; font-size: 11px; co
 .hint { color: var(--ink-dim); font-size: 12px; }
 
 /* ---- Calendar (results) ---- */
+.calhead { position: sticky; top: var(--calhead-top, 0); z-index: 18; background: var(--bg); padding-bottom: 6px; }
 .daytabs { display: flex; gap: 6px; margin: 12px 0; flex-wrap: wrap; }
 .daytabs button { cursor: pointer; }
 .daytabs button.active { background: var(--accent); color: #2a0014; border-color: var(--accent); font-weight: 700; }
@@ -153,7 +154,7 @@ label.fld { display: flex; flex-direction: column; gap: 3px; font-size: 11px; co
 .calwrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); }
 .cal { position: relative; display: grid; }
 .cal .colhead {
-  position: sticky; top: 0; z-index: 5; background: var(--panel);
+  position: sticky; top: var(--colhead-top, 0); z-index: 5; background: var(--panel);
   border-bottom: 1px solid var(--line); padding: 8px 6px; font-weight: 600; font-size: 13px;
   text-align: center; border-left: 1px solid var(--line);
 }

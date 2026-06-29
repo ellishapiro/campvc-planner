@@ -23,19 +23,21 @@
     <div id="status" class="hint">Loading...</div>
 
     <div id="main" hidden>
-      <div class="daytabs" id="dayTabs"></div>
-      <div class="row" style="justify-content:space-between;align-items:center">
-        <div class="legend">
-          <span><span class="sw" style="background:var(--must)"></span>Must do</span>
-          <span><span class="sw" style="background:var(--want)"></span>Want</span>
-          <span><span class="sw" style="background:var(--iffree)"></span>If free</span>
-          <span><span class="sw" style="background:#6fb1c9"></span>Drop-in (earmarked)</span>
-          <span><span class="sw" style="background:#10131a;color:#ffd479;text-align:center;font-weight:800;font-size:9px;line-height:12px">&pound;</span>= paid (book it)</span>
-          <span>&#8599; = split from group</span>
+      <div class="calhead" id="calHead">
+        <div class="daytabs" id="dayTabs"></div>
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div class="legend">
+            <span><span class="sw" style="background:var(--must)"></span>Must do</span>
+            <span><span class="sw" style="background:var(--want)"></span>Want</span>
+            <span><span class="sw" style="background:var(--iffree)"></span>If free</span>
+            <span><span class="sw" style="background:#6fb1c9"></span>Drop-in (earmarked)</span>
+            <span><span class="sw" style="background:#10131a;color:#ffd479;text-align:center;font-weight:800;font-size:9px;line-height:12px">&pound;</span>= paid (book it)</span>
+            <span>&#8599; = split from group</span>
+          </div>
+          <label class="fld" style="flex-direction:row;gap:6px;align-items:center">
+            <input type="checkbox" id="showRef"> Show full schedule column
+          </label>
         </div>
-        <label class="fld" style="flex-direction:row;gap:6px;align-items:center">
-          <input type="checkbox" id="showRef"> Show full schedule column
-        </label>
       </div>
 
       <div class="calwrap"><div class="cal" id="cal"></div></div>

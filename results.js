@@ -54,7 +54,20 @@
     buildDayTabs();
     renderCalendar();
     renderPeople();
+    fixSticky();
   }
+
+  // Pin the day tabs + legend below the header, and the friend-name row below
+  // that, by measuring their heights (works on web and mobile).
+  function fixSticky() {
+    var tb = document.querySelector(".topbar");
+    var head = $("calHead");
+    if (!tb || !head) return;
+    var tbH = tb.offsetHeight;
+    document.documentElement.style.setProperty("--calhead-top", tbH + "px");
+    document.documentElement.style.setProperty("--colhead-top", (tbH + head.offsetHeight) + "px");
+  }
+  window.addEventListener("resize", fixSticky);
 
   // ---------- Calendar ----------
   function renderCalendar() {
@@ -154,9 +167,15 @@
         card.appendChild(el("div", "phase hint", "If you have time: " + p.ifTime.map(function (x) { return esc(x.name); }).join(", ")));
       }
       if (p.dropped.length) {
-        var fd = el("div", "phase"); fd.appendChild(el("h4", null, "Couldn't fit"));
-        p.dropped.forEach(function (x) {
-          fd.appendChild(el("div", "bk flag", esc(x.name) + " - " + esc(x.reason)));
+        // group the couldn't-fit list by priority (must -> want -> if-free) for readability
+        var fd = el("div", "phase"); fd.appendChild(el("h4", null, "Couldn't fit (" + p.dropped.length + ")"));
+        var order = { must: 0, want: 1, iffree: 2 };
+        p.dropped.slice().sort(function (a, b) {
+          return (order[a.priority] == null ? 9 : order[a.priority]) - (order[b.priority] == null ? 9 : order[b.priority]);
+        }).forEach(function (x) {
+          var dot = x.priority ? '<span class="pri-dot ' + x.priority + '"></span>' : "";
+          fd.appendChild(el("div", "bk drop", dot + esc(x.name) +
+            '<div class="when">' + esc(x.reason) + "</div>"));
         });
         card.appendChild(fd);
       }

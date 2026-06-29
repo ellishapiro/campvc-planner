@@ -122,7 +122,8 @@
     var ext = act.external ? '<div class="bnote">Books off-app - via a link in the Guidebook app.</div>' : "";
     var bkp = (p.kind === "repeating" && p.backups && p.backups.length)
       ? '<div class="bkp">if full, backup: ' + p.backups.map(esc).join("; ") + "</div>" : "";
-    body.innerHTML = "<strong>" + esc(p.name) + "</strong>" + split + limited +
+    var dot = p.priority ? '<span class="pri-dot ' + p.priority + '"></span>' : "";
+    body.innerHTML = dot + "<strong>" + esc(p.name) + "</strong>" + split + limited +
       '<div class="when">' + p.day + " " + fmt(p.start_min) + "-" + fmt(p.end_min) +
       (p.location ? " &middot; " + esc(p.location) : "") + (p.offsite ? " &middot; off-site" : "") + withTxt + "</div>" + ext + bkp;
     row.appendChild(cb); row.appendChild(body);
