@@ -209,11 +209,15 @@
         chosen = a.instances.filter(function (i) { return instanceKey(i) === pins[a.id]; })[0] || a.instances[0];
       } else {
         scored = a.instances.map(function (inst) {
-          var s = 0;
-          people.forEach(function (p) { if (fits(p.name, candFromInstance(a, inst), false)) s += p.weight; });
-          return { inst: inst, score: s };
+          var s = 0, mustFit = 0;
+          people.forEach(function (p) {
+            if (fits(p.name, candFromInstance(a, inst), false)) { s += p.weight; if (p.priority === "must") mustFit++; }
+          });
+          return { inst: inst, score: s, mustFit: mustFit };
         });
-        scored.sort(function (x, y) { return (y.score - x.score) || instSort(x.inst, y.inst); });
+        // Prefer the instance that includes the most MUST-people (so a must-person
+        // anchors the shared slot), then the most weighted attendance overall.
+        scored.sort(function (x, y) { return (y.mustFit - x.mustFit) || (y.score - x.score) || instSort(x.inst, y.inst); });
         chosen = scored[0].inst;
       }
       groupPref[a.id] = chosen;
@@ -291,12 +295,68 @@
         if (!did) break;
       }
     });
-    // recompute group counts after any repair bumps
+
+    // ---- Togetherness pass: if interested friends ended up on different
+    //      instances of the same activity, try to converge them onto one slot
+    //      (the one with the most attendees). placeAt only relocates flexible
+    //      bookings and never drops a must, so split friends are pulled together
+    //      only when it can be done without sacrificing anyone's must. ----
+    function myInstKey(n, id) {
+      var p = sched[n].filter(function (x) { return x.activityId === id; })[0];
+      return p ? instanceKey(p) : null;
+    }
+    schedule.activities.filter(function (a) { return a.kind === "repeating"; }).forEach(function (a) {
+      var fans = names.filter(function (n) { return picksByName[n][a.id] && myInstKey(n, a.id); });
+      if (fans.length < 2) return;
+      var here = {};
+      fans.forEach(function (n) { var k = myInstKey(n, a.id); here[k] = (here[k] || 0) + 1; });
+      var keys = Object.keys(here);
+      if (keys.length < 2) return; // already together
+      keys.sort(function (x, y) { return here[y] - here[x]; });
+      var target = keys[0];
+      var targetInst = a.instances.filter(function (i) { return instanceKey(i) === target; })[0];
+      if (!targetInst) return;
+      fans.forEach(function (n) {
+        if (myInstKey(n, a.id) === target) return;
+        var pr = picksByName[n][a.id];
+        var snapshot = sched[n].slice();
+        sched[n] = sched[n].filter(function (x) { return x.activityId !== a.id; });
+        if (placeTogether(n, a, targetInst, pr)) return;
+        sched[n] = snapshot; // couldn't join without sacrificing an equal/higher priority - leave split
+      });
+    });
+
+    // Seat `n` on `inst` for togetherness: relocate flexible conflicts if possible,
+    // else bump conflicts that are STRICTLY lower priority (never an equal/higher,
+    // so a must is never sacrificed to chase togetherness).
+    function placeTogether(person, a, inst, priority) {
+      if (placeAt(person, a, inst, priority, false)) return true;
+      var cf = candFromInstance(a, inst);
+      var confs = sched[person].filter(function (p) { return overlaps(p, cf); });
+      if (!confs.length) return false;
+      if (!confs.every(function (p) { return weightOf(p.priority) < weightOf(priority); })) return false;
+      confs.forEach(function (p) {
+        sched[person] = sched[person].filter(function (q) { return q !== p; });
+        dropped[person].push({ activityId: p.activityId, name: p.name, priority: p.priority,
+          reason: "moved aside so the group could be together for " + a.name });
+      });
+      place(person, a, inst, "booking", priority, false);
+      return true;
+    }
+
+    // recompute the shared instance + group counts after repair/togetherness passes
     Object.keys(byActivity).forEach(function (id) {
-      var k = byActivity[id].chosenKey;
-      byActivity[id].groupCount = names.filter(function (n) {
-        return sched[n].some(function (p) { return p.activityId === id && instanceKey(p) === k; });
-      }).length;
+      var counts = {};
+      names.forEach(function (n) {
+        sched[n].forEach(function (p) { if (p.activityId === id) counts[instanceKey(p)] = (counts[instanceKey(p)] || 0) + 1; });
+      });
+      var keys = Object.keys(counts);
+      if (!keys.length) { byActivity[id].groupCount = 0; return; }
+      keys.sort(function (x, y) { return counts[y] - counts[x]; });
+      byActivity[id].chosenKey = keys[0];
+      byActivity[id].groupCount = counts[keys[0]];
+      var inst = (acts[id].instances || []).filter(function (i) { return instanceKey(i) === keys[0]; })[0];
+      if (inst) byActivity[id].chosenLabel = inst.label;
     });
 
     // ---- Step 3: earmark drop-ins into free gaps ----
@@ -307,7 +367,7 @@
         .map(function (a) { return { a: a, w: weightOf(picksByName[n][a.id]) }; });
       wanted.sort(function (x, y) { return y.w - x.w; });
       wanted.forEach(function (item) {
-        if (!tryPlaceDropin(n, item.a)) ifTime[n].push({ activityId: item.a.id, name: item.a.name });
+        if (!tryPlaceDropin(n, item.a)) ifTime[n].push({ activityId: item.a.id, name: item.a.name, priority: picksByName[n][item.a.id] });
       });
     });
 

@@ -86,7 +86,7 @@
     var dropItems = [];
     peopleToShow().forEach(function (n) {
       (state.result.byPerson[n].dropins || []).forEach(function (p) { dropItems.push({ name: n, p: p }); });
-      (state.result.byPerson[n].ifTime || []).forEach(function (x) { dropItems.push({ name: n, p: { name: x.name, type: "iftime" } }); });
+      (state.result.byPerson[n].ifTime || []).forEach(function (x) { dropItems.push({ name: n, p: { name: x.name, priority: x.priority, type: "iftime" } }); });
     });
     if (dropItems.length) {
       var d = el("div", "card");
@@ -96,8 +96,10 @@
         if (!mine.length) return;
         var grp = el("div", "phase"); grp.appendChild(el("h4", null, esc(n)));
         mine.forEach(function (it) {
-          var when = it.p.type === "iftime" ? "if you have time" : (it.p.day + " " + fmt(it.p.start_min) + "-" + fmt(it.p.end_min));
-          grp.appendChild(el("div", "bk drop", esc(it.p.name) + ' <span class="when">' + when + "</span>"));
+          var when = it.p.type === "iftime" ? "no free slot - turn up if you can" : (it.p.day + " " + fmt(it.p.start_min) + "-" + fmt(it.p.end_min));
+          var dot = it.p.priority ? '<span class="pri-dot ' + it.p.priority + '"></span>' : "";
+          grp.appendChild(el("div", "bk", dot + esc(it.p.name) +
+            ' <span class="badge drop">drop-in</span><div class="when">' + when + "</div>"));
         });
         d.appendChild(grp);
       });

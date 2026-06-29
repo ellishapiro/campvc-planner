@@ -166,15 +166,14 @@
       card.appendChild(phaseBlock("Phase 2 - Free (book a week later)", p.free));
 
       if (p.dropins.length) {
-        var dd = el("div", "phase"); dd.appendChild(el("h4", null, "Drop-ins (turn up - time earmarked)"));
-        p.dropins.forEach(function (x) {
-          dd.appendChild(el("div", "bk drop",
-            esc(x.name) + ' <span class="when">' + x.day + " " + fmt(x.start_min) + "-" + fmt(x.end_min) + "</span>"));
-        });
+        var dd = el("div", "phase"); dd.appendChild(el("h4", null, "Drop-ins - turn up (time earmarked)"));
+        p.dropins.forEach(function (x) { dd.appendChild(dropRow(x, x.day + " " + fmt(x.start_min) + "-" + fmt(x.end_min))); });
         card.appendChild(dd);
       }
       if (p.ifTime.length) {
-        card.appendChild(el("div", "phase hint", "Wanted drop-ins with no free gap (turn up if you can squeeze them in): " + p.ifTime.map(function (x) { return esc(x.name); }).join(", ")));
+        var it = el("div", "phase"); it.appendChild(el("h4", null, "Drop-ins - no free gap (turn up if you can)"));
+        p.ifTime.forEach(function (x) { it.appendChild(dropRow(x, "no free slot")); });
+        card.appendChild(it);
       }
       if (p.dropped.length) {
         // group the couldn't-fit list by priority (must -> want -> if-free) for readability
@@ -184,13 +183,20 @@
           return (order[a.priority] == null ? 9 : order[a.priority]) - (order[b.priority] == null ? 9 : order[b.priority]);
         }).forEach(function (x) {
           var dot = x.priority ? '<span class="pri-dot ' + x.priority + '"></span>' : "";
-          fd.appendChild(el("div", "bk drop", dot + esc(x.name) +
+          fd.appendChild(el("div", "bk", dot + esc(x.name) +
             '<div class="when">' + esc(x.reason) + "</div>"));
         });
         card.appendChild(fd);
       }
       wrap.appendChild(card);
     });
+  }
+
+  // A drop-in row, styled like the other list rows (priority dot + name + tag).
+  function dropRow(x, whenText) {
+    var dot = x.priority ? '<span class="pri-dot ' + x.priority + '"></span>' : "";
+    return el("div", "bk", dot + esc(x.name) +
+      ' <span class="badge drop">drop-in</span><div class="when">' + esc(whenText) + "</div>");
   }
 
   function phaseBlock(title, items) {
