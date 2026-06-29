@@ -5,7 +5,7 @@
   var CONFIG = window.CONFIG;
   var acts = schedule.activities;
 
-  var state = { name: "", picks: {}, savedPicks: {}, loading: false };
+  var state = { name: "", picks: {}, savedPicks: {}, loading: false, expanded: {} };
   var DRAFT_KEY = "campvc_draft"; // per-tab session cache so tabbing between views keeps edits
 
   var $ = function (id) { return document.getElementById(id); };
@@ -36,9 +36,17 @@
     return Object.keys(s);
   }
 
+  function locationsOf(a) {
+    var s = {};
+    (a.instances || []).forEach(function (i) { if (i.location) s[i.location] = 1; });
+    (a.windows || []).forEach(function (w) { if (w.location) s[w.location] = 1; });
+    return Object.keys(s);
+  }
+
   function detail(a) {
     var bits = [];
-    if (a.location) bits.push(esc(a.location));
+    var locs = locationsOf(a);
+    if (locs.length) bits.push(esc(locs.slice(0, 2).join(" / ")));
     if (a.kind === "repeating") {
       bits.push(a.instances.length + " sessions (" + daysOf(a).map(function (d) { return d.slice(0, 3); }).join(", ") + ")");
     } else if (a.kind === "oneoff") {
@@ -54,15 +62,23 @@
     if (a.paid) b += '<span class="badge paid">Paid</span>';
     else b += '<span class="badge">Free</span>';
     if (a.offsite) b += '<span class="badge off">Off-site</span>';
+    if (a.external) b += '<span class="badge off">Books off-app</span>';
     if (a.kind === "repeating") b += '<span class="badge rep">Repeats &times;' + a.instances.length + '</span>';
-    if (a.kind === "dropin") b += '<span class="badge drop">Drop-in</span>';
+    if (a.kind === "dropin") b += '<span class="badge drop">Drop-in &middot; just turn up</span>';
+    if (a.maxPerSession && a.maxPerSession > 0 && a.maxPerSession <= 12) b += '<span class="badge lim">Limited &middot; ' + a.maxPerSession + '/session</span>';
     return b;
+  }
+
+  function bookingNote(a) {
+    if (a.kind === "dropin") return "Just turn up - no booking needed.";
+    if (a.external) return "Booking is off-app, via a link in the Guidebook app (opens when booking opens).";
+    return a.paid ? "Paid - books in phase 1 (from 4 July)." : "Included - books in phase 2 (from 11 July).";
   }
 
   function matches(a) {
     var q = $("search").value.trim().toLowerCase();
     if (q) {
-      var hay = (a.name + " " + a.location + " " + (a.categories || []).join(" ")).toLowerCase();
+      var hay = (a.name + " " + locationsOf(a).join(" ") + " " + (a.categories || []).join(" ") + " " + (a.description || "")).toLowerCase();
       if (hay.indexOf(q) === -1) return false;
     }
     var fc = $("fCat").value; if (fc && (a.categories || []).indexOf(fc) === -1) return false;
@@ -101,9 +117,11 @@
   }
 
   function activityRow(a) {
+    var frag = document.createDocumentFragment();
     var row = el("div", "act");
     var meta = el("div", "meta");
-    meta.innerHTML = '<div class="nm">' + esc(a.name) + badges(a) + "</div><div class=\"det\">" + detail(a) + "</div>";
+    var info = a.description ? ' <button class="infobtn" type="button" title="More details">&#9432;</button>' : "";
+    meta.innerHTML = '<div class="nm">' + esc(a.name) + badges(a) + info + "</div><div class=\"det\">" + detail(a) + "</div>";
     row.appendChild(meta);
 
     var seg = el("div", "seg");
@@ -127,7 +145,21 @@
       seg.appendChild(btn);
     });
     row.appendChild(seg);
-    return row;
+    frag.appendChild(row);
+
+    // Collapsible details panel (description + booking info). Inline, so no
+    // navigation and no state is lost; expanded state is remembered per activity.
+    if (a.description) {
+      var panel = el("div", "actdetails");
+      panel.hidden = !state.expanded[a.id];
+      panel.innerHTML = '<div class="bnote">' + esc(bookingNote(a)) + "</div><p>" + esc(a.description) + "</p>";
+      meta.querySelector(".infobtn").addEventListener("click", function () {
+        state.expanded[a.id] = panel.hidden;  // toggle
+        panel.hidden = !panel.hidden;
+      });
+      frag.appendChild(panel);
+    }
+    return frag;
   }
 
   function pickedCount() { return Object.keys(state.picks).length; }

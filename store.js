@@ -51,9 +51,28 @@
     });
   }
 
+  // Remap saved pick ids to current (merged) ids so picks survive a rebuild.
+  // On a merge collision, keep the higher priority. Applied on every read, so
+  // there's no timing race with a deploy and nothing is ever lost.
+  var PRANK = { must: 3, want: 2, iffree: 1 };
+  function migrate(picks) {
+    var M = window.MIGRATIONS || {};
+    var out = {};
+    Object.keys(picks || {}).forEach(function (k) {
+      var nk = M[k] || k, v = picks[k];
+      if (!out[nk] || (PRANK[v] || 0) > (PRANK[out[nk]] || 0)) out[nk] = v;
+    });
+    return out;
+  }
+  function migrateAll(map) {
+    var out = {};
+    Object.keys(map).forEach(function (n) { out[n] = migrate(map[n]); });
+    return out;
+  }
+
   // ---- Picks ----
   function getPicks() {
-    if (isLocal) return Promise.resolve(lsGet(LS_PICKS, {}));
+    if (isLocal) return Promise.resolve(migrateAll(lsGet(LS_PICKS, {})));
     return jsonp({ action: "getPicks" }).then(function (rows) {
       // rows: [{ts, name, picks}] - keep latest per name.
       var latest = {};
@@ -61,7 +80,7 @@
         if (!latest[r.name] || r.ts > latest[r.name].ts) latest[r.name] = r;
       });
       var out = {};
-      Object.keys(latest).forEach(function (n) { out[n] = latest[n].picks || {}; });
+      Object.keys(latest).forEach(function (n) { out[n] = migrate(latest[n].picks || {}); });
       return out;
     });
   }

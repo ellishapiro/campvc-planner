@@ -4,6 +4,8 @@
   var schedule = window.SCHEDULE;
   var CONFIG = window.CONFIG;
   var NAMES = (CONFIG.friends || []).slice();
+  var actById = {};
+  schedule.activities.forEach(function (a) { actById[a.id] = a; });
 
   var $ = function (id) { return document.getElementById(id); };
   function el(t, c, h) { var e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; }
@@ -173,10 +175,12 @@
       var bkp = (x.kind === "repeating" && x.backups && x.backups.length)
         ? '<div class="bkp">backup: ' + x.backups.map(esc).join("; ") + "</div>" : "";
       var split = x.split ? ' <span class="flag">(split from group)</span>' : "";
+      var act = actById[x.activityId] || {};
+      var ext = act.external ? '<div class="bnote">books off-app (link in the app)</div>' : "";
       line.innerHTML = dot + "<strong>" + esc(x.name) + "</strong>" + split +
         '<div class="when">' + x.day + " " + fmt(x.start_min) + "-" + fmt(x.end_min) +
         (x.location ? " &middot; " + esc(x.location) : "") + (x.offsite ? " &middot; off-site" : "") + "</div>" +
-        withTxt + bkp;
+        withTxt + ext + bkp;
       d.appendChild(line);
     });
     return d;

@@ -9,6 +9,20 @@
   var CONFIG = window.CONFIG;
   var NAMES = (CONFIG.friends || []).slice();
   var BOOKED_KEY = "campvc_booked";
+  var actById = {};
+  schedule.activities.forEach(function (a) { actById[a.id] = a; });
+  var PRANK = { must: 3, want: 2, iffree: 1 };
+  // Scarcity = total places across all sessions; fewer = book sooner. Unlimited
+  // (null) sorts last. Used to order each person's list within a phase.
+  function scarcity(p) {
+    var a = actById[p.activityId];
+    return (a && a.totalPlaces != null) ? a.totalPlaces : Infinity;
+  }
+  function byScarcity(x, y) {
+    return (PRANK[y.p.priority] || 0) - (PRANK[x.p.priority] || 0) ||
+      scarcity(x.p) - scarcity(y.p) ||
+      (x.p.dayIndex - y.p.dayIndex) || (x.p.start_min - y.p.start_min);
+  }
 
   var $ = function (id) { return document.getElementById(id); };
   function el(t, c, h) { var e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; }
@@ -58,10 +72,10 @@
       if (!items.length) { sec.appendChild(el("div", "hint", "nothing to book here")); c.appendChild(sec); return; }
       // group by person
       peopleToShow().forEach(function (n) {
-        var mine = items.filter(function (it) { return it.name === n; });
+        var mine = items.filter(function (it) { return it.name === n; }).sort(byScarcity);
         if (!mine.length) return;
         var grp = el("div", "phase");
-        grp.appendChild(el("h4", null, esc(n)));
+        grp.appendChild(el("h4", null, esc(n) + ' <span class="hint">- scarcest first</span>'));
         mine.forEach(function (it) { grp.appendChild(itemRow(it.name, it.p)); });
         sec.appendChild(grp);
       });
@@ -100,13 +114,17 @@
       persist(); body.classList.toggle("booked", cb.checked); updateCounts();
     });
     var body = el("div", state.booked[k] ? "bkbody booked" : "bkbody");
+    var act = actById[p.activityId] || {};
     var withTxt = p.withWhom && p.withWhom.length ? '<span class="with"> &middot; with ' + p.withWhom.map(esc).join(", ") + "</span>" : "";
     var split = p.split ? ' <span class="flag">(split from group)</span>' : "";
+    var limited = (act.totalPlaces != null && act.totalPlaces <= 60)
+      ? ' <span class="badge lim">limited &middot; ~' + act.totalPlaces + " places</span>" : "";
+    var ext = act.external ? '<div class="bnote">Books off-app - via a link in the Guidebook app.</div>' : "";
     var bkp = (p.kind === "repeating" && p.backups && p.backups.length)
       ? '<div class="bkp">if full, backup: ' + p.backups.map(esc).join("; ") + "</div>" : "";
-    body.innerHTML = "<strong>" + esc(p.name) + "</strong>" + split +
+    body.innerHTML = "<strong>" + esc(p.name) + "</strong>" + split + limited +
       '<div class="when">' + p.day + " " + fmt(p.start_min) + "-" + fmt(p.end_min) +
-      (p.location ? " &middot; " + esc(p.location) : "") + (p.offsite ? " &middot; off-site" : "") + withTxt + "</div>" + bkp;
+      (p.location ? " &middot; " + esc(p.location) : "") + (p.offsite ? " &middot; off-site" : "") + withTxt + "</div>" + ext + bkp;
     row.appendChild(cb); row.appendChild(body);
     return row;
   }

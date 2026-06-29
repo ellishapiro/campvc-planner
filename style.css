@@ -110,6 +110,12 @@ label.fld { display: flex; flex-direction: column; gap: 3px; font-size: 11px; co
 .badge.off { color: var(--accent); border-color: var(--accent); }
 .badge.rep { color: var(--accent-2); border-color: var(--accent-2); }
 .badge.drop { color: var(--iffree); border-color: var(--iffree); }
+.badge.lim { color: var(--must); border-color: var(--must); }
+
+.infobtn { background: none; border: 0; color: var(--accent-2); cursor: pointer; font-size: 14px; padding: 0 4px; vertical-align: middle; }
+.actdetails { border: 1px solid var(--line); border-top: 0; background: var(--bg); padding: 10px 14px; font-size: 13px; color: var(--ink-dim); }
+.actdetails p { margin: 6px 0 0; }
+.actdetails .bnote { color: var(--ink); font-weight: 600; }
 
 /* ---- Priority segmented control ---- */
 .seg { display: flex; gap: 4px; flex: 0 0 auto; }
@@ -198,6 +204,7 @@ label.fld { display: flex; flex-direction: column; gap: 3px; font-size: 11px; co
 .bkitem input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px; flex: 0 0 auto; }
 .bkbody { font-size: 13px; }
 .bkbody.booked { text-decoration: line-through; opacity: .5; }
+.bnote { color: var(--accent); font-size: 11px; margin-top: 2px; }
 
 /* ---- Adjust panel ---- */
 .adjust { margin-top: 18px; }

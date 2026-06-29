@@ -41,7 +41,7 @@ $liveChanged = ($checkCode -ne 0)
 if ($CheckOnly) {
   Section 'Check only - comparing against the planner''s current data too'
   Push-Location $planner
-  try { python build_schedule.py "$xlsx" --check } finally { Pop-Location }
+  try { python build_schedule.py "$schedProj" --check } finally { Pop-Location }
   if ($liveChanged) {
     Write-Host "`nLive schedule HAS changed since the last snapshot. Re-run without -CheckOnly to update." -ForegroundColor Yellow
   } else {
@@ -83,7 +83,7 @@ if ($after -le $before -and -not $Force) {
 # ---- 3. Rebuild planner data + flag changes ----------------------------------
 Section 'Rebuilding planner data and flagging changes'
 Push-Location $planner
-try { python build_schedule.py "$xlsx" } finally { Pop-Location }
+try { python build_schedule.py "$schedProj" } finally { Pop-Location }
 
 Write-Host "`nDone. Review the change report above (also saved to data\CHANGES.md)." -ForegroundColor Green
 Write-Host "If you've deployed to GitHub Pages, commit & push so everyone gets the update." -ForegroundColor Green
