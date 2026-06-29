@@ -6324,12 +6324,12 @@
    "windows": []
   },
   {
-   "id": "friday-roller-disco",
-   "name": "Friday Roller Disco",
+   "id": "roller-disco",
+   "name": "Roller Disco",
    "offsite": false,
    "paid": false,
    "phase": 2,
-   "kind": "oneoff",
+   "kind": "repeating",
    "booking": true,
    "external": false,
    "description": "D-I-S-C-O! Join us for the Camp VC Roller Disco! Open to quad skaters with existing experience, or anyone who has successfully completed a Beginners Lesson and mastered the basics. Skates, helmets and pads are available to borrow on a first-come, first-served basis, although we strongly encourage you to bring your own equipment. No inline skates or first-time skaters, please. Helmets and pads are mandatory. Drop in at any point during the 90-minute session. If it's busy, participants may be asked to take turns so everyone gets a chance to skate.",
@@ -6344,6 +6344,14 @@
      "start_min": 1080,
      "end_min": 1170,
      "label": "Friday 18:00-19:30",
+     "location": "QUAD SKATE TENT",
+     "capacity": -1
+    },
+    {
+     "day": "Saturday",
+     "start_min": 1080,
+     "end_min": 1170,
+     "label": "Saturday 18:00-19:30",
      "location": "QUAD SKATE TENT",
      "capacity": -1
     }
@@ -8332,33 +8340,6 @@
      "label": "Saturday 18:00-19:00",
      "location": "BAR & MOTO TENT",
      "capacity": 50
-    }
-   ],
-   "windows": []
-  },
-  {
-   "id": "saturday-roller-disco",
-   "name": "Saturday Roller Disco",
-   "offsite": false,
-   "paid": false,
-   "phase": 2,
-   "kind": "oneoff",
-   "booking": true,
-   "external": false,
-   "description": "D-I-S-C-O! Join us for the Camp VC Roller Disco! Open to quad skaters with existing experience, or anyone who has successfully completed a Beginners Lesson and mastered the basics. Skates, helmets and pads are available to borrow on a first-come, first-served basis, although we strongly encourage you to bring your own equipment. No inline skates or first-time skaters, please. Helmets and pads are mandatory. Drop in at any point during the 90-minute session. If it's busy, participants may be asked to take turns so everyone gets a chance to skate.",
-   "categories": [
-    "QUAD SKATING"
-   ],
-   "maxPerSession": null,
-   "totalPlaces": null,
-   "instances": [
-    {
-     "day": "Saturday",
-     "start_min": 1080,
-     "end_min": 1170,
-     "label": "Saturday 18:00-19:30",
-     "location": "QUAD SKATE TENT",
-     "capacity": -1
     }
    ],
    "windows": []

@@ -80,6 +80,20 @@ def slugify(text):
     return re.sub(r"[^a-zA-Z0-9]+", "-", t).strip("-").lower() or "x"
 
 
+# Some events the source lists as separate per-day items are functionally
+# interchangeable - merge them under one name so they become a single repeating
+# activity and the engine can pick whichever instance fits. Keyed by
+# norm(original name) -> canonical display name.
+NAME_ALIASES = {
+    "friday roller disco": "Roller Disco",
+    "saturday roller disco": "Roller Disco",
+}
+
+
+def canonical_name(name):
+    return NAME_ALIASES.get(norm(name), (name or "").strip())
+
+
 def is_external_bookable(name):
     return load_overrides().get(norm(name)) == "bookable"
 
@@ -201,9 +215,10 @@ def build(sched_dir):
                 unclassified.add(name)
             scheduled = not is_open_window(r.get("Start"), r.get("End"), start_min, end_min, name)
 
-        key = norm(name)
+        cname = canonical_name(name)   # merge fungible per-day events (keep `name` for extras lookup)
+        key = norm(cname)
         if key not in activities:
-            activities[key] = {"id": slugify(name), "name": name, "categories": [],
+            activities[key] = {"id": slugify(cname), "name": cname, "categories": [],
                                "paid": paid, "offsite": False, "external": False, "booking": False,
                                "description": "", "slots": [], "windows": []}
         a = activities[key]
@@ -326,7 +341,7 @@ def build_migrations(old_payload, new_acts):
     new_ids = {a["id"] for a in new_acts}
     mig = {}
     for a in (old_payload.get("activities", []) if old_payload else []):
-        new_id = slugify(a["name"])
+        new_id = slugify(canonical_name(a["name"]))
         if a["id"] != new_id and new_id in new_ids:
             mig[a["id"]] = new_id
     return mig
