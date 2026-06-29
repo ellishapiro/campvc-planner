@@ -163,6 +163,11 @@
     if (s != null) return "from " + fmt(s);
     return "all day";
   }
+  function winLabel(x) {
+    var act = actById[x.activityId] || {};
+    var w = (act.windows || []).filter(function (z) { return z.day === x.day; })[0];
+    return w ? "open " + winText(w) : "around " + fmt(x.start_min);
+  }
 
   function blockEl(x, startB) {
     var isWindow = x.type === "dropin";
@@ -209,9 +214,18 @@
       card.appendChild(phaseBlock("Phase 2 - Free (book a week later)", p.free));
       if (p.turnup && p.turnup.length) card.appendChild(phaseBlock("Turn up - no booking (be there on time)", p.turnup));
 
-      if (p.dropins.length) {
-        var dd = el("div", "phase"); dd.appendChild(el("h4", null, "Drop-ins - turn up (time earmarked)"));
-        p.dropins.forEach(function (x) { dd.appendChild(dropRow(x, x.day + " " + fmt(x.start_min) + "-" + fmt(x.end_min))); });
+      // appointments (window activities that need booking, e.g. Massage) vs
+      // genuinely flexible turn-up drop-ins (Calm Space).
+      var appts = p.dropins.filter(function (x) { return x.booking; });
+      var flex = p.dropins.filter(function (x) { return !x.booking; });
+      if (appts.length) {
+        var ad = el("div", "phase"); ad.appendChild(el("h4", null, "Book a slot (appointment)"));
+        appts.forEach(function (x) { ad.appendChild(dropRow(x, x.day + " " + winLabel(x))); });
+        card.appendChild(ad);
+      }
+      if (flex.length) {
+        var dd = el("div", "phase"); dd.appendChild(el("h4", null, "Drop-ins - turn up (anytime)"));
+        flex.forEach(function (x) { dd.appendChild(dropRow(x, x.day + " " + fmt(x.start_min) + "-" + fmt(x.end_min))); });
         card.appendChild(dd);
       }
       if (p.ifTime.length) {

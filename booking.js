@@ -108,31 +108,51 @@
       c.appendChild(t);
     }
 
-    // Drop-ins: not booked, listed for completeness
-    var dropItems = [];
+    // Window activities split into appointments (need booking, e.g. Massage)
+    // and genuine turn-up drop-ins.
+    var apptItems = [], flexItems = [];
     peopleToShow().forEach(function (n) {
-      (state.result.byPerson[n].dropins || []).forEach(function (p) { dropItems.push({ name: n, p: p }); });
-      (state.result.byPerson[n].ifTime || []).forEach(function (x) { dropItems.push({ name: n, p: { name: x.name, priority: x.priority, type: "iftime" } }); });
+      (state.result.byPerson[n].dropins || []).forEach(function (p) {
+        (p.booking ? apptItems : flexItems).push({ name: n, p: p });
+      });
+      (state.result.byPerson[n].ifTime || []).forEach(function (x) {
+        flexItems.push({ name: n, p: { name: x.name, priority: x.priority, type: "iftime" } });
+      });
     });
-    if (dropItems.length) {
+    function dropCard(items, title, isAppt) {
+      if (!items.length) return;
       var d = el("div", "card");
-      d.appendChild(el("h3", null, 'Drop-ins <span class="hint">- just turn up, no booking needed</span>'));
+      d.appendChild(el("h3", null, title));
       peopleToShow().forEach(function (n) {
-        var mine = dropItems.filter(function (it) { return it.name === n; });
+        var mine = items.filter(function (it) { return it.name === n; });
         if (!mine.length) return;
         var grp = el("div", "phase"); grp.appendChild(el("h4", null, esc(n)));
         mine.forEach(function (it) {
-          var when = it.p.type === "iftime" ? "no free slot - turn up if you can" : (it.p.day + " " + fmt(it.p.start_min) + "-" + fmt(it.p.end_min));
-          var dot = it.p.priority ? '<span class="pri-dot ' + it.p.priority + '"></span>' : "";
-          var tag = it.p.booking
-            ? '<span class="badge book">book a slot' + (it.p.external ? " off-app" : "") + "</span>"
+          var p = it.p;
+          var when = p.type === "iftime" ? "no free slot - turn up if you can"
+            : (isAppt ? (p.day + " " + winOf(p)) : (p.day + " " + fmt(p.start_min) + "-" + fmt(p.end_min)));
+          var dot = p.priority ? '<span class="pri-dot ' + p.priority + '"></span>' : "";
+          var tag = p.booking
+            ? '<span class="badge book">book a slot' + (p.external ? " off-app" : "") + "</span>"
             : '<span class="badge drop">drop-in</span>';
-          grp.appendChild(el("div", "bk", dot + esc(it.p.name) + " " + tag + '<div class="when">' + when + "</div>"));
+          var note = p.booking && p.external ? '<div class="bnote">books off-app (partner link)</div>' : "";
+          grp.appendChild(el("div", "bk", dot + esc(p.name) + " " + tag + '<div class="when">' + when + "</div>" + note));
         });
         d.appendChild(grp);
       });
       c.appendChild(d);
     }
+    dropCard(apptItems, 'Book a slot <span class="hint">- off-app appointments, within open hours</span>', true);
+    dropCard(flexItems, 'Drop-ins <span class="hint">- just turn up, no booking needed</span>', false);
+  }
+
+  function winOf(p) {
+    var a = actById[p.activityId] || {};
+    var w = (a.windows || []).filter(function (z) { return z.day === p.day; })[0];
+    if (!w) return "book a slot";
+    function pm(t) { var m = /^(\d{1,2}):(\d{2})$/.exec(String(t || "").trim()); return m ? (+m[1] * 60 + +m[2]) : null; }
+    var s = pm(w.start), e = pm(w.end); if (s === 0) s = null;
+    return "open " + (s != null && e != null ? fmt(s) + "-" + fmt(e) : (e != null ? "until " + fmt(e) : "all day"));
   }
 
   function itemRow(name, p) {
