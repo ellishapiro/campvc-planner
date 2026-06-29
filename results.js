@@ -206,9 +206,10 @@
     NAMES.forEach(function (n) {
       var p = state.result.byPerson[n];
       var hasAny = p.all.length || p.dropins.length || p.ifTime.length || p.dropped.length;
-      // Collapsible per person - expanded on wide screens, collapsed on mobile.
+      // Collapsible per person, collapsed by default so the section is short;
+      // tap a name to expand. (Counts are in the summary either way.)
       var card = el("details", "card");
-      card.open = window.innerWidth > 700;
+      card.open = false;
       var toBook = p.paid.length + p.free.length;
       var sum = el("summary");
       sum.innerHTML = "<strong>" + esc(n) + "</strong>" +
