@@ -295,6 +295,27 @@
     body.appendChild(el("p", "hint",
       "Changes here are shared with everyone (saved to the group sheet) and the schedule recomputes live."));
 
+    // Togetherness dial
+    var tog = el("div", "knobrow");
+    tog.innerHTML = "<span>Keeping the group together:</span>";
+    var ti = el("select");
+    [
+      ["0", "Off - everyone's own best plan"],
+      ["1", "When it's free (default)"],
+      ["10", "Prefer together (may drop a 'want')"],
+      ["30", "Strongly together"],
+    ].forEach(function (o) { ti.appendChild(new Option(o[1], o[0])); });
+    var curTog = (state.knobs.togetherness != null ? state.knobs.togetherness : CONFIG.togetherness);
+    if (curTog == null) curTog = 1;
+    ti.value = String(curTog);
+    ti.addEventListener("change", function () {
+      state.knobs.togetherness = parseInt(ti.value, 10); persist();
+    });
+    tog.appendChild(ti);
+    body.appendChild(tog);
+    body.appendChild(el("p", "hint",
+      "A 'must do' is never sacrificed to keep people together - this only trades lower-priority picks."));
+
     // Global break
     var brk = el("div", "knobrow");
     brk.innerHTML = "<span>Break between activities (minutes):</span>";

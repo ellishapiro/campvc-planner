@@ -25,6 +25,15 @@ window.CONFIG = {
   // Don't earmark drop-ins before this hour (keeps "all day" drop-ins out of dawn).
   dropInEarliestHour: 9,
 
+  // Togetherness dial: how hard the engine tries to land friends on the SAME
+  // instance of a shared activity. A must is never sacrificed for togetherness.
+  //   0  = off (everyone gets their own best timetable)
+  //   1  = co-locate only when it costs nobody a pick (default)
+  //   10 = prefer together (will trade a "want" for one more person sharing)
+  //   30 = strongly together
+  // Adjustable live in the results page Adjust panel (saved as a shared knob).
+  togetherness: 1,
+
   // Festival open hours (the Main Event Site). Outside these the calendar is
   // greyed out and no drop-ins are earmarked. Empty = no bound that side
   // (it runs continuously overnight in the middle). Friday opens noon (first

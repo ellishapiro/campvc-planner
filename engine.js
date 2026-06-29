@@ -1,518 +1,321 @@
-// Camp VC planner - matchmaking + clash engine.
-// Pure, deterministic functions. Given the schedule, everyone's picks, and the
-// shared "knobs", it produces each person's booking plan and the group view.
-// No randomness, no network, no DOM - so it is consistent and testable.
+// Camp VC planner - matchmaking + scheduling engine.
+// Pure, deterministic. Given the schedule, everyone's picks and the shared
+// "knobs", it produces each person's booking plan and the group view.
 //
-// Exposed as window.Engine.compute(schedule, picksByName, knobs, config).
+//   window.Engine.compute(schedule, picksByName, knobs, config)
 //
-// picksByName: { "Elli": { "<activityId>": "must"|"want"|"iffree", ... }, ... }
-// knobs:       { breakMinutes?, pins?: {activityId: instanceKey}, gaps?: {activityId: minutes} }
+// Design: for each person we solve the EXACT best timetable for their must+want
+// picks (branch-and-bound: choose <=1 instance per activity, no time overlaps
+// incl. buffers, maximise total priority weight) - so a higher priority is never
+// crowded out by a lower one, and no fittable pick is left out. If-free picks are
+// then greedily slotted into the gaps. Togetherness is a TUNABLE objective term
+// (config/knobs.togetherness): we iterate a group "consensus" instance per shared
+// activity and reward landing on it - small dial = only co-locate when it's free,
+// larger dial = trade some lower-priority picks for being together. A must is
+// never dropped to chase togetherness.
 (function () {
   "use strict";
 
   var PRIORITY_WEIGHT = { must: 3, want: 2, iffree: 1 };
   var PRIORITY_LABEL = { must: "Must do", want: "Want", iffree: "If free" };
+  function weightOf(p) { return PRIORITY_WEIGHT[p] || 0; }
+  // Optimiser weights are tiered so a MUST can never be traded away for
+  // togetherness or wants (must dominates), while wants remain tradeable.
+  function covWeight(p) { return p === "must" ? 10000 : (p === "want" ? 10 : (p === "iffree" ? 1 : 0)); }
+  function instanceKey(i) { return i.day + "|" + i.start_min; }
+  function fmt(m) { var h = Math.floor(m / 60), x = m % 60; return (h < 10 ? "0" : "") + h + ":" + (x < 10 ? "0" : "") + x; }
+  function toMin(s) { if (s == null) return null; var m = /^(\d{1,2}):(\d{2})$/.exec(String(s).trim()); return m ? +m[1] * 60 + +m[2] : null; }
 
-  function weightOf(priority) {
-    return PRIORITY_WEIGHT[priority] || 0;
-  }
-
-  function instanceKey(inst) {
-    return inst.day + "|" + inst.start_min;
-  }
-
-  // Derive sensible calendar bounds from the bookable instances.
   function dayBounds(schedule, config) {
     var min = 24 * 60, max = 0, seen = false;
     schedule.activities.forEach(function (a) {
-      a.instances.forEach(function (i) {
-        seen = true;
-        if (i.start_min < min) min = i.start_min;
-        if (i.end_min > max) max = i.end_min;
-      });
+      a.instances.forEach(function (i) { seen = true; if (i.start_min < min) min = i.start_min; if (i.end_min > max) max = i.end_min; });
     });
-    if (!seen) {
-      min = (config.dayStartHourFallback || 8) * 60;
-      max = (config.dayEndHourFallback || 23) * 60;
-    }
+    if (!seen) { min = (config.dayStartHourFallback || 8) * 60; max = (config.dayEndHourFallback || 23) * 60; }
     return { start: min, end: max };
   }
 
   function compute(schedule, picksByName, knobs, config) {
-    knobs = knobs || {};
-    config = config || {};
-    var acts = {};
-    schedule.activities.forEach(function (a) { acts[a.id] = a; });
-    var days = schedule.days;
-    var dayIndex = {};
-    days.forEach(function (d, i) { dayIndex[d] = i; });
-
+    knobs = knobs || {}; config = config || {};
+    var acts = {}; schedule.activities.forEach(function (a) { acts[a.id] = a; });
+    var days = schedule.days; var dayIndex = {}; days.forEach(function (d, i) { dayIndex[d] = i; });
     var breakMin = (knobs.breakMinutes != null ? knobs.breakMinutes : config.breakMinutes) || 0;
     var offsiteBuf = config.offsiteBufferMinutes || 0;
-    var pins = knobs.pins || {};
-    var forced = knobs.gaps || {};
+    var pins = knobs.pins || {}, forced = knobs.gaps || {};
     var names = Object.keys(picksByName);
-
-    var sched = {};       // name -> [placement]   (bookings)
-    var earmarks = {};    // name -> [placement]   (drop-in suggestions)
-    var dropped = {};     // name -> [{activityId,name,reason}]
-    var ifTime = {};      // name -> [activity]    (wanted drop-ins with no gap)
-    names.forEach(function (n) { sched[n] = []; earmarks[n] = []; dropped[n] = []; ifTime[n] = []; });
-
+    // Togetherness dial. Optimiser weights are must=10000, want=10, iffree=1, so a
+    // must is never traded for togetherness. To trade ONE want for one extra person
+    // sharing an instance you need dial >= 10. So: 0 = off, 1 = co-locate only when
+    // it costs nothing (default), ~10 = prefer together (trade a want), ~30 = strong.
+    var together = (knobs.togetherness != null ? knobs.togetherness : config.togetherness);
+    if (together == null) together = 1;  // default: co-locate when free, never trade a want
     var bounds = dayBounds(schedule, config);
     var dropinEarliest = Math.max(bounds.start, (config.dropInEarliestHour || 9) * 60);
-    var dropinLatest = (config.dayEndHourFallback || 23) * 60;  // evening drop-ins (cabaret, DJ) run later than the last bookable session
+    var dropinLatest = (config.dayEndHourFallback || 23) * 60;
 
     function reqGap(aId, bId) {
-      var g = breakMin;
-      var a = acts[aId], b = acts[bId];
+      var g = breakMin, a = acts[aId], b = acts[bId];
       if ((a && a.offsite) || (b && b.offsite)) g += offsiteBuf;
       g += Math.max(forced[aId] || 0, forced[bId] || 0);
       return g;
     }
+    function dayIdx(i) { return i.dayIndex != null ? i.dayIndex : (dayIndex[i.day] != null ? dayIndex[i.day] : 9); }
+    function instSort(a, b) { return (dayIdx(a) - dayIdx(b)) || (a.start_min - b.start_min); }
+    // do instances of two activities clash (overlap or within the required gap)?
+    function clash(i1, a1, i2, a2) {
+      if (i1.day !== i2.day) return false;
+      var g = reqGap(a1.id, a2.id);
+      return i1.start_min < i2.end_min + g && i2.start_min < i1.end_min + g;
+    }
+    function scheduled(a) { return a && (a.kind === "oneoff" || a.kind === "repeating") && a.instances.length; }
+    function candInsts(a) {
+      if (pins[a.id]) { var p = a.instances.filter(function (i) { return instanceKey(i) === pins[a.id]; }); if (p.length) return p; }
+      return a.instances.slice().sort(instSort);
+    }
+    function interested(id) {
+      var o = []; names.forEach(function (n) { var pr = picksByName[n][id]; if (pr) o.push({ name: n, priority: pr, w: weightOf(pr) }); });
+      return o;
+    }
 
-    // Does `cand` fit in `person`'s timetable without overlap/too-close?
-    // Returns the conflicting placement if not, else null.
-    function conflictFor(person, cand, includeEarmarks) {
-      var list = sched[person].slice();
-      if (includeEarmarks) list = list.concat(earmarks[person]);
-      for (var i = 0; i < list.length; i++) {
-        var p = list[i];
-        if (p.day !== cand.day) continue;
-        var g = reqGap(p.activityId, cand.activityId);
-        var ok = (cand.start_min >= p.end_min + g) || (p.start_min >= cand.end_min + g);
-        if (!ok) return p;
+    // ---- togetherness consensus: a shared instance per activity ----
+    var consensus = {};
+    schedule.activities.forEach(function (a) {
+      if (!scheduled(a) || !interested(a.id).length) return;
+      consensus[a.id] = instanceKey(candInsts(a)[0]);
+    });
+
+    // ---- per-person solve: exact B&B over must+want, then greedy if-free ----
+    function solve(n) {
+      var picks = picksByName[n];
+      function tier(pr) {
+        var out = [];
+        for (var id in picks) if (picks[id] === pr && scheduled(acts[id]))
+          out.push({ a: acts[id], w: covWeight(pr), insts: candInsts(acts[id]) });
+        return out;
       }
-      return null;
+      var items = tier("must").concat(tier("want"))
+        .sort(function (x, y) { return (y.w - x.w) || (x.insts.length - y.insts.length); });
+
+      var best = { score: -1, set: [] }, calls = 0;
+      function fitsList(inst, a, list) { for (var k = 0; k < list.length; k++) if (clash(inst, a, list[k].inst, list[k].a)) return false; return true; }
+      function dfs(idx, cur, curW, curT) {
+        if (++calls > 2000000) return;
+        var score = curW + together * curT;
+        if (score > best.score) best = { score: score, set: cur.slice() };
+        if (idx >= items.length) return;
+        var rem = 0; for (var k = idx; k < items.length; k++) rem += items[k].w;
+        if (curW + rem + together * (curT + (items.length - idx)) <= best.score) return; // optimistic bound
+        var it = items[idx];
+        for (var j = 0; j < it.insts.length; j++) {
+          var inst = it.insts[j];
+          if (fitsList(inst, it.a, cur)) {
+            var t = consensus[it.a.id] === instanceKey(inst) ? 1 : 0;
+            cur.push({ a: it.a, inst: inst, w: it.w }); dfs(idx + 1, cur, curW + it.w, curT + t); cur.pop();
+          }
+        }
+        dfs(idx + 1, cur, curW, curT); // skip this activity
+      }
+      dfs(0, [], 0, 0);
+      var chosen = best.set.map(function (c) { return { a: c.a, inst: c.inst }; });
+
+      // if-free: greedy into remaining gaps, preferring the consensus instance.
+      function fitsAll(inst, a) { for (var k = 0; k < chosen.length; k++) if (clash(inst, a, chosen[k].inst, chosen[k].a)) return false; return true; }
+      var iff = [];
+      for (var id in picks) if (picks[id] === "iffree" && scheduled(acts[id])) iff.push(acts[id]);
+      iff.sort(function (x, y) { return x.instances.length - y.instances.length; });
+      iff.forEach(function (a) {
+        var order = candInsts(a).slice().sort(function (p, q) {
+          var pc = consensus[a.id] === instanceKey(p) ? 0 : 1, qc = consensus[a.id] === instanceKey(q) ? 0 : 1;
+          return (pc - qc) || instSort(p, q);
+        });
+        for (var j = 0; j < order.length; j++) if (fitsAll(order[j], a)) { chosen.push({ a: a, inst: order[j] }); break; }
+      });
+      return chosen;
     }
 
-    function fits(person, cand, includeEarmarks) {
-      return conflictFor(person, cand, includeEarmarks) === null;
+    // Global objective so we can pick the BEST iteration (the consensus loop can
+    // oscillate, so we never just trust the last one): total priority weight
+    // placed + dial * total co-attendance (extra people sharing an instance).
+    function globalScore(asg) {
+      var cov = 0, byInst = {};
+      names.forEach(function (n) {
+        asg[n].forEach(function (c) {
+          cov += covWeight(picksByName[n][c.a.id]);
+          var k = c.a.id + "@" + instanceKey(c.inst); byInst[k] = (byInst[k] || 0) + 1;
+        });
+      });
+      var tog = 0; for (var k in byInst) tog += Math.max(0, byInst[k] - 1);
+      return cov + together * tog;
     }
 
-    function makePlacement(a, inst, type, priority, split) {
+    // iterate: solve everyone, recompute consensus, keep the best-scoring round.
+    var assign = null, bestScore = -Infinity;
+    for (var iter = 0; iter < 6; iter++) {
+      var cur = {}; names.forEach(function (n) { cur[n] = solve(n); });
+      var sc = globalScore(cur);
+      if (sc > bestScore) { bestScore = sc; assign = cur; }
+      var tally = {};
+      names.forEach(function (n) {
+        cur[n].forEach(function (c) {
+          var id = c.a.id, k = instanceKey(c.inst);
+          (tally[id] = tally[id] || {})[k] = (tally[id][k] || 0) + weightOf(picksByName[n][id]);
+        });
+      });
+      var changed = false;
+      Object.keys(tally).forEach(function (id) {
+        if (pins[id]) return;
+        var bk = null, bw = -1;
+        for (var k in tally[id]) if (tally[id][k] > bw) { bw = tally[id][k]; bk = k; }
+        if (bk && consensus[id] !== bk) { consensus[id] = bk; changed = true; }
+      });
+      if (!changed) break;
+    }
+    assign = assign || {};
+
+    // ---- build placements ----
+    var sched = {}, dropped = {}, earmarks = {}, ifTime = {};
+    names.forEach(function (n) { sched[n] = []; dropped[n] = []; earmarks[n] = []; ifTime[n] = []; });
+
+    function makePlacement(a, inst, type, priority) {
       return {
-        activityId: a.id,
-        name: a.name,
-        location: a.location,
-        paid: a.paid,
-        offsite: a.offsite,
-        booking: !!a.booking,       // needs booking (in booking lists) vs turn-up
-        external: !!a.external,     // booking is off-app (partner link)
-        kind: a.kind,
-        type: type,                 // "booking" | "dropin"
-        priority: priority || null,
-        priorityLabel: priority ? PRIORITY_LABEL[priority] : null,
-        day: inst.day,
-        dayIndex: dayIndex[inst.day] != null ? dayIndex[inst.day] : 9,
-        start_min: inst.start_min,
-        end_min: inst.end_min,
+        activityId: a.id, name: a.name, location: a.location, paid: a.paid, offsite: a.offsite,
+        booking: !!a.booking, external: !!a.external, kind: a.kind, type: type,
+        priority: priority || null, priorityLabel: priority ? PRIORITY_LABEL[priority] : null,
+        day: inst.day, dayIndex: dayIdx(inst), start_min: inst.start_min, end_min: inst.end_min,
         label: inst.label || (inst.day + " " + fmt(inst.start_min) + "-" + fmt(inst.end_min)),
-        split: !!split,
-        withWhom: [],
+        withWhom: [], backups: [],
       };
     }
 
-    function place(person, a, inst, type, priority, split) {
-      sched[person].push(makePlacement(a, inst, type, priority, split));
-    }
-
-    function candFromInstance(a, inst) {
-      return { day: inst.day, start_min: inst.start_min, end_min: inst.end_min, activityId: a.id };
-    }
-
-    function interested(actId) {
-      var out = [];
-      names.forEach(function (n) {
-        var pr = picksByName[n][actId];
-        if (pr) out.push({ name: n, priority: pr, weight: weightOf(pr) });
-      });
-      return out;
-    }
-
-    function dayIdx(i) {
-      if (i.dayIndex != null) return i.dayIndex;
-      return dayIndex[i.day] != null ? dayIndex[i.day] : 9;
-    }
-    function instSort(a, b) {
-      return (dayIdx(a) - dayIdx(b)) || (a.start_min - b.start_min);
-    }
-
-    function overlaps(p, cand) {
-      if (p.day !== cand.day) return false;
-      var g = reqGap(p.activityId, cand.activityId);
-      return !((cand.start_min >= p.end_min + g) || (p.start_min >= cand.end_min + g));
-    }
-    function weightOfPick(person, actId) { return weightOf(picksByName[person][actId]); }
-
-    // ---- Placement ----
-    // We place activities one at a time, tightest-first, so constrained picks
-    // (one-offs, few-instance activities) claim slots before very flexible ones
-    // (e.g. Archery x34). For each activity all interested people aim at the SAME
-    // chosen instance (matchmaking); a person who can't fit it will first try to
-    // RELOCATE the flexible bookings in the way (keeping everyone), and only then
-    // fall back to a different instance (a "split") or being dropped.
-    var groupPref = {};   // activityId -> chosen shared instance
-    var backupsOf = {};   // activityId -> [labels]
-
-    function isGroupPref(a, inst) { return groupPref[a.id] && instanceKey(inst) === instanceKey(groupPref[a.id]); }
-    function candList(a) {
-      if (pins[a.id]) {
-        var pinned = a.instances.filter(function (i) { return instanceKey(i) === pins[a.id]; });
-        return pinned.length ? pinned : a.instances.slice();
-      }
-      var pref = groupPref[a.id];
-      var rest = a.instances.filter(function (i) { return !pref || instanceKey(i) !== instanceKey(pref); }).sort(instSort);
-      return (pref ? [pref] : []).concat(rest);
-    }
-
-    // Put `inst` of `a` into `person`'s timetable - directly if it fits, else by
-    // relocating the flexible (repeating) bookings it clashes with to other
-    // instances. One-off conflicts can't move, so those block. Returns true if placed.
-    function placeAt(person, a, inst, priority, split) {
-      var cf = candFromInstance(a, inst);
-      if (fits(person, cf, false)) { place(person, a, inst, "booking", priority, split); return true; }
-      var conflicts = sched[person].filter(function (p) { return overlaps(p, cf); });
-      if (!conflicts.length) return false;
-      if (conflicts.some(function (p) { return acts[p.activityId].kind !== "repeating"; })) return false;
-      var snapshot = sched[person].slice();
-      sched[person] = sched[person].filter(function (p) { return conflicts.indexOf(p) < 0; });
-      place(person, a, inst, "booking", priority, split);
-      for (var k = 0; k < conflicts.length; k++) {
-        var cc = conflicts[k], act = acts[cc.activityId], moved = false, alt = candList(act);
-        for (var j = 0; j < alt.length; j++) {
-          if (fits(person, candFromInstance(act, alt[j]), false)) {
-            place(person, act, alt[j], "booking", cc.priority, !isGroupPref(act, alt[j]));
-            moved = true; break;
-          }
-        }
-        if (!moved) { sched[person] = snapshot; return false; }  // rollback
-      }
-      return true;
-    }
-
-    function maxWeight(a) {
-      return interested(a.id).reduce(function (m, p) { return Math.max(m, p.weight); }, 0);
-    }
-    var ordered = schedule.activities
-      .filter(function (a) { return a.kind !== "dropin" && interested(a.id).length; })
-      .sort(function (x, y) {
-        return (maxWeight(y) - maxWeight(x)) || (x.instances.length - y.instances.length) ||
-          (x.name < y.name ? -1 : (x.name > y.name ? 1 : 0));
-      });
-
-    var byActivity = {};
-    ordered.forEach(function (a) {
-      var people = interested(a.id).sort(function (p, q) { return q.weight - p.weight; });
-      // Choose the shared instance: the one the most (weighted) interested people
-      // can take right now. A pin forces it.
-      var chosen, scored = null;
-      if (pins[a.id]) {
-        chosen = a.instances.filter(function (i) { return instanceKey(i) === pins[a.id]; })[0] || a.instances[0];
-      } else {
-        scored = a.instances.map(function (inst) {
-          var s = 0, mustFit = 0;
-          people.forEach(function (p) {
-            if (fits(p.name, candFromInstance(a, inst), false)) { s += p.weight; if (p.priority === "must") mustFit++; }
-          });
-          return { inst: inst, score: s, mustFit: mustFit };
-        });
-        // Prefer the instance that includes the most MUST-people (so a must-person
-        // anchors the shared slot), then the most weighted attendance overall.
-        scored.sort(function (x, y) { return (y.mustFit - x.mustFit) || (y.score - x.score) || instSort(x.inst, y.inst); });
-        chosen = scored[0].inst;
-      }
-      groupPref[a.id] = chosen;
-      backupsOf[a.id] = scored ? scored.slice(1).filter(function (x) { return x.score > 0; }).slice(0, 2)
-        .map(function (x) { return x.inst.label; }) : [];
-
-      people.forEach(function (p) {
-        // 1) the shared instance (direct or by relocation) -> together
-        if (placeAt(p.name, a, chosen, p.priority, false)) return;
-        if (pins[a.id]) {
-          var cp = conflictFor(p.name, candFromInstance(a, chosen), false);
-          dropped[p.name].push({ activityId: a.id, name: a.name, priority: p.priority, reason: "pinned slot unavailable" + (cp ? " (clashes with " + cp.name + ")" : "") });
-          return;
-        }
-        // 2) best alternative instance -> split from the group
-        var cands = candList(a);
-        for (var i = 0; i < cands.length; i++) {
-          if (instanceKey(cands[i]) === instanceKey(chosen)) continue;
-          if (placeAt(p.name, a, cands[i], p.priority, true)) return;
-        }
-        // 3) drop
-        var clash = conflictFor(p.name, candFromInstance(a, chosen), false);
-        dropped[p.name].push({
-          activityId: a.id, name: a.name, priority: p.priority,
-          reason: clash ? ("no clash-free time (clashes with " + clash.name + ")") : "no clash-free time",
-        });
-      });
-
-      var prefKey = instanceKey(chosen);
-      var here = names.filter(function (n) {
-        return sched[n].some(function (p) { return p.activityId === a.id && instanceKey(p) === prefKey; });
-      });
-      byActivity[a.id] = {
-        id: a.id, name: a.name, kind: a.kind, paid: a.paid, offsite: a.offsite,
-        chosenLabel: chosen.label || (chosen.day + " " + fmt(chosen.start_min) + "-" + fmt(chosen.end_min)),
-        chosenKey: prefKey,
-        people: people.map(function (p) { return p.name; }),
-        groupCount: here.length,
-        backups: backupsOf[a.id],
-        instances: a.instances.map(function (i) { return { key: instanceKey(i), label: i.label }; }),
-      };
-    });
-
-    // ---- Priority repair: never let a lower-priority booking crowd out a
-    //      higher-priority pick. If a dropped pick can take a slot where every
-    //      clashing booking is strictly lower priority, bump those and place it.
-    //      Run after the main loop AND after togetherness (which reshuffles
-    //      bookings and can re-create an inversion). ----
-    function priorityRepair() {
-      names.forEach(function (n) {
-      for (var guard = 0; guard < 200; guard++) {
-        var drops = dropped[n].slice().sort(function (x, y) {
-          return weightOf(picksByName[n][y.activityId]) - weightOf(picksByName[n][x.activityId]);
-        });
-        var did = false;
-        for (var di = 0; di < drops.length; di++) {
-          var d = drops[di], a = acts[d.activityId];
-          if (!a || a.kind === "dropin" || !a.instances.length) continue;
-          var myW = weightOf(picksByName[n][a.id]);
-          if (!myW) continue;
-          for (var ii = 0; ii < a.instances.length; ii++) {
-            var cf = candFromInstance(a, a.instances[ii]);
-            var confs = sched[n].filter(function (p) { return overlaps(p, cf); });
-            if (confs.length && confs.every(function (p) { return weightOf(p.priority) < myW; })) {
-              confs.forEach(function (p) {
-                sched[n] = sched[n].filter(function (q) { return q !== p; });
-                dropped[n].push({ activityId: p.activityId, name: p.name, priority: p.priority,
-                  reason: "bumped so a higher-priority pick (" + a.name + ") could fit" });
-              });
-              dropped[n] = dropped[n].filter(function (x) { return x.activityId !== a.id; });
-              place(n, a, a.instances[ii], "booking", picksByName[n][a.id], !isGroupPref(a, a.instances[ii]));
-              did = true;
-              break;
-            }
-          }
-          if (did) break;
-        }
-        if (!did) break;
-      }
-      });
-    }
-    priorityRepair();
-
-    // ---- Togetherness pass: if interested friends ended up on different
-    //      instances of the same activity, try to converge them onto one slot
-    //      (the one with the most attendees). placeAt only relocates flexible
-    //      bookings and never drops a must, so split friends are pulled together
-    //      only when it can be done without sacrificing anyone's must. ----
-    function myInstKey(n, id) {
-      var p = sched[n].filter(function (x) { return x.activityId === id; })[0];
-      return p ? instanceKey(p) : null;
-    }
-    schedule.activities.filter(function (a) { return a.kind === "repeating"; }).forEach(function (a) {
-      var fans = names.filter(function (n) { return picksByName[n][a.id] && myInstKey(n, a.id); });
-      if (fans.length < 2) return;
-      var here = {};
-      fans.forEach(function (n) { var k = myInstKey(n, a.id); here[k] = (here[k] || 0) + 1; });
-      var keys = Object.keys(here);
-      if (keys.length < 2) return; // already together
-      keys.sort(function (x, y) { return here[y] - here[x]; });
-      var target = keys[0];
-      var targetInst = a.instances.filter(function (i) { return instanceKey(i) === target; })[0];
-      if (!targetInst) return;
-      fans.forEach(function (n) {
-        if (myInstKey(n, a.id) === target) return;
-        var pr = picksByName[n][a.id];
-        var snapshot = sched[n].slice();
-        sched[n] = sched[n].filter(function (x) { return x.activityId !== a.id; });
-        if (placeTogether(n, a, targetInst, pr)) return;
-        sched[n] = snapshot; // couldn't join without sacrificing an equal/higher priority - leave split
-      });
-    });
-    priorityRepair();  // re-fix any inversions the togetherness reshuffle created
-
-    // Seat `n` on `inst` for togetherness: relocate flexible conflicts if possible,
-    // else bump conflicts that are STRICTLY lower priority (never an equal/higher,
-    // so a must is never sacrificed to chase togetherness).
-    function placeTogether(person, a, inst, priority) {
-      if (placeAt(person, a, inst, priority, false)) return true;
-      var cf = candFromInstance(a, inst);
-      var confs = sched[person].filter(function (p) { return overlaps(p, cf); });
-      if (!confs.length) return false;
-      if (!confs.every(function (p) { return weightOf(p.priority) < weightOf(priority); })) return false;
-      confs.forEach(function (p) {
-        sched[person] = sched[person].filter(function (q) { return q !== p; });
-        dropped[person].push({ activityId: p.activityId, name: p.name, priority: p.priority,
-          reason: "moved aside so the group could be together for " + a.name });
-      });
-      place(person, a, inst, "booking", priority, false);
-      return true;
-    }
-
-    // recompute the shared instance + group counts after repair/togetherness passes
-    Object.keys(byActivity).forEach(function (id) {
-      var counts = {};
-      names.forEach(function (n) {
-        sched[n].forEach(function (p) { if (p.activityId === id) counts[instanceKey(p)] = (counts[instanceKey(p)] || 0) + 1; });
-      });
-      var keys = Object.keys(counts);
-      if (!keys.length) { byActivity[id].groupCount = 0; return; }
-      keys.sort(function (x, y) { return counts[y] - counts[x]; });
-      byActivity[id].chosenKey = keys[0];
-      byActivity[id].groupCount = counts[keys[0]];
-      var inst = (acts[id].instances || []).filter(function (i) { return instanceKey(i) === keys[0]; })[0];
-      if (inst) byActivity[id].chosenLabel = inst.label;
-    });
-
-    // ---- Step 3: earmark drop-ins into free gaps ----
-    var dropins = schedule.activities.filter(function (a) { return a.kind === "dropin"; });
     names.forEach(function (n) {
-      var wanted = dropins
-        .filter(function (a) { return picksByName[n][a.id]; })
-        .map(function (a) { return { a: a, w: weightOf(picksByName[n][a.id]) }; });
-      wanted.sort(function (x, y) { return y.w - x.w; });
-      wanted.forEach(function (item) {
-        if (!tryPlaceDropin(n, item.a)) ifTime[n].push({ activityId: item.a.id, name: item.a.name, priority: picksByName[n][item.a.id] });
-      });
+      var got = {};
+      assign[n].forEach(function (c) { got[c.a.id] = true; sched[n].push(makePlacement(c.a, c.inst, "booking", picksByName[n][c.a.id])); });
+      sched[n].sort(instSort);
+      for (var id in picksByName[n]) {
+        var a = acts[id];
+        if (scheduled(a) && !got[id]) dropped[n].push({ activityId: id, name: a.name, priority: picksByName[n][id], reason: "" });
+      }
     });
 
+    // ---- drop-ins (window activities): earmark into free gaps within open hours ----
     function festOpen(day) { var t = toMin(((config.festivalHours || {})[day] || {}).open); return t == null ? 0 : t; }
     function festClose(day) { var t = toMin(((config.festivalHours || {})[day] || {}).close); return t == null ? 24 * 60 : t; }
     function availabilityByDay(a) {
       var map = {};
       (a.windows || []).forEach(function (w) {
-        var s = toMin(w.start);
-        var e = toMin(w.end);
+        var s = toMin(w.start), e = toMin(w.end);
         if (s == null) s = dropinEarliest;
         if (e == null) e = dropinLatest;
-        s = Math.max(s, dropinEarliest, festOpen(w.day));   // not before the site opens
-        e = Math.min(e, dropinLatest, festClose(w.day));    // not after it closes
+        s = Math.max(s, dropinEarliest, festOpen(w.day));
+        e = Math.min(e, dropinLatest, festClose(w.day));
         if (e - s < 1) return;
-        if (!map[w.day] || s < map[w.day][0]) {
-          map[w.day] = map[w.day] ? [Math.min(map[w.day][0], s), Math.max(map[w.day][1], e)] : [s, e];
-        } else {
-          map[w.day] = [Math.min(map[w.day][0], s), Math.max(map[w.day][1], e)];
-        }
+        map[w.day] = map[w.day] ? [Math.min(map[w.day][0], s), Math.max(map[w.day][1], e)] : [s, e];
       });
       return map;
     }
-
+    function fitsForDropin(n, cand) {
+      var list = sched[n].concat(earmarks[n]);
+      for (var i = 0; i < list.length; i++) {
+        var p = list[i]; if (p.day !== cand.day) continue;
+        var g = reqGap(p.activityId, cand.activityId);
+        if (!(cand.start_min >= p.end_min + g || p.start_min >= cand.end_min + g)) return false;
+      }
+      return true;
+    }
     function tryPlaceDropin(n, a) {
-      var slotLen = config.dropInSlotMinutes || 45;
-      var avail = availabilityByDay(a);
+      var slot = config.dropInSlotMinutes || 45, avail = availabilityByDay(a);
       for (var di = 0; di < days.length; di++) {
-        var day = days[di];
-        if (!avail[day]) continue;
+        var day = days[di]; if (!avail[day]) continue;
         var as = avail[day][0], ae = avail[day][1];
-        var items = sched[n].concat(earmarks[n])
-          .filter(function (p) { return p.day === day; })
-          .sort(function (x, y) { return x.start_min - y.start_min; });
-        var positions = [as];
-        items.forEach(function (it) { positions.push(it.end_min + reqGap(it.activityId, a.id)); });
-        for (var pi = 0; pi < positions.length; pi++) {
-          var pos = Math.max(positions[pi], as);
-          var cand = { day: day, start_min: pos, end_min: pos + slotLen, activityId: a.id };
-          if (cand.end_min <= ae && fits(n, cand, true)) {
-            earmarks[n].push(makePlacement(a, {
-              day: day, start_min: pos, end_min: pos + slotLen,
-              label: day + " " + fmt(pos) + "-" + fmt(pos + slotLen),
-            }, "dropin", picksByName[n][a.id], false));
+        var items = sched[n].concat(earmarks[n]).filter(function (p) { return p.day === day; }).sort(function (x, y) { return x.start_min - y.start_min; });
+        var pos = [as]; items.forEach(function (it) { pos.push(it.end_min + reqGap(it.activityId, a.id)); });
+        for (var pi = 0; pi < pos.length; pi++) {
+          var s = Math.max(pos[pi], as), cand = { day: day, start_min: s, end_min: s + slot, activityId: a.id };
+          if (cand.end_min <= ae && fitsForDropin(n, cand)) {
+            earmarks[n].push(makePlacement(a, { day: day, start_min: s, end_min: s + slot, label: day + " " + fmt(s) + "-" + fmt(s + slot) }, "dropin", picksByName[n][a.id]));
             return true;
           }
         }
       }
       return false;
     }
-
-    // ---- Finalise: sort, compute who-with, attach backups ----
+    var dropins = schedule.activities.filter(function (a) { return a.kind === "dropin"; });
     names.forEach(function (n) {
-      sched[n].sort(instSort);
-      earmarks[n].sort(instSort);
+      dropins.filter(function (a) { return picksByName[n][a.id]; })
+        .sort(function (x, y) { return weightOf(picksByName[n][y.id]) - weightOf(picksByName[n][x.id]); })
+        .forEach(function (a) {
+          if (!tryPlaceDropin(n, a)) ifTime[n].push({ activityId: a.id, name: a.name, priority: picksByName[n][a.id] });
+        });
     });
-    // who-with: people sharing the same activity instance (same day+start)
+
+    // ---- who-with + backups ----
+    names.forEach(function (n) { earmarks[n].sort(instSort); });
     names.forEach(function (n) {
       sched[n].forEach(function (p) {
-        var others = [];
-        names.forEach(function (m) {
-          if (m === n) return;
-          if (sched[m].some(function (q) {
-            return q.activityId === p.activityId && q.day === p.day && q.start_min === p.start_min;
-          })) others.push(m);
+        p.withWhom = names.filter(function (m) {
+          return m !== n && sched[m].some(function (q) { return q.activityId === p.activityId && q.day === p.day && q.start_min === p.start_min; });
         });
-        p.withWhom = others;
-        var ba = byActivity[p.activityId];
-        p.backups = (ba && ba.backups) ? ba.backups : [];
+        if (p.kind === "repeating") {
+          var a = acts[p.activityId], others = sched[n].filter(function (q) { return q !== p; });
+          p.backups = a.instances.filter(function (i) {
+            return instanceKey(i) !== instanceKey(p) && others.every(function (q) { return !clash(i, a, q, acts[q.activityId]); });
+          }).sort(instSort).slice(0, 2).map(function (i) { return i.label; });
+        }
       });
     });
 
-    // Recompute couldn't-fit reasons against the FINAL schedule, listing every
-    // activity that blocks it (a dropped pick usually clashes with several).
+    // ---- couldn't-fit reasons (against the final schedule) ----
     names.forEach(function (n) {
       dropped[n].forEach(function (d) {
-        if (/bumped|moved aside|pinned/.test(d.reason || "")) return; // keep intentional reasons
-        var a = acts[d.activityId];
-        if (!a || !a.instances || !a.instances.length) { d.reason = d.reason || "no clash-free time"; return; }
-        var blockers = {};
+        var a = acts[d.activityId]; var blockers = {};
         a.instances.forEach(function (inst) {
-          sched[n].forEach(function (p) { if (overlaps(p, candFromInstance(a, inst))) blockers[p.name] = true; });
+          sched[n].forEach(function (p) { if (clash(inst, a, p, acts[p.activityId])) blockers[p.name] = true; });
         });
         var list = Object.keys(blockers);
-        d.reason = list.length
-          ? "clashes with " + list.slice(0, 4).join(", ") + (list.length > 4 ? " and " + (list.length - 4) + " more" : "")
-          : "no clash-free time";
+        d.reason = list.length ? "clashes with " + list.slice(0, 4).join(", ") + (list.length > 4 ? " and " + (list.length - 4) + " more" : "") : "no clash-free time";
       });
     });
 
-    var anyPicks = names.some(function (n) { return Object.keys(picksByName[n]).length > 0; });
-
-    return {
-      days: days,
-      bounds: bounds,
-      names: names,
-      anyPicks: anyPicks,
-      byPerson: buildByPerson(),
-      byActivity: byActivity,
-    };
+    // ---- group view ----
+    var byActivity = {};
+    schedule.activities.forEach(function (a) {
+      if (a.kind === "dropin") return;
+      var people = interested(a.id); if (!people.length) return;
+      var counts = {};
+      names.forEach(function (n) { sched[n].forEach(function (p) { if (p.activityId === a.id) counts[instanceKey(p)] = (counts[instanceKey(p)] || 0) + 1; }); });
+      var keys = Object.keys(counts).sort(function (x, y) { return counts[y] - counts[x]; });
+      var chosenKey = keys[0] || consensus[a.id] || instanceKey(a.instances[0]);
+      var chosenInst = a.instances.filter(function (i) { return instanceKey(i) === chosenKey; })[0] || a.instances[0];
+      byActivity[a.id] = {
+        id: a.id, name: a.name, kind: a.kind, paid: a.paid, offsite: a.offsite,
+        chosenLabel: chosenInst.label, chosenKey: chosenKey,
+        people: people.map(function (p) { return p.name; }),
+        groupCount: keys.length ? counts[keys[0]] : 0,
+        backups: [], instances: a.instances.map(function (i) { return { key: instanceKey(i), label: i.label }; }),
+      };
+    });
 
     function buildByPerson() {
       var out = {};
       names.forEach(function (n) {
-        var bookings = sched[n].filter(function (p) { return p.type === "booking"; });
-        var needBooking = bookings.filter(function (p) { return p.booking; });
+        var b = sched[n].filter(function (p) { return p.type === "booking"; });
+        var need = b.filter(function (p) { return p.booking; });
         out[n] = {
-          paid: needBooking.filter(function (p) { return p.paid; }),
-          free: needBooking.filter(function (p) { return !p.paid; }),
-          turnup: bookings.filter(function (p) { return !p.booking; }),  // scheduled, no booking
-          all: bookings,
-          dropins: earmarks[n],
-          ifTime: ifTime[n],
-          dropped: dropped[n],
+          paid: need.filter(function (p) { return p.paid; }),
+          free: need.filter(function (p) { return !p.paid; }),
+          turnup: b.filter(function (p) { return !p.booking; }),
+          all: b, dropins: earmarks[n], ifTime: ifTime[n], dropped: dropped[n],
         };
       });
       return out;
     }
+
+    return {
+      days: days, bounds: bounds, names: names,
+      anyPicks: names.some(function (n) { return Object.keys(picksByName[n]).length > 0; }),
+      byPerson: buildByPerson(), byActivity: byActivity,
+    };
   }
 
-  function toMin(s) {
-    if (s == null) return null;
-    s = String(s).trim();
-    var m = /^(\d{1,2}):(\d{2})$/.exec(s);
-    if (!m) return null;
-    return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
-  }
-  function fmt(mins) {
-    var h = Math.floor(mins / 60), m = mins % 60;
-    return (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m;
-  }
-
-  window.Engine = {
-    compute: compute,
-    weightOf: weightOf,
-    instanceKey: instanceKey,
-    PRIORITY_LABEL: PRIORITY_LABEL,
-    fmt: fmt,
-  };
+  window.Engine = { compute: compute, weightOf: weightOf, instanceKey: instanceKey, PRIORITY_LABEL: PRIORITY_LABEL, fmt: fmt };
 })();
