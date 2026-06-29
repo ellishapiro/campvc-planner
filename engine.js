@@ -265,8 +265,11 @@
 
     // ---- Priority repair: never let a lower-priority booking crowd out a
     //      higher-priority pick. If a dropped pick can take a slot where every
-    //      clashing booking is strictly lower priority, bump those and place it. ----
-    names.forEach(function (n) {
+    //      clashing booking is strictly lower priority, bump those and place it.
+    //      Run after the main loop AND after togetherness (which reshuffles
+    //      bookings and can re-create an inversion). ----
+    function priorityRepair() {
+      names.forEach(function (n) {
       for (var guard = 0; guard < 200; guard++) {
         var drops = dropped[n].slice().sort(function (x, y) {
           return weightOf(picksByName[n][y.activityId]) - weightOf(picksByName[n][x.activityId]);
@@ -296,7 +299,9 @@
         }
         if (!did) break;
       }
-    });
+      });
+    }
+    priorityRepair();
 
     // ---- Togetherness pass: if interested friends ended up on different
     //      instances of the same activity, try to converge them onto one slot
@@ -327,6 +332,7 @@
         sched[n] = snapshot; // couldn't join without sacrificing an equal/higher priority - leave split
       });
     });
+    priorityRepair();  // re-fix any inversions the togetherness reshuffle created
 
     // Seat `n` on `inst` for togetherness: relocate flexible conflicts if possible,
     // else bump conflicts that are STRICTLY lower priority (never an equal/higher,
