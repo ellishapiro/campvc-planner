@@ -94,6 +94,24 @@ def books_off_app(description):
     return bool(_PARTNER_RE.search(description or ""))
 
 
+def is_open_window(start_raw, end_raw, start_min, end_min, name):
+    """An open/all-day space you drop into anytime (vs a fixed-time session)."""
+    s = str(start_raw or "").strip().lower()
+    if s == "all day" or s == "":
+        return True
+    if start_min is None:
+        return True
+    if end_min is None or str(end_raw or "").strip() == "":
+        return True
+    if end_min <= start_min:           # crosses midnight / not a normal block
+        return True
+    if (end_min - start_min) >= 180:   # long open window (Calm Space, salons...)
+        return True
+    if re.search(r"drop.?in", name or "", re.I):
+        return True
+    return False
+
+
 def load_inputs(sched_dir):
     with open(os.path.join(sched_dir, "rows.json"), encoding="utf-8") as f:
         rows = json.load(f)
@@ -151,21 +169,28 @@ def build(sched_dir):
         desc = ex.get("desc", "")
         offsite = (loc == "")  # off-site trips have a blank venue in the source
 
+        # Three properties, kept consistent:
+        #   needs_booking - must be booked (reg, partner-link, or curated trip).
+        #   external      - that booking happens off-app (third-party partner link).
+        #   scheduled     - sits at a fixed time (so it's placed + clash-aware).
+        # A no-booking timed event (Founders Talk) is scheduled but not booked;
+        # an open all-day space (Calm Space) is neither - it's a window.
+        partner = books_off_app(desc)
+        ov = overrides.get(norm(name))
         if reg:
-            bookable, external = True, False
+            needs_booking, external, scheduled = True, partner, True
+        elif partner or ov == "bookable":
+            needs_booking, external, scheduled = True, True, True
         else:
-            verdict = overrides.get(norm(name))
-            if verdict == "bookable":
-                bookable, external = True, True
-            else:
-                bookable, external = False, False
-                if verdict is None:
-                    unclassified.add(name)
+            needs_booking, external = False, False
+            if ov is None:
+                unclassified.add(name)
+            scheduled = not is_open_window(r.get("Start"), r.get("End"), start_min, end_min, name)
 
         key = norm(name)
         if key not in activities:
             activities[key] = {"id": slugify(name), "name": name, "categories": [],
-                               "paid": paid, "offsite": False, "external": False,
+                               "paid": paid, "offsite": False, "external": False, "booking": False,
                                "description": "", "slots": [], "windows": []}
         a = activities[key]
         for c in cats:
@@ -176,8 +201,9 @@ def build(sched_dir):
         a["paid"] = a["paid"] or paid
         a["offsite"] = a["offsite"] or offsite
         a["external"] = a["external"] or external
+        a["booking"] = a["booking"] or needs_booking
 
-        if bookable and start_min is not None:
+        if scheduled and start_min is not None:
             a["slots"].append({
                 "day": day, "day_index": DAY_INDEX.get(day, 9), "start_min": start_min,
                 "end_min": end_min if end_min is not None else start_min + 50,
@@ -200,7 +226,7 @@ def build(sched_dir):
         out.append({
             "id": a["id"], "name": a["name"], "offsite": a["offsite"], "paid": a["paid"],
             "phase": 1 if a["paid"] else 2, "kind": kind,
-            "external": a["external"] or books_off_app(a["description"]),
+            "booking": a["booking"], "external": a["external"],
             "description": a["description"], "categories": a["categories"],
             "maxPerSession": max(caps) if caps else None, "totalPlaces": total_places,
             "instances": [{"day": s["day"], "start_min": s["start_min"], "end_min": s["end_min"],

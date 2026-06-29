@@ -182,6 +182,7 @@
 
       card.appendChild(phaseBlock("Phase 1 - Paid (book first)", p.paid));
       card.appendChild(phaseBlock("Phase 2 - Free (book a week later)", p.free));
+      if (p.turnup && p.turnup.length) card.appendChild(phaseBlock("Turn up - no booking (be there on time)", p.turnup));
 
       if (p.dropins.length) {
         var dd = el("div", "phase"); dd.appendChild(el("h4", null, "Drop-ins - turn up (time earmarked)"));

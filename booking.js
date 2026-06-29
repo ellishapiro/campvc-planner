@@ -82,6 +82,32 @@
       c.appendChild(sec);
     });
 
+    // Timed sessions you don't book but must turn up to on time.
+    var turnupItems = [];
+    peopleToShow().forEach(function (n) {
+      (state.result.byPerson[n].turnup || []).forEach(function (p) { turnupItems.push({ name: n, p: p }); });
+    });
+    if (turnupItems.length) {
+      var t = el("div", "card");
+      t.appendChild(el("h3", null, 'Turn up - no booking <span class="hint">- be there on time</span>'));
+      peopleToShow().forEach(function (n) {
+        var mine = turnupItems.filter(function (it) { return it.name === n; })
+          .sort(function (a, b) { return (a.p.dayIndex - b.p.dayIndex) || (a.p.start_min - b.p.start_min); });
+        if (!mine.length) return;
+        var grp = el("div", "phase"); grp.appendChild(el("h4", null, esc(n)));
+        mine.forEach(function (it) {
+          var p = it.p;
+          var dot = p.priority ? '<span class="pri-dot ' + p.priority + '"></span>' : "";
+          var withTxt = p.withWhom && p.withWhom.length ? '<span class="with"> &middot; with ' + p.withWhom.map(esc).join(", ") + "</span>" : "";
+          grp.appendChild(el("div", "bk", dot + "<strong>" + esc(p.name) + "</strong>" +
+            '<div class="when">' + p.day + " " + fmt(p.start_min) + "-" + fmt(p.end_min) +
+            (p.location ? " &middot; " + esc(p.location) : "") + withTxt + "</div>"));
+        });
+        t.appendChild(grp);
+      });
+      c.appendChild(t);
+    }
+
     // Drop-ins: not booked, listed for completeness
     var dropItems = [];
     peopleToShow().forEach(function (n) {

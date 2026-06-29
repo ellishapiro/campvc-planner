@@ -97,6 +97,8 @@
         location: a.location,
         paid: a.paid,
         offsite: a.offsite,
+        booking: !!a.booking,       // needs booking (in booking lists) vs turn-up
+        external: !!a.external,     // booking is off-app (partner link)
         kind: a.kind,
         type: type,                 // "booking" | "dropin"
         priority: priority || null,
@@ -471,9 +473,11 @@
       var out = {};
       names.forEach(function (n) {
         var bookings = sched[n].filter(function (p) { return p.type === "booking"; });
+        var needBooking = bookings.filter(function (p) { return p.booking; });
         out[n] = {
-          paid: bookings.filter(function (p) { return p.paid; }),
-          free: bookings.filter(function (p) { return !p.paid; }),
+          paid: needBooking.filter(function (p) { return p.paid; }),
+          free: needBooking.filter(function (p) { return !p.paid; }),
+          turnup: bookings.filter(function (p) { return !p.booking; }),  // scheduled, no booking
           all: bookings,
           dropins: earmarks[n],
           ifTime: ifTime[n],
