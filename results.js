@@ -177,6 +177,8 @@
     var cls = "block " + (x.priority || "none");
     if (isWindow) cls += booking ? " appt" : " dropin";
     if (x.paid) cls += " paid";
+    var locked = !!(state.knobs.pins && state.knobs.pins[x.activityId]);
+    if (locked) cls += " pinned";
     var b = el("div", cls);
     b.style.top = (x.start_min - startB) * PX + "px";
     b.style.height = Math.max((x.end_min - x.start_min) * PX, 30) + "px";
@@ -197,8 +199,9 @@
     } else {
       bm = fmt(x.start_min) + "-" + fmt(x.end_min) + withTxt;
     }
-    b.innerHTML = '<div class="bt">' + esc(x.name) + tag + '</div><div class="bm">' + bm + "</div>";
-    b.title = x.name + " - " + x.day + " " + fmt(x.start_min) + "-" + fmt(x.end_min) +
+    var lock = locked ? '<span class="lockmark" title="Locked to this time for everyone">&#128274;</span>' : "";
+    b.innerHTML = '<div class="bt">' + esc(x.name) + tag + lock + '</div><div class="bm">' + bm + "</div>";
+    b.title = (locked ? "[Locked] " : "") + x.name + " - " + x.day + " " + fmt(x.start_min) + "-" + fmt(x.end_min) +
       (x.location ? " @ " + x.location : "");
     return b;
   }
