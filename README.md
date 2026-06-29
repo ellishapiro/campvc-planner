@@ -97,12 +97,13 @@ records old->new so friends' saved picks are remapped on load and never lost. Th
 previous build is archived to `data/schedule.prev.json`.
 
 **Two things to review after a rebuild** (printed by the script):
-- the **NO-REGISTRATION** list - sessions with no in-app booking. They're treated
-  as drop-in unless listed in `EXTERNAL_BOOKABLE` at the top of `build_schedule.py`
-  (the off-app trips like Aqueduct Canoeing / Fire Walk / Royal Enfield). Adjust
-  that list if a real bookable trip is being shown as drop-in. To decide quickly,
-  run **`python review_dropins.py`** - it lists every no-registration activity with
-  a suggested verdict (BOOKABLE? / turn-up) and the give-away description snippet.
+- **New no-registration activities**: the build flags any no-booking activity it
+  hasn't seen before as needing a bookable-vs-turn-up decision (it's treated as
+  drop-in until decided). Classifying these is **Claude's job, not yours** - in a
+  session, Claude reads the descriptions (`review_dropins.py` helps) and records
+  the verdict in `dropin_overrides.json`, only asking you about a genuinely
+  ambiguous one. Every current activity is already classified, so normally this
+  section says "nothing to review".
 - the change report (NEW / REMOVED / TIMING).
 
 ## Tests

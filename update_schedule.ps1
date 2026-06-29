@@ -86,4 +86,6 @@ Push-Location $planner
 try { python build_schedule.py "$schedProj" } finally { Pop-Location }
 
 Write-Host "`nDone. Review the change report above (also saved to data\CHANGES.md)." -ForegroundColor Green
+Write-Host "If the build flagged any NEW no-registration activities, hand them to Claude" -ForegroundColor Green
+Write-Host "to classify (bookable vs turn-up) - not a job for you." -ForegroundColor Green
 Write-Host "If you've deployed to GitHub Pages, commit & push so everyone gets the update." -ForegroundColor Green

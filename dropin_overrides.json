@@ -1,0 +1,102 @@
+{
+ "aqueduct canoeing ()": {
+  "verdict": "bookable",
+  "example_name": "Aqueduct Canoeing (£)"
+ },
+ "baddies book swap": {
+  "verdict": "turnup",
+  "example_name": "Baddies Book Swap"
+ },
+ "big feeling club ()": {
+  "verdict": "turnup",
+  "example_name": "Big Feeling Club (£)"
+ },
+ "calm space": {
+  "verdict": "turnup",
+  "example_name": "Calm Space"
+ },
+ "camp fire & marshmallows": {
+  "verdict": "turnup",
+  "example_name": "Camp Fire & Marshmallows"
+ },
+ "cosmic cabaret": {
+  "verdict": "turnup",
+  "example_name": "Cosmic Cabaret"
+ },
+ "design a custom moto": {
+  "verdict": "turnup",
+  "example_name": "Design A Custom Moto"
+ },
+ "disco bingo": {
+  "verdict": "turnup",
+  "example_name": "Disco Bingo"
+ },
+ "dj requests": {
+  "verdict": "turnup",
+  "example_name": "DJ Requests"
+ },
+ "fire walk ()": {
+  "verdict": "bookable",
+  "example_name": "Fire Walk (£)"
+ },
+ "founders talk & team talk": {
+  "verdict": "turnup",
+  "example_name": "Founders Talk & Team Talk"
+ },
+ "fox kit loans": {
+  "verdict": "turnup",
+  "example_name": "FOX Kit Loans"
+ },
+ "karaoke": {
+  "verdict": "turnup",
+  "example_name": "Karaoke"
+ },
+ "live stream: british strong woman competition": {
+  "verdict": "turnup",
+  "example_name": "Live Stream: British Strong Woman Competition"
+ },
+ "moto games": {
+  "verdict": "turnup",
+  "example_name": "Moto Games"
+ },
+ "mountain bike pump track: drop-in": {
+  "verdict": "turnup",
+  "example_name": "Mountain Bike Pump Track: Drop-In"
+ },
+ "raffle draw": {
+  "verdict": "turnup",
+  "example_name": "Raffle Draw"
+ },
+ "remote control car racing": {
+  "verdict": "turnup",
+  "example_name": "Remote Control Car Racing"
+ },
+ "remote control car racing - drop in": {
+  "verdict": "turnup",
+  "example_name": "Remote Control Car Racing - Drop In"
+ },
+ "royal enfield - guided ride out": {
+  "verdict": "bookable",
+  "example_name": "Royal Enfield - Guided Ride Out"
+ },
+ "she shreds hair & beauty ()": {
+  "verdict": "turnup",
+  "example_name": "She Shreds Hair & Beauty (£)"
+ },
+ "sunrise aqueduct canoeing ()": {
+  "verdict": "bookable",
+  "example_name": "Sunrise Aqueduct Canoeing (£)"
+ },
+ "tarot card reading": {
+  "verdict": "turnup",
+  "example_name": "Tarot Card Reading"
+ },
+ "the pleasure project post box": {
+  "verdict": "turnup",
+  "example_name": "The Pleasure Project Post Box"
+ },
+ "try a bell helmet": {
+  "verdict": "turnup",
+  "example_name": "Try A Bell Helmet"
+ }
+}

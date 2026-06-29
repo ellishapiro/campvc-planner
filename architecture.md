@@ -5,6 +5,9 @@ A static website (no server of our own) talking to a Google Sheet that acts as t
 
 ## 1. The big picture (deployment / components)
 
+![Big picture: deployment / components](images/diagram-1.svg)
+
+<!-- Mermaid source for the diagram above (rendered to images/diagram-1.svg):
 ```mermaid
 flowchart TB
     subgraph Friends["Friends' phones / laptops (web browsers)"]
@@ -31,6 +34,8 @@ flowchart TB
     AS <-->|"reads/writes rows"| SH
     LOCAL -->|"git push (you, occasionally)"| GH
 ```
+-->
+
 
 ASCII fallback:
 
@@ -59,6 +64,9 @@ ASCII fallback:
 
 ## 2. Saving a pick (sequence)
 
+![Saving a pick: sequence](images/diagram-2.svg)
+
+<!-- Mermaid source for the diagram above (rendered to images/diagram-2.svg):
 ```mermaid
 sequenceDiagram
     participant U as Friend (browser)
@@ -77,9 +85,14 @@ sequenceDiagram
     S-->>P: ok / not-saved
     P-->>U: "saved - your picks are in"
 ```
+-->
+
 
 ## 3. Viewing the calendar (sequence)
 
+![Viewing the calendar: sequence](images/diagram-3.svg)
+
+<!-- Mermaid source for the diagram above (rendered to images/diagram-3.svg):
 ```mermaid
 sequenceDiagram
     participant U as Friend (browser)
@@ -98,6 +111,8 @@ sequenceDiagram
     E-->>R: per-person plan (calendar + booking lists)
     R-->>U: rendered schedule
 ```
+-->
+
 
 ## 4. Two things that are new to you
 
@@ -120,7 +135,6 @@ sequenceDiagram
 | Friends' picks | Google Sheet "Picks" tab | Friends, via the My Picks page |
 | Shared schedule tweaks (knobs) | Google Sheet "Knobs" tab | You, via the Adjust panel |
 | Old→new id remaps | `data/migrations.js` (in the repo) | `build_schedule.py` |
-````
 
 A couple of clarifications for someone new to these:
 - **Updating the website** (code or the festival programme) = edit files locally, then `git push` - GitHub Pages redeploys automatically in ~a minute. Nothing in the Google Sheet is affected.

@@ -38,15 +38,24 @@ OFFSITE_LOCATION = "(off-site / no venue listed)"
 REG_PAID = "2026-07-04"      # paid sessions register first (phase 1)
 REG_INCLUDED = "2026-07-11"  # included/free sessions register a week later (phase 2)
 
-# No-registration activities that are nonetheless bookable, just via an off-app
-# third-party link. Matched by name prefix, case- and emoji-insensitive.
-# REVIEW THIS LIST against the build's "no-registration" report.
-EXTERNAL_BOOKABLE = [
-    "aqueduct canoeing",
-    "sunrise aqueduct canoeing",
-    "fire walk",
-    "royal enfield",
-]
+# Curated verdicts for no-registration activities (decided by reviewing their
+# Guidebook descriptions): "bookable" = a real trip booked off-app, "turnup" =
+# genuine drop-in. Keyed by normalised name. New/unknown no-reg activities are
+# left unclassified and FLAGGED by the build (treated as drop-in until decided).
+OVERRIDES_FILE = "dropin_overrides.json"
+_overrides = None
+
+
+def load_overrides():
+    global _overrides
+    if _overrides is None:
+        try:
+            with open(OVERRIDES_FILE, encoding="utf-8") as f:
+                raw = json.load(f)
+            _overrides = {k: (v.get("verdict") if isinstance(v, dict) else v) for k, v in raw.items()}
+        except FileNotFoundError:
+            _overrides = {}
+    return _overrides
 
 
 def to_minutes(value):
@@ -72,8 +81,7 @@ def slugify(text):
 
 
 def is_external_bookable(name):
-    n = norm(name)
-    return any(n.startswith(p) for p in EXTERNAL_BOOKABLE)
+    return load_overrides().get(norm(name)) == "bookable"
 
 
 def load_inputs(sched_dir):
@@ -114,7 +122,8 @@ def build(sched_dir):
     extras = build_extras(bundle)
 
     activities = OrderedDict()  # norm(name) -> activity dict
-    no_reg_names = set()
+    unclassified = set()        # no-reg activities with no curated verdict yet
+    overrides = load_overrides()
 
     for r in rows:
         name = (r.get("Event") or "").strip()
@@ -134,11 +143,14 @@ def build(sched_dir):
 
         if reg:
             bookable, external = True, False
-        elif is_external_bookable(name):
-            bookable, external = True, True
         else:
-            bookable, external = False, False
-            no_reg_names.add(name)
+            verdict = overrides.get(norm(name))
+            if verdict == "bookable":
+                bookable, external = True, True
+            else:
+                bookable, external = False, False
+                if verdict is None:
+                    unclassified.add(name)
 
         key = norm(name)
         if key not in activities:
@@ -184,7 +196,7 @@ def build(sched_dir):
                            "label": s["label"], "location": s["location"], "capacity": s["capacity"]}
                           for s in slots],
             "windows": a["windows"]})
-    return out, len(rows), counts, sorted(no_reg_names)
+    return out, len(rows), counts, sorted(unclassified)
 
 
 # ---------------- change detection (vs previous build) ----------------
@@ -264,7 +276,7 @@ def main():
     check_only = "--check" in sys.argv[1:]
     sched_dir = args[0] if args else os.path.join("..", "campvc-schedule")
 
-    activities, raw_count, counts, no_reg = build(sched_dir)
+    activities, raw_count, counts, unclassified = build(sched_dir)
     old = load_existing()
     added, removed, retimed = diff_schedules(old, activities)
     report, changed = format_changes(old, added, removed, retimed)
@@ -314,9 +326,13 @@ def main():
     print(summary)
     print(f"Migrations (old->new id): {len(existing_mig)} total")
     print()
-    print("NO-REGISTRATION activities (drop-in unless in EXTERNAL_BOOKABLE) - REVIEW:")
-    for n in no_reg:
-        print(f"  - {n}" + ("  [external-bookable]" if is_external_bookable(n) else ""))
+    if unclassified:
+        print("!! NEW no-registration activities NEEDING A BOOKABLE/TURN-UP DECISION")
+        print("   (treated as drop-in for now - classify in dropin_overrides.json):")
+        for n in unclassified:
+            print(f"   - {n}")
+    else:
+        print("All no-registration activities are classified (dropin_overrides.json). Nothing to review.")
     print()
     print(report)
     print("\nWrote data/schedule.json, schedule.js, migrations.js, CHANGES.md")
