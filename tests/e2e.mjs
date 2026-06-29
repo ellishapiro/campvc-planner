@@ -28,6 +28,13 @@ const server = http.createServer((req, res) => {
   if (p === "/") p = "/index.html";
   const file = path.join(root, p);
   if (!file.startsWith(root) || !fs.existsSync(file)) { res.writeHead(404); return res.end("nf"); }
+  // SAFETY: always serve config.js with a blank appsScriptUrl so tests run in
+  // LOCAL mode (localStorage) and can NEVER read or write the live Google sheet.
+  if (p === "/config.js") {
+    const cfg = fs.readFileSync(file, "utf8").replace(/appsScriptUrl:\s*"[^"]*"/, 'appsScriptUrl: ""');
+    res.writeHead(200, { "Content-Type": "text/javascript", "Cache-Control": "no-store" });
+    return res.end(cfg);
+  }
   res.writeHead(200, { "Content-Type": MIME[path.extname(file)] || "text/plain", "Cache-Control": "no-store" });
   fs.createReadStream(file).pipe(res);
 });

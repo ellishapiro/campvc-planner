@@ -167,7 +167,12 @@ label.fld { display: flex; flex-direction: column; gap: 3px; font-size: 11px; co
 .block.want { background: var(--want); }
 .block.iffree { background: var(--iffree); }
 .block.none { background: #8aa0b5; }
-.block.paid { border-color: var(--paid); }
+/* Paid = a distinct "£" chip (border colour clashed with the 'want' fill). */
+.block.paid::before {
+  content: "£"; position: absolute; top: 2px; left: 4px; font-size: 10px; font-weight: 800;
+  line-height: 1.4; padding: 0 4px; border-radius: 4px; background: #10131a; color: #ffd479;
+}
+.block.paid .bt { padding-left: 16px; }
 .block.dropin { background: repeating-linear-gradient(45deg, #6fb1c9, #6fb1c9 6px, #5aa0ba 6px, #5aa0ba 12px); color: #06222e; }
 .block.split::after { content: "↗"; position: absolute; top: 2px; right: 4px; font-size: 10px; }
 
