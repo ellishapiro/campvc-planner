@@ -165,18 +165,27 @@
   }
 
   function blockEl(x, startB) {
-    var cls = "block " + (x.type === "dropin" ? "dropin" : (x.priority || "none"));
+    var isWindow = x.type === "dropin";
+    var booking = isWindow && x.booking; // window that needs booking (appointment)
+    var cls = "block " + (isWindow ? (booking ? "appt" : "dropin") : (x.priority || "none"));
     if (x.paid) cls += " paid";
     var b = el("div", cls);
     b.style.top = (x.start_min - startB) * PX + "px";
     b.style.height = Math.max((x.end_min - x.start_min) * PX, 30) + "px";
     var withTxt = x.withWhom && x.withWhom.length ? " &middot; with " + x.withWhom.map(esc).join(", ") : "";
-    var tag = x.type === "dropin" ? '<span class="droptag">drop-in &middot; flexible</span>' : "";
+    var tag = isWindow
+      ? (booking ? '<span class="droptag book">book a slot' + (x.external ? " off-app" : "") + "</span>"
+                 : '<span class="droptag">drop-in &middot; flexible</span>')
+      : "";
     var bm;
-    if (x.type === "dropin") {
+    if (isWindow) {
       var act = actById[x.activityId] || {};
       var w = (act.windows || []).filter(function (z) { return z.day === x.day; })[0];
-      bm = "earmarked " + fmt(x.start_min) + "-" + fmt(x.end_min) + (w ? " &middot; open " + winText(w) : " &middot; go anytime");
+      if (booking) {
+        bm = (x.external ? "book off-app" : "book a slot") + (w ? " &middot; open " + winText(w) : "");
+      } else {
+        bm = "earmarked " + fmt(x.start_min) + "-" + fmt(x.end_min) + (w ? " &middot; open " + winText(w) : " &middot; go anytime");
+      }
     } else {
       bm = fmt(x.start_min) + "-" + fmt(x.end_min) + withTxt;
     }
