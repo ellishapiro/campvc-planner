@@ -100,7 +100,9 @@ previous build is archived to `data/schedule.prev.json`.
 - the **NO-REGISTRATION** list - sessions with no in-app booking. They're treated
   as drop-in unless listed in `EXTERNAL_BOOKABLE` at the top of `build_schedule.py`
   (the off-app trips like Aqueduct Canoeing / Fire Walk / Royal Enfield). Adjust
-  that list if a real bookable trip is being shown as drop-in.
+  that list if a real bookable trip is being shown as drop-in. To decide quickly,
+  run **`python review_dropins.py`** - it lists every no-registration activity with
+  a suggested verdict (BOOKABLE? / turn-up) and the give-away description snippet.
 - the change report (NEW / REMOVED / TIMING).
 
 ## Tests
