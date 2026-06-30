@@ -290,19 +290,34 @@ def label_set(act):
     return set(i["label"] for i in act.get("instances", []))
 
 
+def window_set(act):
+    """Open-hours of a drop-in/window activity, e.g. 'Friday 12:30-18:00'."""
+    out = set()
+    for w in act.get("windows", []):
+        day = (w.get("day") or "").strip()
+        s, e = (w.get("start") or "?").strip(), (w.get("end") or "?").strip()
+        out.add(f"{day} {s}-{e}")
+    return out
+
+
 def diff_schedules(old_payload, new_acts):
     old = {a["id"]: a for a in (old_payload.get("activities", []) if old_payload else [])}
     new = {a["id"]: a for a in new_acts}
     added = [new[i] for i in new if i not in old]
     removed = [old[i] for i in old if i not in new]
-    retimed = []
+    retimed, rehoured = [], []
     for i, a in new.items():
         if i in old:
             at = sorted(label_set(a) - label_set(old[i]))
             rt = sorted(label_set(old[i]) - label_set(a))
             if at or rt:
                 retimed.append((a, at, rt))
-    return added, removed, retimed
+            # drop-in / window-hours changes (instances diff misses these)
+            wa = sorted(window_set(a) - window_set(old[i]))
+            wr = sorted(window_set(old[i]) - window_set(a))
+            if wa or wr:
+                rehoured.append((a, wa, wr))
+    return added, removed, retimed, rehoured
 
 
 def days_short(a):
@@ -314,10 +329,10 @@ def days_short(a):
     return ",".join(seen)
 
 
-def format_changes(old_payload, added, removed, retimed):
+def format_changes(old_payload, added, removed, retimed, rehoured):
     if old_payload is None:
         return "No previous schedule on disk - first build, nothing to compare.", False
-    if not (added or removed or retimed):
+    if not (added or removed or retimed or rehoured):
         return "SCHEDULE CHANGES: none - identical to last build.", False
     L = ["SCHEDULE CHANGES (vs last build)", "=" * 34, "", f"NEW EVENTS ({len(added)}):"]
     for a in sorted(added, key=lambda x: x["name"]):
@@ -333,6 +348,13 @@ def format_changes(old_payload, added, removed, retimed):
             L.append(f"      removed: {t}")
         for t in at:
             L.append(f"      added:   {t}")
+    L += ["", f"OPEN-HOURS CHANGES - drop-ins/appointments ({len(rehoured)}):"]
+    for a, wa, wr in sorted(rehoured, key=lambda x: x[0]["name"]):
+        L.append(f"  ~ {a['name']}:")
+        for t in wr:
+            L.append(f"      was: {t}")
+        for t in wa:
+            L.append(f"      now: {t}")
     return "\n".join(L), True
 
 
@@ -354,8 +376,8 @@ def main():
 
     activities, raw_count, counts, unclassified = build(sched_dir)
     old = load_existing()
-    added, removed, retimed = diff_schedules(old, activities)
-    report, changed = format_changes(old, added, removed, retimed)
+    added, removed, retimed, rehoured = diff_schedules(old, activities)
+    report, changed = format_changes(old, added, removed, retimed, rehoured)
 
     summary = (
         f"Source rows:         {raw_count}\n"
