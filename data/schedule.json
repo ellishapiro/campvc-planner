@@ -1518,7 +1518,7 @@
    "kind": "dropin",
    "booking": true,
    "external": true,
-   "description": "Island Feather are back with an incredible range of massage services, including a 25-minute seated massage (£35) and 50-minute Massage Therapy Session (£65). For 50 minute treatments choose from Deep/Soft Tissue, Clinical Massage, or a treatment focused on specific/a combination areas - including neck, shoulders, back, legs, hands and feet. Paid Activity Booking Instructions Click here to book 25 minute sessions. Click here to book 50 minute sessions. Important Notes: - By booking with a third party, you agree to their terms and conditions, including refund and cancellation policies. - Clicking “Add to schedule” will not secure your space; you must complete the third-party booking first. - Any queries regarding paid activities should be directed to the activity provider.",
+   "description": "Island Feather are back with an incredible range of massage services, including 25-minute (£40) and 50-minute Massage Therapy sessions (£70). Choose from Deep/Soft Tissue, Clinical Massage, or a treatment focused on specific/a combination areas - including neck, shoulders, back, legs, hands and feet. Paid Activity Booking Instructions Bookings open 10 am, Sat 4th July. Click here to book 25 minute sessions. Click here to book 50 minute sessions. Important Notes: - By booking with a third party, you agree to their terms and conditions, including refund and cancellation policies. - Clicking “Add to schedule” will not secure your space; you must complete the third-party booking first. - Any queries regarding paid activities should be directed to the activity provider.",
    "categories": [
     "WELLNESS"
    ],
@@ -1529,19 +1529,19 @@
     {
      "day": "Friday",
      "start": "12:30",
-     "end": "18:00",
+     "end": "17:00",
      "location": "MASSAGE TENT"
     },
     {
      "day": "Saturday",
-     "start": "08:00",
-     "end": "18:00",
+     "start": "09:00",
+     "end": "17:00",
      "location": "MASSAGE TENT"
     },
     {
      "day": "Sunday",
      "start": "08:00",
-     "end": "18:00",
+     "end": "12:00",
      "location": "MASSAGE TENT"
     }
    ]
@@ -1730,7 +1730,7 @@
      "start_min": 660,
      "end_min": 710,
      "label": "Saturday 11:00-11:50",
-     "location": "FLAT GROUND B",
+     "location": "FLAT GROUND A",
      "capacity": 10
     },
     {
@@ -1738,7 +1738,7 @@
      "start_min": 660,
      "end_min": 710,
      "label": "Saturday 11:00-11:50",
-     "location": "FLAT GROUND A",
+     "location": "FLAT GROUND B",
      "capacity": 10
     },
     {
@@ -1786,7 +1786,7 @@
      "start_min": 600,
      "end_min": 650,
      "label": "Sunday 10:00-10:50",
-     "location": "FLAT GROUND B",
+     "location": "FLAT GROUND A",
      "capacity": 10
     },
     {
@@ -1794,7 +1794,7 @@
      "start_min": 600,
      "end_min": 650,
      "label": "Sunday 10:00-10:50",
-     "location": "FLAT GROUND A",
+     "location": "FLAT GROUND B",
      "capacity": 10
     },
     {
