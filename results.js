@@ -8,6 +8,15 @@
   schedule.activities.forEach(function (a) { actById[a.id] = a; });
 
   var $ = function (id) { return document.getElementById(id); };
+  // A lock is per-person: pins[id] = { key, people:[names] }. Read tolerantly:
+  // an older string-form pin locks the original friends (legacyLockPeople), so
+  // people added later aren't locked retroactively.
+  var LEGACY_LOCK = (CONFIG.legacyLockPeople || NAMES).slice();
+  function pinObj(id) {
+    var p = state.knobs.pins && state.knobs.pins[id]; if (!p) return null;
+    if (typeof p === "string") return { key: p, people: LEGACY_LOCK.slice() };
+    return { key: p.key, people: (p.people || NAMES).slice() };
+  }
   function el(t, c, h) { var e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   var fmt = window.Engine.fmt;
@@ -132,7 +141,7 @@
       addClosed(col, ni === 0);
       var p = state.result.byPerson[n];
       var items = p.all.concat(p.dropins).filter(function (x) { return x.day === day; });
-      items.forEach(function (x) { col.appendChild(blockEl(x, startB)); });
+      items.forEach(function (x) { col.appendChild(blockEl(x, startB, n)); });
       cal.appendChild(col);
     });
 
@@ -170,14 +179,16 @@
     return w ? "open " + winText(w) : "around " + fmt(x.start_min);
   }
 
-  function blockEl(x, startB) {
+  function blockEl(x, startB, who) {
     var isWindow = x.type === "dropin";
     var booking = isWindow && x.booking; // window that needs booking (appointment)
     // Background always carries priority; drop-in/appointment is a border cue.
     var cls = "block " + (x.priority || "none");
     if (isWindow) cls += booking ? " appt" : " dropin";
     if (x.paid) cls += " paid";
-    var locked = !!(state.knobs.pins && state.knobs.pins[x.activityId]);
+    // Locked only for the people the lock applies to (so it shows in their column).
+    var pi = pinObj(x.activityId);
+    var locked = !!(pi && (who == null || pi.people.indexOf(who) >= 0));
     if (locked) cls += " pinned";
     var b = el("div", cls);
     b.style.top = (x.start_min - startB) * PX + "px";
@@ -241,7 +252,8 @@
       "A 'must do' is never given up to do this."));
 
     acts.forEach(function (a) {
-      var pinned = !!pins[a.id];
+      var lock = pinObj(a.id);          // { key, people } or null
+      var pinned = !!lock;
       var total = a.people.length;
       var byKey = {}; a.instances.forEach(function (i) { byKey[i.key] = i; });
       var row = el("div", "share" + (pinned ? " locked" : ""));
@@ -251,44 +263,67 @@
       row.appendChild(head);
 
       // Status from ACTUAL placements (exact), not a prediction.
-      var here = (byKey[pinned ? pins[a.id] : a.chosenKey] || {}).here || [];
       var status = el("div", "share-status");
       if (pinned) {
-        var pl = (byKey[pins[a.id]] || {}).label || a.chosenLabel;
-        status.innerHTML = '<span class="lock">&#128274; Locked</span> to <strong>' + esc(pl) + "</strong> &middot; " +
-          (here.length ? "on it: " + here.map(esc).join(", ") : "nobody can make it") +
-          (a.notPlaced.length ? ' &middot; <span class="warn">' + a.notPlaced.map(esc).join(", ") +
-            " can't make this time (clash)</span> - try another below" : "");
+        var pl = (byKey[lock.key] || {}).label || a.chosenLabel;
+        var onIt = (byKey[lock.key] || {}).here || [];
+        var lockMiss = lock.people.filter(function (p) { return onIt.indexOf(p) < 0; });
+        status.innerHTML = '<span class="lock">&#128274; Locked</span> to <strong>' + esc(pl) + "</strong>" +
+          " for " + lock.people.map(esc).join(", ") + " &middot; " +
+          (onIt.length ? "on it: " + onIt.map(esc).join(", ") : "nobody can make it") +
+          (lockMiss.length ? ' &middot; <span class="warn">' + lockMiss.map(esc).join(", ") +
+            " can't make this time (clash)</span> - try another time or drop them below" : "");
       } else if (a.groupCount >= total) {
         status.innerHTML = (total === 2 ? "Both" : "All " + total) +
           " are already on the same session (" + esc(a.chosenLabel) + ").";
       } else {
-        // who's where right now
         var spread = a.instances.filter(function (i) { return i.here.length; })
           .map(function (i) { return i.here.map(esc).join(", ") + " on " + esc(i.label); });
         status.innerHTML = '<span class="warn">Split</span> - ' + spread.join("; ") +
           (a.notPlaced.length ? "; " + a.notPlaced.map(esc).join(", ") + " not placed" : "") +
-          ". Lock a time to pull together whoever's free.";
+          ". Tick who to lock together and choose a time.";
       }
       row.appendChild(status);
 
-      // control: pick an instance (showing who's currently on each) + lock / unlock
+      // Per-person checkboxes: only the people who picked this activity can be
+      // locked onto it. Default = the currently-locked people, else everyone
+      // interested (untick anyone you don't want on the shared time).
       var ctl = el("div", "share-ctl");
+      var people = el("div", "share-people");
+      var boxes = {};
+      a.people.forEach(function (nm) {
+        var id = "lk-" + a.id + "-" + nm;
+        var wrap2 = el("label", "who");
+        var cb = el("input"); cb.type = "checkbox"; cb.id = id;
+        cb.checked = pinned ? lock.people.indexOf(nm) >= 0 : true;
+        boxes[nm] = cb;
+        wrap2.appendChild(cb); wrap2.appendChild(document.createTextNode(" " + nm));
+        people.appendChild(wrap2);
+      });
+      ctl.appendChild(people);
+
+      var pickrow = el("div", "share-pick");
       var sel = el("select");
       a.instances.forEach(function (i) {
         var note = i.here.length ? " - on it now: " + i.here.join(", ") : " - nobody yet";
         sel.appendChild(new Option(i.label + note, i.key));
       });
-      sel.value = pinned ? pins[a.id] : a.chosenKey;
-      ctl.appendChild(sel);
-      var btn = el("button", null, pinned ? "Update lock" : "Lock this time for everyone");
-      btn.addEventListener("click", function () { state.knobs.pins[a.id] = sel.value; persist(); });
-      ctl.appendChild(btn);
+      sel.value = pinned ? lock.key : a.chosenKey;
+      pickrow.appendChild(sel);
+      var btn = el("button", null, pinned ? "Update lock" : "Lock this time");
+      btn.addEventListener("click", function () {
+        var chosen = a.people.filter(function (nm) { return boxes[nm].checked; });
+        if (!chosen.length) { delete state.knobs.pins[a.id]; }   // nobody ticked = unlock
+        else state.knobs.pins[a.id] = { key: sel.value, people: chosen };
+        persist();
+      });
+      pickrow.appendChild(btn);
       if (pinned) {
         var un = el("button", "linkbtn", "Unlock");
         un.addEventListener("click", function () { delete state.knobs.pins[a.id]; persist(); });
-        ctl.appendChild(un);
+        pickrow.appendChild(un);
       }
+      ctl.appendChild(pickrow);
       row.appendChild(ctl);
       box.appendChild(row);
     });

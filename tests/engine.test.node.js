@@ -167,5 +167,52 @@ function check(desc, cond) {
   check("none fell through to 'if time'", r.byPerson.Elli.ifTime.length === 0);
 })();
 
+// Scenario H: a per-person lock binds only the listed people.
+(function () {
+  console.log("\n[H] Per-person lock");
+  const fake = {
+    days: ["D1"],
+    activities: [
+      { id: "X", name: "X", location: "", offsite: false, paid: false, categories: [], kind: "repeating",
+        instances: [
+          { day: "D1", start_min: 600, end_min: 650, label: "D1 10:00-10:50" },
+          { day: "D1", start_min: 840, end_min: 890, label: "D1 14:00-14:50" }], windows: [] },
+      { id: "Z", name: "Z", location: "", offsite: false, paid: false, categories: [], kind: "oneoff",
+        instances: [{ day: "D1", start_min: 840, end_min: 890, label: "D1 14:00-14:50" }], windows: [] },
+    ],
+  };
+  // P1 and P2 both want X. Lock X to the 14:00 instance for P1 ONLY. P2 also has a
+  // must (Z) at 14:00, so if the lock wrongly bound P2 it would collide.
+  const picks = { P1: { X: "want" }, P2: { X: "want", Z: "must" } };
+  const key = "D1|840";
+  const r = Engine.compute(fake, picks, { pins: { X: { key: key, people: ["P1"] } } }, config);
+  const x1 = r.byPerson.P1.all.find(p => p.activityId === "X");
+  const x2 = r.byPerson.P2.all.find(p => p.activityId === "X");
+  const z2 = r.byPerson.P2.all.find(p => p.activityId === "Z");
+  check("locked person P1 is on the locked 14:00 instance", x1 && x1.start_min === 840);
+  check("unlocked person P2 keeps their must Z at 14:00", z2 && z2.start_min === 840);
+  check("unlocked person P2's X is NOT forced onto the locked time", x2 && x2.start_min === 600);
+})();
+
+// Scenario I: legacy string pin locks only the legacy people (config default).
+(function () {
+  console.log("\n[I] Legacy string pin -> legacyLockPeople only");
+  const fake = {
+    days: ["D1"],
+    activities: [{ id: "X", name: "X", location: "", offsite: false, paid: false, categories: [], kind: "repeating",
+      instances: [
+        { day: "D1", start_min: 600, end_min: 650, label: "D1 10:00-10:50" },
+        { day: "D1", start_min: 840, end_min: 890, label: "D1 14:00-14:50" }], windows: [] }],
+  };
+  const cfg = Object.assign({}, config, { legacyLockPeople: ["Old"] });
+  const picks = { Old: { X: "want" }, New: { X: "want" } };
+  const r = Engine.compute(fake, picks, { pins: { X: "D1|840" } }, cfg);
+  const old = r.byPerson.Old.all.find(p => p.activityId === "X");
+  check("legacy-listed person is locked to 14:00", old && old.start_min === 840);
+  // 'New' isn't in legacyLockPeople, so isn't force-locked (togetherness may still
+  // co-locate, but it must not be *restricted* to the pinned instance) - sanity:
+  check("New person still scheduled", r.byPerson.New.all.some(p => p.activityId === "X"));
+})();
+
 console.log("\n" + pass + " passed, " + fail + " failed");
 process.exit(fail ? 1 : 0);

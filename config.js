@@ -4,7 +4,12 @@
 window.CONFIG = {
   // The people planning together. These names appear in the picks dropdown and
   // as the calendar columns. Add up to ~6.
-  friends: ["Abs", "Elli", "Jess", "Mummy"],
+  friends: ["Abs", "Elli", "Jess", "Mummy", "Kate", "Sophie"],
+
+  // Who a legacy (whole-group) lock applies to when read. Locks are now per-person
+  // ({key, people}); any older string-form lock is treated as locking just these
+  // people, so friends added later (Kate, Sophie) aren't locked retroactively.
+  legacyLockPeople: ["Abs", "Elli", "Jess", "Mummy"],
 
   // Paste the Google Apps Script web-app URL here after deploying it (see README).
   // Until it's set, the site runs in LOCAL mode: picks are kept in this browser

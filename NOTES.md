@@ -91,9 +91,17 @@ verify migrations after any change that alters ids.
   "consensus" instance is rewarded; the dial (`together`, default 1) scales it.
   At default it only co-locates when free. The consensus loop can oscillate, so we
   run a few rounds and **keep the best-scoring round** (`globalScore`).
+- **Locks are per-person.** `knobs.pins[id] = { key, people:[names] }` - the lock
+  binds only the listed people; others schedule freely. An older string-form pin
+  (`pins[id] = "Day|min"`) is read as locking `config.legacyLockPeople` (the
+  original four friends) so friends added later aren't locked retroactively. The
+  engine reads both via `pinInfo()`/`lockedFor()`, `candInsts(a, n)` is
+  person-aware, and `byActivity[id].lock` is exposed to the UI. The "Do these
+  together?" rows have per-person checkboxes (only people who picked it); unticking
+  everyone unlocks. The calendar padlock shows only in a locked person's column.
 - **Explicit togetherness UX**: per-activity "Do these together?" in `results.js`
   (`renderShared`, a collapsed `details`), which pins an instance via `knobs.pins`.
-  A LOCKED activity is **force-placed** for everyone who wants it: in `solve()` its
+  A LOCKED activity is **force-placed** for the locked people: in `solve()` its
   item weight becomes `LOCK_W` (5000) - above any want, below a must (10000) - so
   the solver drops lower/equal picks and relocates flexible ones to fit it, but
   never gives up a real must. Locked if-free picks are pulled into the B&B too (not

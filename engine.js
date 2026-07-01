@@ -43,6 +43,15 @@
     var offsiteBuf = config.offsiteBufferMinutes || 0;
     var pins = knobs.pins || {}, forced = knobs.gaps || {};
     var names = Object.keys(picksByName);
+    // A lock is per-person: pins[id] = { key, people:[names] }. An older string
+    // form (whole-group) is read as locking config.legacyLockPeople (the original
+    // friends), so people added later aren't locked retroactively.
+    function pinInfo(id) {
+      var p = pins[id]; if (!p) return null;
+      if (typeof p === "string") return { key: p, people: (config.legacyLockPeople || names) };
+      return { key: p.key, people: (p.people && p.people.length ? p.people : names) };
+    }
+    function lockedFor(id, n) { var pi = pinInfo(id); return !!(pi && pi.people.indexOf(n) >= 0); }
     // Togetherness dial. Optimiser weights are must=10000, want=10, iffree=1, so a
     // must is never traded for togetherness. To trade ONE want for one extra person
     // sharing an instance you need dial >= 10. So: 0 = off, 1 = co-locate only when
@@ -68,8 +77,15 @@
       return i1.start_min < i2.end_min + g && i2.start_min < i1.end_min + g;
     }
     function scheduled(a) { return a && (a.kind === "oneoff" || a.kind === "repeating") && a.instances.length; }
-    function candInsts(a) {
-      if (pins[a.id]) { var p = a.instances.filter(function (i) { return instanceKey(i) === pins[a.id]; }); if (p.length) return p; }
+    // Instance candidates for a person. If the activity is locked FOR this person
+    // (or n omitted, e.g. seeding consensus) restrict to the locked instance;
+    // otherwise they choose freely from all instances.
+    function candInsts(a, n) {
+      var pi = pinInfo(a.id);
+      if (pi && (n == null || pi.people.indexOf(n) >= 0)) {
+        var p = a.instances.filter(function (i) { return instanceKey(i) === pi.key; });
+        if (p.length) return p;
+      }
       return a.instances.slice().sort(instSort);
     }
     function interested(id) {
@@ -98,10 +114,10 @@
       var items = [];
       for (var id in picks) {
         if (!scheduled(acts[id])) continue;
-        var pr = picks[id];
-        if (pr === "must" || pr === "want" || pins[id]) {
-          var w = pins[id] ? (pr === "must" ? covWeight("must") : LOCK_W) : covWeight(pr);
-          items.push({ a: acts[id], w: w, insts: candInsts(acts[id]) });
+        var pr = picks[id], lk = lockedFor(id, n);
+        if (pr === "must" || pr === "want" || lk) {
+          var w = lk ? (pr === "must" ? covWeight("must") : LOCK_W) : covWeight(pr);
+          items.push({ a: acts[id], w: w, insts: candInsts(acts[id], n) });
         }
       }
       items.sort(function (x, y) { return (y.w - x.w) || (x.insts.length - y.insts.length); });
@@ -131,10 +147,10 @@
       // if-free: greedy into remaining gaps, preferring the consensus instance.
       function fitsAll(inst, a) { for (var k = 0; k < chosen.length; k++) if (clash(inst, a, chosen[k].inst, chosen[k].a)) return false; return true; }
       var iff = [];
-      for (var id in picks) if (picks[id] === "iffree" && !pins[id] && scheduled(acts[id])) iff.push(acts[id]);
+      for (var id in picks) if (picks[id] === "iffree" && !lockedFor(id, n) && scheduled(acts[id])) iff.push(acts[id]);
       iff.sort(function (x, y) { return x.instances.length - y.instances.length; });
       iff.forEach(function (a) {
-        var order = candInsts(a).slice().sort(function (p, q) {
+        var order = candInsts(a, n).slice().sort(function (p, q) {
           var pc = consensus[a.id] === instanceKey(p) ? 0 : 1, qc = consensus[a.id] === instanceKey(q) ? 0 : 1;
           return (pc - qc) || instSort(p, q);
         });
@@ -308,6 +324,7 @@
       byActivity[a.id] = {
         id: a.id, name: a.name, kind: a.kind, paid: a.paid, offsite: a.offsite,
         chosenLabel: chosenInst.label, chosenKey: chosenKey,
+        lock: pinInfo(a.id),  // { key, people } or null
         people: people.map(function (p) { return p.name; }),
         notPlaced: people.map(function (p) { return p.name; }).filter(function (n) { return placedSomewhere.indexOf(n) < 0; }),
         groupCount: keys.length ? counts[keys[0]] : 0,

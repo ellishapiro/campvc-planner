@@ -246,10 +246,13 @@ details.card[open] > summary { margin-bottom: 10px; }
 .share-status { font-size: 12px; color: var(--ink-dim); margin-bottom: 8px; }
 .lock { color: var(--iffree); font-weight: 600; }
 .warn { color: var(--paid); font-weight: 600; }
-.share-ctl { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.share-ctl select { min-width: 150px; padding: 7px 9px; }
-.share-ctl button { padding: 7px 12px; }
-.share-ctl .linkbtn { background: none; border: 0; color: var(--accent-2); cursor: pointer; padding: 7px 4px; }
+.share-ctl { display: flex; gap: 10px; flex-direction: column; }
+.share-people { display: flex; gap: 6px 14px; flex-wrap: wrap; }
+.share-people .who { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--ink); white-space: nowrap; }
+.share-pick { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.share-pick select { min-width: 150px; padding: 7px 9px; }
+.share-pick button { padding: 7px 12px; }
+.share-pick .linkbtn { background: none; border: 0; color: var(--accent-2); cursor: pointer; padding: 7px 4px; }
 
 /* ---- Full schedule reference ---- */
 .refcol .ref-item { padding: 6px 4px; border-bottom: 1px solid var(--line); font-size: 12px; }
