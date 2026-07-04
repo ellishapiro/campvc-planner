@@ -58,6 +58,34 @@ def load_overrides():
     return _overrides
 
 
+TIME_OVERRIDES_FILE = "time_overrides.json"
+
+
+def load_time_overrides():
+    """Corrections for garbled upstream session times (e.g. an AM/PM typo).
+    Matched on (name, full start datetime) so a correction stops matching - and is
+    reported as stale - once Guidebook fixes or changes the row."""
+    try:
+        with open(TIME_OVERRIDES_FILE, encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return []
+
+
+def apply_time_override(r, name, overrides, used):
+    """If a row matches a time override, correct its Start/End in place. Marks the
+    override as used so the caller can flag any that never matched (likely stale)."""
+    for idx, o in enumerate(overrides):
+        if norm(name) == norm(o.get("name", "")) and str(r.get("_start")) == o.get("match_start_datetime"):
+            if o.get("set_start"):
+                r["Start"] = o["set_start"]
+            if o.get("set_end"):
+                r["End"] = o["set_end"]
+            used.add(idx)
+            return True
+    return False
+
+
 def to_minutes(value):
     if value is None:
         return None
@@ -177,11 +205,14 @@ def build(sched_dir):
     activities = OrderedDict()  # norm(name) -> activity dict
     unclassified = set()        # no-reg activities with no curated verdict yet
     overrides = load_overrides()
+    time_overrides = load_time_overrides()
+    time_ovr_used = set()
 
     for r in rows:
         name = (r.get("Event") or "").strip()
         if not name:
             continue
+        apply_time_override(r, name, time_overrides, time_ovr_used)  # fix garbled upstream times
         day = (r.get("Day") or "").strip()
         loc = (r.get("Location") or "").strip()
         start_min = to_minutes(r.get("Start"))
@@ -272,7 +303,10 @@ def build(sched_dir):
                            "label": s["label"], "location": s["location"], "capacity": s["capacity"]}
                           for s in slots],
             "windows": a["windows"]})
-    return out, len(rows), counts, sorted(unclassified)
+    # Overrides that matched nothing this build - Guidebook likely fixed/changed
+    # the row, so the correction is probably stale and can be removed.
+    stale_time_overrides = [o for i, o in enumerate(time_overrides) if i not in time_ovr_used]
+    return out, len(rows), counts, sorted(unclassified), stale_time_overrides
 
 
 # ---------------- change detection (vs previous build) ----------------
@@ -374,7 +408,7 @@ def main():
     check_only = "--check" in sys.argv[1:]
     sched_dir = args[0] if args else os.path.join("..", "campvc-schedule")
 
-    activities, raw_count, counts, unclassified = build(sched_dir)
+    activities, raw_count, counts, unclassified, stale_time_ovr = build(sched_dir)
     old = load_existing()
     added, removed, retimed, rehoured = diff_schedules(old, activities)
     report, changed = format_changes(old, added, removed, retimed, rehoured)
@@ -386,6 +420,12 @@ def main():
         f"  one-off:           {counts['oneoff']}\n"
         f"  drop-in:           {counts['dropin']}\n"
         f"External-bookable:   {sum(1 for a in activities if a['external'])}\n")
+
+    if stale_time_ovr:
+        summary += ("\nSTALE TIME OVERRIDES (matched no row - upstream may be fixed; "
+                    "consider removing from time_overrides.json):\n")
+        for o in stale_time_ovr:
+            summary += f"  ! {o.get('name')} @ {o.get('match_start_datetime')}\n"
 
     if check_only:
         print(summary)

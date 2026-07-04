@@ -65,6 +65,13 @@ Other rules:
 - **Fungible per-day events**: `NAME_ALIASES` in `build_schedule.py` maps e.g.
   "Friday Roller Disco"/"Saturday Roller Disco" -> "Roller Disco" so they merge
   into one repeating activity. Add to that map for any similar case.
+- **Garbled upstream times**: `time_overrides.json` corrects bad source times
+  (e.g. Camp VC entered the Welsh class as Sun 23:15->Mon 12:05, an AM/PM typo for
+  11:15-12:05). Each entry matches on `(name, full start datetime)` and sets a new
+  Start/End. Applied every build; if an override stops matching (Guidebook fixed
+  the row) the build prints a STALE warning so we know to remove it. This is the
+  right home for the recurring "impossible time" glitches (also seen with Intro to
+  Motorsport, which Guidebook later fixed themselves).
 
 ## Pick migration (don't lose friends' data)
 
