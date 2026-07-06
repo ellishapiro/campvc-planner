@@ -1,9 +1,1 @@
-[
-  {
-    "name": "Welsh Language Taster Class",
-    "match_start_datetime": "2026-07-26 23:15:00",
-    "set_start": "11:15",
-    "set_end": "12:05",
-    "reason": "Upstream AM/PM typo: Guidebook stores 2026-07-26 23:15 -> 2026-07-27 12:05 (Sunday night into Monday, after the festival ends). Siblings are 50-min sessions and the end (12:05) is right, so the intended time is Sunday 11:15-12:05. Remove this once Guidebook corrects the source (the build will flag it as stale when it no longer matches)."
-  }
-]
+[]

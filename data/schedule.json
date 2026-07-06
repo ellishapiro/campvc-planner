@@ -951,7 +951,8 @@
    "external": true,
    "description": "In these 25-minute taster sessions, you&#x27;ll master the basics of riding the quad, before tackling obstacles such as tight corners, log balances and see-saws. The focus is on skill, control and confidence rather than speed. Choose between 90cc automatic quads, which are smaller and easier to handle, or more powerful 250cc semi-automatic quads. Please note that the 90cc quads have a rider weight limit of 13 stone, while the 250cc quads have a weight limit of 25 stone. Riders must have sufficient strength and mobility in both hands and feet to safely operate the controls, including braking, acceleration and gear changes where applicable. Quad biking can be physically demanding, so participants should be comfortable gripping handlebars and have a reasonable level of core strength. Helmets with visors are provided and must be worn. They weigh aprx 1.35 kg. If you have your own off-road helmet, you&#x27;re welcome to bring it. Flat, sturdy footwear such as trainers, boots, or wellies must be worn. Sandals, Crocs, and other open-toed footwear are not permitted. Participants must also wear long sleeves and full-length trousers. Riders who demonstrate the required skill and control during their taster session will be invited to book onto the more advanced off-road trail, exploring the site&#x27;s beautiful and rugged terrain. Trail sessions cannot be booked in advance, as riders must first demonstrate their ability in the field. Taster Experience – £25 Off-Road Experience – £25 Paid Activity Booking Instructions 1) Click t he partner link to book and pay for your space. Bookings open 10am, Sat 4th July. 2) Once booked and paid, click “Add to schedule” to add it to your planner. Important! - By booking with a third party, you agree to their terms and conditions, including refund and cancellation policies. - Clicking “Add to schedule” will not secure your space; you must complete the third-party booking first. - Any queries regarding paid activities should be directed to the activity provider.",
    "categories": [
-    "QUAD BIKING"
+    "QUAD BIKING",
+    "ADVENTURE"
    ],
    "maxPerSession": null,
    "totalPlaces": null,
@@ -1001,6 +1002,14 @@
      "start_min": 975,
      "end_min": 1015,
      "label": "Friday 16:15-16:55",
+     "location": "QUAD BIKE: MEETING POINT",
+     "capacity": -1
+    },
+    {
+     "day": "Friday",
+     "start_min": 1005,
+     "end_min": 1015,
+     "label": "Friday 16:45-16:55",
      "location": "QUAD BIKE: MEETING POINT",
      "capacity": -1
     },
@@ -1121,6 +1130,22 @@
      "start_min": 810,
      "end_min": 850,
      "label": "Sunday 13:30-14:10",
+     "location": "QUAD BIKE: MEETING POINT",
+     "capacity": -1
+    },
+    {
+     "day": "Sunday",
+     "start_min": 840,
+     "end_min": 880,
+     "label": "Sunday 14:00-14:40",
+     "location": "QUAD BIKE: MEETING POINT",
+     "capacity": -1
+    },
+    {
+     "day": "Sunday",
+     "start_min": 870,
+     "end_min": 910,
+     "label": "Sunday 14:30-15:10",
      "location": "QUAD BIKE: MEETING POINT",
      "capacity": -1
     }
@@ -1754,7 +1779,7 @@
      "start_min": 900,
      "end_min": 950,
      "label": "Saturday 15:00-15:50",
-     "location": "FLAT GROUND A",
+     "location": "FLAT GROUND B",
      "capacity": 10
     },
     {
@@ -1762,7 +1787,7 @@
      "start_min": 900,
      "end_min": 950,
      "label": "Saturday 15:00-15:50",
-     "location": "FLAT GROUND B",
+     "location": "FLAT GROUND A",
      "capacity": 10
     },
     {
@@ -2406,7 +2431,7 @@
    "kind": "repeating",
    "booking": true,
    "external": true,
-   "description": "This session is for complete beginners to riding motorcycles, but you must be able to ride a bicycle to participate . If you already have some riding experience (but are new to off-road), check out the Inch Perfect &#x27;Beginner to Trials Racing&#x27; session instead! Ride out for the very first time and get to grips with overall bike control. You&#x27;ll ride an electric (EM) trials bike, which means you&#x27;ll get going straight away, without having to master clutch and gears! £109 for 2 hours. Paid Activity Booking Instructions: 1) Bookings open from 10 am on Saturday, 4th July. Please click here to be taken to the booking platform. 2) Click the third-party link above to book and pay for your space. 3) Once booked and paid, click “Add to schedule” to add it to your planner. Important! Please Read: By booking with a third party, you agree to their terms and conditions, including refund and cancellation policies. Clicking “Add to schedule” will not secure your space; you must complete the third-party booking first. Any queries regarding paid activities should be directed to the activity provider. You must sign the waiver you&#x27;ll receive by email directly from Inch Perfect to participate. Inch Perfect provide bikes, insurance, helmets, boots, pants and jerseys in a broad range of sizes. Wear whatever you like under the kit, as long as you&#x27;re comfortable (fitness gear always works well) PLEASE ARRIVE AT THE MEETING POINT AT LEAST 15 MINUTES BEFORE YOUR START TIME",
+   "description": "This session is for complete beginners to riding motorcycles, but you must be able to ride a bicycle to participate . If you already have some riding experience (but are new to off-road), check out the Inch Perfect &#x27;Beginner to Trials Riding&#x27; session instead! Ride out for the very first time and get to grips with overall bike control. You&#x27;ll ride an electric (EM) trials bike, which means you&#x27;ll get going straight away, without having to master clutch and gears! £109 for 2 hours. Paid Activity Booking Instructions: 1) Bookings open from 10 am on Saturday, 4th July. Please click here to be taken to the booking platform. 2) Click the third-party link above to book and pay for your space. 3) Once booked and paid, click “Add to schedule” to add it to your planner. Important! Please Read: By booking with a third party, you agree to their terms and conditions, including refund and cancellation policies. Clicking “Add to schedule” will not secure your space; you must complete the third-party booking first. Any queries regarding paid activities should be directed to the activity provider. You must sign the waiver you&#x27;ll receive by email directly from Inch Perfect to participate. Inch Perfect provide bikes, insurance, helmets, boots, pants and jerseys in a broad range of sizes. Wear whatever you like under the kit, as long as you&#x27;re comfortable (fitness gear always works well) PLEASE ARRIVE AT THE MEETING POINT AT LEAST 15 MINUTES BEFORE YOUR START TIME",
    "categories": [
     "MOTO"
    ],
@@ -3005,6 +3030,14 @@
      "start_min": 780,
      "end_min": 840,
      "label": "Sunday 13:00-14:00",
+     "location": "DESERT ROSE RIDING SCHOOL: MEETING POINT",
+     "capacity": -1
+    },
+    {
+     "day": "Sunday",
+     "start_min": 990,
+     "end_min": 1050,
+     "label": "Sunday 16:30-17:30",
      "location": "DESERT ROSE RIDING SCHOOL: MEETING POINT",
      "capacity": -1
     }
@@ -3664,9 +3697,9 @@
     },
     {
      "day": "Friday",
-     "start_min": 1020,
-     "end_min": 1060,
-     "label": "Friday 17:00-17:40",
+     "start_min": 1035,
+     "end_min": 1075,
+     "label": "Friday 17:15-17:55",
      "location": "QUAD BIKE: MEETING POINT",
      "capacity": -1
     },
@@ -5789,7 +5822,7 @@
     "MAKE & CREATE"
    ],
    "maxPerSession": 40,
-   "totalPlaces": 200,
+   "totalPlaces": 240,
    "instances": [
     {
      "day": "Friday",
@@ -5830,16 +5863,17 @@
      "label": "Sunday 09:30-10:20",
      "location": "BAR & MOTO TENT",
      "capacity": 40
-    }
-   ],
-   "windows": [
+    },
     {
      "day": "Sunday",
-     "start": "10:30",
-     "end": "23:20",
-     "location": "BAR & MOTO TENT"
+     "start_min": 630,
+     "end_min": 680,
+     "label": "Sunday 10:30-11:20",
+     "location": "BAR & MOTO TENT",
+     "capacity": 40
     }
-   ]
+   ],
+   "windows": []
   },
   {
    "id": "merit-patch-making",
@@ -5964,7 +5998,7 @@
    "kind": "oneoff",
    "booking": true,
    "external": true,
-   "description": "During this two-hour circle, we’ll celebrate our achievements, move through stuck emotions, make some noise, shake off what we’re carrying, and reconnect with ourselves through somatic and healing practices. Our smaller group size allows for a more nurturing and connected experience than the larger festival workshops, ensuring every participant feels seen, supported, and able to engage at a level that feels comfortable for them. Expect laughter, maybe a few tears, plenty of support, and a goody bag worth over £20, leaving you feeling truly looked after. Spaces are intentionally limited to maintain the intimacy and quality of the experience. We ask that you show up as you are and leave as yourself. Paid Activity Booking Instructions 1) Click t his link to book and pay for your space. Bookings open 10 am, Sat 4th July. 2) Once booked and paid, click “Add to schedule” to add it to your planner. Important! - By booking with a third party, you agree to their terms and conditions, including refund and cancellation policies. - Clicking “Add to schedule” will not secure your space; you must complete the third-party booking first. - Any queries regarding paid activities should be directed to the activity provider. About your hosts Leading the workshop are Bec and Raichelle. Raichelle is a horse-mad Reiki and Blissweave practitioner who is passionate about bringing calm, relaxation and bliss to her healing work. With a keen interest in nature and the natural world, she weaves these elements into the nurturing support she provides through her sessions. Bec is a neurospicy anime geek and, through Balance Your Being, teaches Reiki, Crystal Healing and Rahanni, as well as delivering workshops on stress, hormones, meditation and coaching. She is a passionate advocate for mental and menstrual health and, alongside Raichelle, has facilitated healing circles, women&#x27;s circles, menstrual health support circles, Reiki shares, wellbeing workshops and one-to-one sessions. Together, they create safe nooks for people to show up, connect with themselves, and process emotions in a healthy and empowering way.",
+   "description": "During this two-hour circle, we’ll celebrate our achievements, move through stuck emotions, make some noise, shake off what we’re carrying, and reconnect with ourselves through somatic and healing practices. Our smaller group size allows for a more nurturing and connected experience than the larger festival workshops, ensuring every participant feels seen, supported, and able to engage at a level that feels comfortable for them. Expect laughter, maybe a few tears, plenty of support, and a goody bag worth over £20, leaving you feeling truly looked after. Spaces are intentionally limited to maintain the intimacy and quality of the experience. We ask that you show up as you are and leave as yourself. Paid Activity Booking Instructions 1) Click this link to book and pay for your space. Bookings open 10 am, Sat 4th July. 2) Once booked and paid, click “Add to schedule” to add it to your planner. Important! - By booking with a third party, you agree to their terms and conditions, including refund and cancellation policies. - Clicking “Add to schedule” will not secure your space; you must complete the third-party booking first. - Any queries regarding paid activities should be directed to the activity provider. About your hosts Leading the workshop are Bec and Raichelle. Raichelle is a horse-mad Reiki and Blissweave practitioner who is passionate about bringing calm, relaxation and bliss to her healing work. With a keen interest in nature and the natural world, she weaves these elements into the nurturing support she provides through her sessions. Bec is a neurospicy anime geek and, through Balance Your Being, teaches Reiki, Crystal Healing and Rahanni, as well as delivering workshops on stress, hormones, meditation and coaching. She is a passionate advocate for mental and menstrual health and, alongside Raichelle, has facilitated healing circles, women&#x27;s circles, menstrual health support circles, Reiki shares, wellbeing workshops and one-to-one sessions. Together, they create safe nooks for people to show up, connect with themselves, and process emotions in a healthy and empowering way.",
    "categories": [
     "WELLNESS"
    ],
@@ -8554,8 +8588,8 @@
    "categories": [
     "FITNESS & MARTIAL ARTS"
    ],
-   "maxPerSession": 25,
-   "totalPlaces": 50,
+   "maxPerSession": 40,
+   "totalPlaces": 80,
    "instances": [
     {
      "day": "Sunday",
@@ -8563,7 +8597,7 @@
      "end_min": 620,
      "label": "Sunday 09:30-10:20",
      "location": "RED BULL TENT",
-     "capacity": 25
+     "capacity": 40
     },
     {
      "day": "Sunday",
@@ -8571,7 +8605,7 @@
      "end_min": 740,
      "label": "Sunday 11:30-12:20",
      "location": "RED BULL TENT",
-     "capacity": 25
+     "capacity": 40
     }
    ],
    "windows": []
@@ -8589,8 +8623,8 @@
    "categories": [
     "BMX & MOUNTAIN BIKING"
    ],
-   "maxPerSession": 6,
-   "totalPlaces": 6,
+   "maxPerSession": null,
+   "totalPlaces": null,
    "instances": [
     {
      "day": "Sunday",
@@ -8598,7 +8632,7 @@
      "end_min": 660,
      "label": "Sunday 09:30-11:00",
      "location": "DROSI TENT MEETING POINT",
-     "capacity": 6
+     "capacity": -1
     }
    ],
    "windows": []
