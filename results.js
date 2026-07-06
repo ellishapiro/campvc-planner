@@ -190,7 +190,15 @@
     var pi = pinObj(x.activityId);
     var locked = !!(pi && (who == null || pi.people.indexOf(who) >= 0));
     if (locked) cls += " pinned";
+    if (x.booked) cls += " booked";          // confirmed reservation -> white
+    if (x.conflict) cls += " conflict";       // two booked items clash (mis-booking)
     var b = el("div", cls);
+    // Tap a block -> actions for this person (pin / mark booked). Scheduled
+    // bookings only; drop-ins/appointments aren't fixed sessions to lock.
+    if (who != null && !isWindow) {
+      b.style.cursor = "pointer";
+      b.addEventListener("click", function (ev) { ev.stopPropagation(); openBlockMenu(x, who); });
+    }
     b.style.top = (x.start_min - startB) * PX + "px";
     b.style.height = Math.max((x.end_min - x.start_min) * PX, 30) + "px";
     var withTxt = x.withWhom && x.withWhom.length ? " &middot; with " + x.withWhom.map(esc).join(", ") : "";
@@ -210,12 +218,74 @@
     } else {
       bm = fmt(x.start_min) + "-" + fmt(x.end_min) + withTxt;
     }
-    var lock = locked ? '<span class="lockmark" title="Locked to this time for everyone">&#128274;</span>' : "";
-    b.innerHTML = '<div class="bt">' + esc(x.name) + tag + lock + '</div><div class="bm">' + bm + "</div>";
-    b.title = (locked ? "[Locked] " : "") + x.name + " - " + x.day + " " + fmt(x.start_min) + "-" + fmt(x.end_min) +
-      (x.location ? " @ " + x.location : "");
+    var mark = x.booked ? '<span class="lockmark" title="Booked (confirmed)">&#10003;</span>'
+                        : (locked ? '<span class="lockmark" title="Locked to this time">&#128274;</span>' : "");
+    b.innerHTML = '<div class="bt">' + esc(x.name) + tag + mark + '</div><div class="bm">' + bm +
+      (x.conflict ? ' &middot; <span class="clashwarn">clashes with another booked item</span>' : "") + "</div>";
+    b.title = (x.booked ? "[Booked] " : locked ? "[Locked] " : "") + x.name + " - " + x.day + " " +
+      fmt(x.start_min) + "-" + fmt(x.end_min) + (x.location ? " @ " + x.location : "");
     return b;
   }
+
+  // ---------- block action sheet (tap a calendar block) ----------
+  // Per-person actions: pin the planning choice, or record a real booking (which
+  // perma-locks + turns the block white). Writes to the shared knobs.
+  function openBlockMenu(x, who) {
+    closeBlockMenu();
+    var id = x.activityId, key = x.day + "|" + x.start_min;
+    state.knobs.pins = state.knobs.pins || {};
+    state.knobs.booked = state.knobs.booked || {};
+    var pi = pinObj(id);
+    var pinnedForWho = !!(pi && pi.people.indexOf(who) >= 0);
+    var isBooked = (state.knobs.booked[id] || {})[who] === key;
+
+    var overlay = el("div", "sheet-overlay");
+    overlay.addEventListener("click", closeBlockMenu);
+    var card = el("div", "sheet");
+    card.addEventListener("click", function (ev) { ev.stopPropagation(); });
+    card.innerHTML = "<div class='sheet-head'><strong>" + esc(who) + "</strong> &middot; " + esc(x.name) +
+      "<div class='hint'>" + esc(x.day) + " " + fmt(x.start_min) + "-" + fmt(x.end_min) + "</div></div>";
+
+    function act(label, cls, fn) {
+      var btn = el("button", cls || null, label);
+      btn.addEventListener("click", function () { fn(); closeBlockMenu(); persistKnobs(); });
+      card.appendChild(btn);
+    }
+    if (isBooked) {
+      act("✓ Booked - tap to unmark", "sheet-booked", function () {
+        var m = state.knobs.booked[id]; if (m) { delete m[who]; if (!Object.keys(m).length) delete state.knobs.booked[id]; }
+      });
+    } else {
+      act("Mark as booked", "sheet-book", function () {
+        (state.knobs.booked[id] = state.knobs.booked[id] || {})[who] = key;
+      });
+    }
+    if (pinnedForWho) {
+      act("Unpin this time", null, function () {
+        var p = state.knobs.pins[id]; if (!p) return;
+        if (typeof p === "string") p = { key: p, people: (CONFIG.legacyLockPeople || NAMES).slice() };
+        p.people = p.people.filter(function (nm) { return nm !== who; });
+        if (p.people.length) state.knobs.pins[id] = p; else delete state.knobs.pins[id];
+      });
+    } else {
+      act("Pin this time for " + esc(who), null, function () {
+        var p = state.knobs.pins[id];
+        if (typeof p === "string") p = { key: p, people: (CONFIG.legacyLockPeople || NAMES).slice() };
+        if (!p || p.key !== key) p = { key: key, people: (p && p.key === key ? p.people : []).slice() };
+        if (p.people.indexOf(who) < 0) p.people.push(who);
+        p.key = key;
+        state.knobs.pins[id] = p;
+      });
+    }
+    var cancel = el("button", "linkbtn", "Close");
+    cancel.addEventListener("click", closeBlockMenu);
+    card.appendChild(cancel);
+
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+    state._sheet = overlay;
+  }
+  function closeBlockMenu() { if (state._sheet) { state._sheet.remove(); state._sheet = null; } }
 
   // ---------- "Do these together?" - per-activity shared-time locking ----------
   // Togetherness is an explicit, per-activity choice (it pins the chosen instance
@@ -511,14 +581,34 @@
     });
   }
 
+  // Recompute + rerender + save shared knobs. Shows a transient status toast so a
+  // save failure is never silent (per the no-silent-failures rule).
+  function persistKnobs() {
+    recompute();
+    renderAll();
+    showToast("saving...", "busy");
+    window.Store.saveKnobs(state.knobs).then(function (r) {
+      showToast(r.ok ? "saved" : "saved on this device only (couldn't reach the group sheet)", r.ok ? "ok" : "err");
+    });
+  }
+  var _toastT = null;
+  function showToast(msg, cls) {
+    var t = $("toast");
+    if (!t) { t = el("div", "toast"); t.id = "toast"; document.body.appendChild(t); }
+    t.textContent = msg; t.className = "toast show " + (cls || "");
+    if (_toastT) clearTimeout(_toastT);
+    if (cls !== "busy") _toastT = setTimeout(function () { t.className = "toast " + (cls || ""); }, 2500);
+  }
+
   function persist() {
-    var st = $("knobStatus"); if (st) { st.textContent = "saving..."; st.className = "status busy"; }
     recompute();
     renderAll();
     renderCurrentKnobs();
     $("adjust").open = true;
+    showToast("saving...", "busy");
     window.Store.saveKnobs(state.knobs).then(function (r) {
-      if (st) { st.textContent = r.ok ? "saved" : "saved locally only"; st.className = "status " + (r.ok ? "ok" : "err"); }
+      var st = $("knobStatus"); if (st) { st.textContent = r.ok ? "saved" : "saved locally only"; st.className = "status " + (r.ok ? "ok" : "err"); }
+      showToast(r.ok ? "saved" : "saved on this device only (couldn't reach the group sheet)", r.ok ? "ok" : "err");
     });
   }
 })();

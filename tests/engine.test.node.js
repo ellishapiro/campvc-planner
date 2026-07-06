@@ -214,5 +214,48 @@ function check(desc, cond) {
   check("New person still scheduled", r.byPerson.New.all.some(p => p.activityId === "X"));
 })();
 
+// Scenario J: a BOOKED item is pre-placed, never moved or dropped, and a must
+// that clashes with it yields (surfaced as couldn't-fit, not silently gone).
+(function () {
+  console.log("\n[J] Booked = hard pre-placement");
+  const fake = {
+    days: ["D1"],
+    activities: [
+      { id: "X", name: "X", location: "", offsite: false, paid: false, categories: [], kind: "repeating",
+        instances: [
+          { day: "D1", start_min: 600, end_min: 650, label: "D1 10:00-10:50" },
+          { day: "D1", start_min: 840, end_min: 890, label: "D1 14:00-14:50" }], windows: [] },
+      { id: "M", name: "M", location: "", offsite: false, paid: false, categories: [], kind: "oneoff",
+        instances: [{ day: "D1", start_min: 600, end_min: 650, label: "D1 10:00-10:50" }], windows: [] },
+    ],
+  };
+  // P booked X at 10:00. P also has M as a must at 10:00 (clashes the booking).
+  const picks = { P: { X: "want", M: "must" } };
+  const r = Engine.compute(fake, picks, { booked: { X: { P: "D1|600" } } }, config);
+  const x = r.byPerson.P.all.find(p => p.activityId === "X");
+  check("booked X placed at exactly the booked instance", x && x.start_min === 600 && x.booked === true);
+  check("the clashing must M is not placed (yields to the real booking)", !r.byPerson.P.all.some(p => p.activityId === "M"));
+  check("M surfaces in couldn't-fit (not silently dropped)", r.byPerson.P.dropped.some(d => d.activityId === "M"));
+})();
+
+// Scenario K: two booked items that clash are BOTH kept and flagged (no drop).
+(function () {
+  console.log("\n[K] Booked-vs-booked clash is flagged, both kept");
+  const fake = {
+    days: ["D1"],
+    activities: [
+      { id: "A", name: "A", location: "", offsite: false, paid: false, categories: [], kind: "oneoff",
+        instances: [{ day: "D1", start_min: 600, end_min: 650, label: "D1 10:00-10:50" }], windows: [] },
+      { id: "B", name: "B", location: "", offsite: false, paid: false, categories: [], kind: "oneoff",
+        instances: [{ day: "D1", start_min: 620, end_min: 700, label: "D1 10:20-11:40" }], windows: [] },
+    ],
+  };
+  const picks = { P: { A: "want", B: "want" } };
+  const r = Engine.compute(fake, picks, { booked: { A: { P: "D1|600" }, B: { P: "D1|620" } } }, config);
+  const got = r.byPerson.P.all.filter(p => p.activityId === "A" || p.activityId === "B");
+  check("both booked items kept despite clash", got.length === 2);
+  check("clash is flagged on the booked items", got.every(p => p.conflict === true));
+})();
+
 console.log("\n" + pass + " passed, " + fail + " failed");
 process.exit(fail ? 1 : 0);

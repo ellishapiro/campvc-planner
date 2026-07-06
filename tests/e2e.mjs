@@ -169,6 +169,17 @@ async function main() {
     check("full-schedule column renders", await cdp.evalp("document.querySelectorAll('.refcol .ref-item').length>0"));
     await shot(cdp, "2-results.png");
 
+    // ---------- TAP A BLOCK -> MARK BOOKED ----------
+    await cdp.evalp("(function(){var b=[].find.call(document.querySelectorAll('#cal .block'),function(x){return !x.classList.contains('dropin')&&!x.classList.contains('appt');});if(!b)return false;b.click();return true;})()");
+    await sleep(150);
+    check("tapping a scheduled block opens the action sheet", await cdp.evalp("!!document.querySelector('.sheet .sheet-book')"));
+    await cdp.evalp("(function(){document.querySelector('.sheet .sheet-book').click();return true;})()");
+    await sleep(250);
+    check("marking booked writes shared knobs.booked", await cdp.evalp(
+      "(function(){var k=JSON.parse(localStorage.getItem('campvc_knobs')||'{}');return !!(k.booked&&Object.keys(k.booked).length);})()"));
+    check("a booked block renders white (booked class)", await cdp.evalp("document.querySelectorAll('#cal .block.booked').length>0"));
+    await shot(cdp, "5-booked.png");
+
     // ---------- ADJUST KNOB ----------
     console.log("\n[adjust] global break = 30");
     await cdp.evalp("document.getElementById('adjust').open=true");
@@ -199,7 +210,9 @@ async function main() {
     check("Phase 2 (Free) section present", await cdp.evalp("/Phase 2/.test(document.getElementById('content').textContent)"));
     check("has bookable items with checkboxes", await cdp.evalp("document.querySelectorAll('.bkitem input[type=checkbox]').length>0"));
     await cdp.evalp("(function(){document.querySelector('.bkitem input[type=checkbox]').click();return true;})()");
-    check("ticking an item persists (marked booked)", await cdp.evalp("Object.keys(JSON.parse(localStorage.getItem('campvc_booked')||'{}')).length>0"));
+    // Booked is now shared state (knobs.booked), persisted to knobs storage (LS_KNOBS in local mode).
+    check("ticking an item persists to shared knobs.booked", await cdp.evalp(
+      "(function(){var k=JSON.parse(localStorage.getItem('campvc_knobs')||'{}');return !!(k.booked&&Object.keys(k.booked).length);})()"));
     await shot(cdp, "3-booking.png");
 
     // ---------- THEME: light/dark toggle ----------

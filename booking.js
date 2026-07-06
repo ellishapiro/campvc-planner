@@ -1,14 +1,13 @@
 // Camp VC planner - booking list page.
 // A phase-first checklist of exactly what each person needs to book: Phase 1
 // (Paid, books first) then Phase 2 (Free, a week later). Tick items off as you
-// book them (stored on this device). Drop-ins are listed separately as "just
-// turn up - no booking needed".
+// book them - booked status is shared with the group (same state the calendar
+// uses). Drop-ins are listed separately as "just turn up - no booking needed".
 (function () {
   "use strict";
   var schedule = window.SCHEDULE;
   var CONFIG = window.CONFIG;
   var NAMES = (CONFIG.friends || []).slice();
-  var BOOKED_KEY = "campvc_booked";
   var actById = {};
   schedule.activities.forEach(function (a) { actById[a.id] = a; });
   var PRANK = { must: 3, want: 2, iffree: 1 };
@@ -29,10 +28,29 @@
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   var fmt = window.Engine.fmt;
 
-  var state = { result: null, filter: "", booked: load() };
-  function load() { try { return JSON.parse(localStorage.getItem(BOOKED_KEY)) || {}; } catch (e) { return {}; } }
-  function persist() { try { localStorage.setItem(BOOKED_KEY, JSON.stringify(state.booked)); } catch (e) {} }
-  function keyOf(name, p) { return name + "|" + p.activityId + "|" + p.day + "|" + p.start_min; }
+  // Booked status is SHARED (knobs.booked[activityId][person] = instanceKey), so
+  // the calendar and this checklist agree and everyone sees the group's progress.
+  var state = { result: null, filter: "", knobs: {} };
+  function bookedMap() { return state.knobs.booked || (state.knobs.booked = {}); }
+  function instKey(p) { return p.day + "|" + p.start_min; }
+  function isBooked(name, p) { var m = bookedMap()[p.activityId]; return !!(m && m[name] === instKey(p)); }
+  function setBooked(name, p, on) {
+    var m = bookedMap();
+    if (on) (m[p.activityId] = m[p.activityId] || {})[name] = instKey(p);
+    else if (m[p.activityId]) { delete m[p.activityId][name]; if (!Object.keys(m[p.activityId]).length) delete m[p.activityId]; }
+    showToast("saving...", "busy");
+    window.Store.saveKnobs(state.knobs).then(function (r) {
+      showToast(r.ok ? "saved" : "saved on this device only (couldn't reach the group sheet)", r.ok ? "ok" : "err");
+    });
+  }
+  var _toastT = null;
+  function showToast(msg, cls) {
+    var t = $("toast");
+    if (!t) { t = el("div", "toast"); t.id = "toast"; document.body.appendChild(t); }
+    t.textContent = msg; t.className = "toast show " + (cls || "");
+    if (_toastT) clearTimeout(_toastT);
+    if (cls !== "busy") _toastT = setTimeout(function () { t.className = "toast " + (cls || ""); }, 2500);
+  }
 
   if (window.Store.isLocal) $("localFlag").hidden = false;
   NAMES.forEach(function (n) { var o = el("option"); o.value = n; o.textContent = "Just " + n; $("who").appendChild(o); });
@@ -40,7 +58,8 @@
   Promise.all([window.Store.getPicks(), window.Store.getKnobs()]).then(function (res) {
     var raw = res[0] || {}; var picksByName = {};
     NAMES.forEach(function (n) { picksByName[n] = raw[n] || {}; });
-    state.result = window.Engine.compute(schedule, picksByName, res[1] || {}, CONFIG);
+    state.knobs = res[1] || {};
+    state.result = window.Engine.compute(schedule, picksByName, state.knobs, CONFIG);
     if (!state.result.anyPicks) {
       $("status").innerHTML = "Nobody has saved any picks yet. Start on <a href='index.html'>My picks</a>.";
       return;
@@ -67,7 +86,7 @@
         (state.result.byPerson[n][ph.key] || []).forEach(function (p) { items.push({ name: n, p: p }); });
       });
       var sec = el("div", "card");
-      var left = items.filter(function (it) { return !state.booked[keyOf(it.name, it.p)]; }).length;
+      var left = items.filter(function (it) { return !isBooked(it.name, it.p); }).length;
       sec.appendChild(el("h3", null, esc(ph.title) + ' <span class="hint">- ' + left + " still to book / " + items.length + " total</span>"));
       if (!items.length) { sec.appendChild(el("div", "hint", "nothing to book here")); c.appendChild(sec); return; }
       // group by person
@@ -156,14 +175,12 @@
   }
 
   function itemRow(name, p) {
-    var k = keyOf(name, p);
     var row = el("label", "bkitem");
-    var cb = el("input"); cb.type = "checkbox"; cb.checked = !!state.booked[k];
+    var cb = el("input"); cb.type = "checkbox"; cb.checked = isBooked(name, p);
     cb.addEventListener("change", function () {
-      if (cb.checked) state.booked[k] = true; else delete state.booked[k];
-      persist(); body.classList.toggle("booked", cb.checked); updateCounts();
+      setBooked(name, p, cb.checked); body.classList.toggle("booked", cb.checked); updateCounts();
     });
-    var body = el("div", state.booked[k] ? "bkbody booked" : "bkbody");
+    var body = el("div", isBooked(name, p) ? "bkbody booked" : "bkbody");
     var act = actById[p.activityId] || {};
     var withTxt = p.withWhom && p.withWhom.length ? '<span class="with"> &middot; with ' + p.withWhom.map(esc).join(", ") + "</span>" : "";
     var limited = (act.totalPlaces != null && act.totalPlaces <= 60)
@@ -193,7 +210,7 @@
         if (!mine.length) return;
         lines.push(n + ":");
         mine.forEach(function (p) {
-          var done = state.booked[keyOf(n, p)] ? "[x] " : "[ ] ";
+          var done = isBooked(n, p) ? "[x] " : "[ ] ";
           var w = p.withWhom && p.withWhom.length ? " (with " + p.withWhom.join(", ") + ")" : "";
           lines.push("  " + done + p.name + " - " + p.day + " " + fmt(p.start_min) + "-" + fmt(p.end_min) +
             (p.location ? " @ " + p.location : "") + w);

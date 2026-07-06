@@ -52,6 +52,11 @@
       return { key: p.key, people: (p.people && p.people.length ? p.people : names) };
     }
     function lockedFor(id, n) { var pi = pinInfo(id); return !!(pi && pi.people.indexOf(n) >= 0); }
+    // "Booked" is a real external reservation the user has recorded: per person,
+    // per activity, at a specific instance. booked[id] = { <person>: instanceKey }.
+    // It's a hard fact - pre-placed, never moved, never dropped (see solve()).
+    var booked = knobs.booked || {};
+    function bookedKey(id, n) { var b = booked[id]; return b ? b[n] : null; }
     // Togetherness dial. Optimiser weights are must=10000, want=10, iffree=1, so a
     // must is never traded for togetherness. To trade ONE want for one extra person
     // sharing an instance you need dial >= 10. So: 0 = off, 1 = co-locate only when
@@ -108,12 +113,25 @@
     var LOCK_W = 5000;
     function solve(n) {
       var picks = picksByName[n];
+      // BOOKED = hard pre-placements. Whatever this person has recorded as booked
+      // is placed at exactly that instance and never optimised or dropped - it's a
+      // real reservation. Booked activities are excluded from the solve below;
+      // everything else must schedule around them.
+      var fixed = [], bookedIds = {};
+      Object.keys(booked).forEach(function (id) {
+        var key = bookedKey(id, n);
+        if (!key || !acts[id] || !scheduled(acts[id])) return;
+        var inst = acts[id].instances.filter(function (i) { return instanceKey(i) === key; })[0];
+        if (inst) { fixed.push({ a: acts[id], inst: inst, booked: true }); bookedIds[id] = true; }
+      });
+
       // Items in the exact solve: every must/want pick, plus any LOCKED pick of
       // any tier (a locked if-free still gets force-placed). If-free that isn't
-      // locked is left for the greedy fill below.
+      // locked is left for the greedy fill below. Booked activities are skipped
+      // (already pre-placed in `fixed`).
       var items = [];
       for (var id in picks) {
-        if (!scheduled(acts[id])) continue;
+        if (!scheduled(acts[id]) || bookedIds[id]) continue;
         var pr = picks[id], lk = lockedFor(id, n);
         if (pr === "must" || pr === "want" || lk) {
           var w = lk ? (pr === "must" ? covWeight("must") : LOCK_W) : covWeight(pr);
@@ -123,7 +141,12 @@
       items.sort(function (x, y) { return (y.w - x.w) || (x.insts.length - y.insts.length); });
 
       var best = { score: -1, set: [] }, calls = 0;
-      function fitsList(inst, a, list) { for (var k = 0; k < list.length; k++) if (clash(inst, a, list[k].inst, list[k].a)) return false; return true; }
+      // must/want candidates must clear both the running set AND the booked blocks.
+      function fitsList(inst, a, list) {
+        for (var f = 0; f < fixed.length; f++) if (clash(inst, a, fixed[f].inst, fixed[f].a)) return false;
+        for (var k = 0; k < list.length; k++) if (clash(inst, a, list[k].inst, list[k].a)) return false;
+        return true;
+      }
       function dfs(idx, cur, curW, curT) {
         if (++calls > 2000000) return;
         var score = curW + together * curT;
@@ -142,12 +165,13 @@
         dfs(idx + 1, cur, curW, curT); // skip this activity
       }
       dfs(0, [], 0, 0);
-      var chosen = best.set.map(function (c) { return { a: c.a, inst: c.inst }; });
+      // Start from the booked pre-placements, then add the solved must/want.
+      var chosen = fixed.concat(best.set.map(function (c) { return { a: c.a, inst: c.inst }; }));
 
       // if-free: greedy into remaining gaps, preferring the consensus instance.
       function fitsAll(inst, a) { for (var k = 0; k < chosen.length; k++) if (clash(inst, a, chosen[k].inst, chosen[k].a)) return false; return true; }
       var iff = [];
-      for (var id in picks) if (picks[id] === "iffree" && !lockedFor(id, n) && scheduled(acts[id])) iff.push(acts[id]);
+      for (var id in picks) if (picks[id] === "iffree" && !lockedFor(id, n) && !bookedIds[id] && scheduled(acts[id])) iff.push(acts[id]);
       iff.sort(function (x, y) { return x.instances.length - y.instances.length; });
       iff.forEach(function (a) {
         var order = candInsts(a, n).slice().sort(function (p, q) {
@@ -202,11 +226,12 @@
     var sched = {}, dropped = {}, earmarks = {}, ifTime = {};
     names.forEach(function (n) { sched[n] = []; dropped[n] = []; earmarks[n] = []; ifTime[n] = []; });
 
-    function makePlacement(a, inst, type, priority) {
+    function makePlacement(a, inst, type, priority, isBooked) {
       return {
         activityId: a.id, name: a.name, location: a.location, paid: a.paid, offsite: a.offsite,
         booking: !!a.booking, external: !!a.external, kind: a.kind, type: type,
         priority: priority || null, priorityLabel: priority ? PRIORITY_LABEL[priority] : null,
+        booked: !!isBooked, conflict: false,
         day: inst.day, dayIndex: dayIdx(inst), start_min: inst.start_min, end_min: inst.end_min,
         label: inst.label || (inst.day + " " + fmt(inst.start_min) + "-" + fmt(inst.end_min)),
         withWhom: [], backups: [],
@@ -215,8 +240,15 @@
 
     names.forEach(function (n) {
       var got = {};
-      assign[n].forEach(function (c) { got[c.a.id] = true; sched[n].push(makePlacement(c.a, c.inst, "booking", picksByName[n][c.a.id])); });
+      assign[n].forEach(function (c) { got[c.a.id] = true; sched[n].push(makePlacement(c.a, c.inst, "booking", picksByName[n][c.a.id], c.booked)); });
       sched[n].sort(instSort);
+      // Flag booked-vs-booked clashes (a real mis-booking) - kept, never dropped.
+      sched[n].forEach(function (p) {
+        if (!p.booked) return;
+        sched[n].forEach(function (q) {
+          if (q !== p && q.booked && clash(p, acts[p.activityId], q, acts[q.activityId])) p.conflict = true;
+        });
+      });
       for (var id in picksByName[n]) {
         var a = acts[id];
         if (scheduled(a) && !got[id]) dropped[n].push({ activityId: id, name: a.name, priority: picksByName[n][id], reason: "" });

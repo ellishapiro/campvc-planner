@@ -98,6 +98,18 @@ verify migrations after any change that alters ids.
   "consensus" instance is rewarded; the dial (`together`, default 1) scales it.
   At default it only co-locates when free. The consensus loop can oscillate, so we
   run a few rounds and **keep the best-scoring round** (`globalScore`).
+- **Three states per person, per activity.** (1) *Interest* = the pick
+  (must/want/iffree). (2) *Scheduled* = engine placement; *Pinned* steers it. (3)
+  *Booked* = a real external reservation the user records - the app never books, it
+  only records the fact. Booked = `knobs.booked[id][person] = instanceKey` (shared).
+  In `solve()` booked items are **hard pre-placements**: placed at exactly that
+  instance, excluded from the B&B, never moved or dropped; must/want/if-free
+  schedule around them. A must that clashes a booking yields (shown in couldn't-fit,
+  not silently gone); two booked items that clash are both kept and flagged
+  (`placement.conflict`). Calendar renders booked blocks **white + tick**; tapping
+  any scheduled block opens an action sheet (Pin / Mark booked, per person). The
+  booking-list page's tick writes the same shared `knobs.booked` (no more device-
+  local `campvc_booked`), so calendar and checklist always agree.
 - **Locks are per-person.** `knobs.pins[id] = { key, people:[names] }` - the lock
   binds only the listed people; others schedule freely. An older string-form pin
   (`pins[id] = "Day|min"`) is read as locking `config.legacyLockPeople` (the
