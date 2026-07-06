@@ -38,6 +38,7 @@
     var m = bookedMap();
     if (on) (m[p.activityId] = m[p.activityId] || {})[name] = instKey(p);
     else if (m[p.activityId]) { delete m[p.activityId][name]; if (!Object.keys(m[p.activityId]).length) delete m[p.activityId]; }
+    state.dirty = true;
     showToast("saving...", "busy");
     window.Store.saveKnobs(state.knobs).then(function (r) {
       showToast(r.ok ? "saved" : "saved on this device only (couldn't reach the group sheet)", r.ok ? "ok" : "err");
@@ -79,6 +80,7 @@
   }).then(function (res) {
     var fresh = res[0] || {}, freshK = res[1] || {};
     if (!cachedP) { paint(fresh, freshK); return; }
+    if (state.dirty) return;   // don't clobber the user's just-made booking
     if (JSON.stringify([fresh, freshK]) !== JSON.stringify([cachedP, cachedK])) {
       var wasBooted = !$("main").hidden; paint(fresh, freshK);
       if (wasBooted) showToast("updated with the group's latest", "ok");

@@ -20,6 +20,7 @@
     return p;
   }
   function pinKeyOf(id, who) { var m = pinMapOf(id); return m ? m[who] : null; }
+  function slotLabel(key) { var p = String(key).split("|"); return p.length === 2 ? p[0] + " " + fmt(+p[1]) : key; }
   // Normalise pins[id] to the per-person shape so we can edit one person's entry.
   function ensurePinMap(id) {
     state.knobs.pins = state.knobs.pins || {};
@@ -41,7 +42,7 @@
   var fmt = window.Engine.fmt;
 
   var PX = 1.1; // pixels per minute
-  var state = { picksByName: {}, knobs: {}, result: null, day: 0, showRef: false, peopleOpen: {} };
+  var state = { picksByName: {}, knobs: {}, result: null, day: 0, showRef: false, peopleOpen: {}, dirty: false };
 
   if (window.Store.isLocal) $("localFlag").hidden = false;
 
@@ -74,6 +75,9 @@
   }).then(function (res) {
     var fresh = res[0] || {}, freshK = res[1] || {};
     if (!cachedP) { paint(fresh, freshK); return; }
+    // If the user has already edited this session, THEIR state is authoritative and
+    // has been saved - never let this (in-flight, pre-edit) refresh clobber it.
+    if (state.dirty) return;
     var changed = JSON.stringify([fresh, freshK]) !== JSON.stringify([cachedP, cachedK]);
     if (!changed) return;
     var apply = function () {
@@ -355,7 +359,9 @@
   }
   function closeBlockMenu() {
     if (state._sheet) { state._sheet.remove(); state._sheet = null; }
-    if (state._deferredRefresh) { var f = state._deferredRefresh; state._deferredRefresh = null; f(); }
+    // Run a deferred background refresh, but not if the user has since edited
+    // (their saved state wins over a stale in-flight fetch).
+    if (state._deferredRefresh) { var f = state._deferredRefresh; state._deferredRefresh = null; if (!state.dirty) f(); }
   }
 
   // ---------- "Do these together?" - per-activity shared-time locking ----------
@@ -532,8 +538,22 @@
           return (order[a.priority] == null ? 9 : order[a.priority]) - (order[b.priority] == null ? 9 : order[b.priority]);
         }).forEach(function (x) {
           var dot = x.priority ? '<span class="pri-dot ' + x.priority + '"></span>' : "";
-          fd.appendChild(el("div", "bk", dot + esc(x.name) +
-            '<div class="when">' + esc(x.reason) + "</div>"));
+          // A pin that couldn't be placed (clashes with a must) has no calendar
+          // block to tap, so offer the unpin escape hatch right here.
+          var pk = pinKeyOf(x.activityId, n);
+          var pinNote = pk ? '<div class="when">pinned to ' + esc(slotLabel(pk)) + " but couldn't place it here</div>" : "";
+          var line = el("div", "bk", dot + esc(x.name) +
+            '<div class="when">' + esc(x.reason) + "</div>" + pinNote);
+          if (pk) {
+            var ub = el("button", "linkbtn", "Unpin");
+            ub.addEventListener("click", function () {
+              var m = ensurePinMap(x.activityId); delete m[n];
+              if (!Object.keys(m).length) delete state.knobs.pins[x.activityId];
+              persistKnobs();
+            });
+            line.appendChild(ub);
+          }
+          fd.appendChild(line);
         });
         card.appendChild(fd);
       }
@@ -696,6 +716,7 @@
   // Recompute + rerender + save shared knobs. Shows a transient status toast so a
   // save failure is never silent (per the no-silent-failures rule).
   function persistKnobs() {
+    state.dirty = true;   // our state now supersedes any in-flight background refresh
     recompute();
     renderAll();
     showToast("saving...", "busy");
@@ -713,6 +734,7 @@
   }
 
   function persist() {
+    state.dirty = true;
     recompute();
     renderAll();
     renderCurrentKnobs();
