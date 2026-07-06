@@ -21,6 +21,16 @@
   }
   function pinKeyOf(id, who) { var m = pinMapOf(id); return m ? m[who] : null; }
   function slotLabel(key) { var p = String(key).split("|"); return p.length === 2 ? p[0] + " " + fmt(+p[1]) : key; }
+  // Plain-language "how do I book this" note - mirrors the picks page.
+  function bookingNote(a) {
+    if (a.kind === "dropin" && !a.booking) return "Just turn up - no booking needed.";
+    if (a.kind === "dropin" && a.booking) return "Book a slot/appointment" +
+      (a.external ? " off-app via the partner link" : " in the app") + (a.paid ? " (paid)" : "") + " - within the open hours.";
+    if (!a.booking) return "No booking - just turn up on time.";
+    if (a.external) return "Book OFF-APP via the partner link" + (a.paid ? " (paid)" : "") +
+      ". 'Add to schedule' in the app does NOT secure your space - complete the third-party booking first.";
+    return a.paid ? "Paid - books in the app, phase 1." : "Included - books in the app, phase 2.";
+  }
   // Normalise pins[id] to the per-person shape so we can edit one person's entry.
   function ensurePinMap(id) {
     state.knobs.pins = state.knobs.pins || {};
@@ -296,7 +306,20 @@
     var card = el("div", "sheet");
     card.addEventListener("click", function (ev) { ev.stopPropagation(); });
     card.innerHTML = "<div class='sheet-head'><strong>" + esc(who) + "</strong> &middot; " + esc(x.name) +
-      "<div class='hint'>" + esc(x.day) + " " + fmt(x.start_min) + "-" + fmt(x.end_min) + "</div></div>";
+      "<div class='hint'>" + esc(x.day) + " " + fmt(x.start_min) + "-" + fmt(x.end_min) +
+      (x.location ? " &middot; " + esc(x.location) : "") + "</div></div>";
+
+    // (i) Details - the description + how-to-book note, inline, no tab switch.
+    var act0 = actById[id] || {};
+    if (act0.description || act0.booking != null) {
+      var det = el("div", "sheet-details"); det.style.display = "none";
+      det.innerHTML = "<div class='bnote'>" + esc(bookingNote(act0)) + "</div>" +
+        (act0.description ? "<p>" + esc(act0.description) + "</p>" : "") +
+        (act0.categories && act0.categories.length ? "<div class='hint'>" + act0.categories.map(esc).join(" &middot; ") + "</div>" : "");
+      var info = el("button", "sheet-info", "ⓘ Details");
+      info.addEventListener("click", function () { det.style.display = det.style.display === "none" ? "block" : "none"; });
+      card.appendChild(info); card.appendChild(det);
+    }
 
     function act(label, cls, fn) {
       var btn = el("button", cls || null, label);

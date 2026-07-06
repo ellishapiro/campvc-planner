@@ -227,6 +227,10 @@ label.fld { display: flex; flex-direction: column; gap: 3px; font-size: 11px; co
 .sheet .sheet-cnb { border-color: var(--paid); color: var(--paid); }
 .sheet .sheet-alt { border-color: var(--accent-2); color: var(--accent-2); }
 .sheet .sheet-alt-h { font-size: 12px; color: var(--ink-dim); margin: 6px 0 2px; text-transform: uppercase; letter-spacing: .03em; }
+.sheet .sheet-info { border-color: var(--line); color: var(--ink-dim); }
+.sheet .sheet-details { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 13px; color: var(--ink-dim); }
+.sheet .sheet-details p { margin: 6px 0 0; color: var(--ink); }
+.sheet .sheet-details .bnote { color: var(--ink); font-weight: 600; }
 .sheet .linkbtn { background: none; border: 0; color: var(--ink-dim); text-align: center; }
 .bk .linkbtn { background: none; border: 0; color: var(--accent-2); cursor: pointer; padding: 2px 4px; font-size: 12px; float: right; }
 
