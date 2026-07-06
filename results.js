@@ -35,13 +35,14 @@
 
   if (window.Store.isLocal) $("localFlag").hidden = false;
 
-  Promise.all([window.Store.getPicks(), window.Store.getKnobs()]).then(function (res) {
-    var raw = res[0] || {};
-    NAMES.forEach(function (n) { state.picksByName[n] = raw[n] || {}; });
-    state.knobs = res[1] || {};
+  function paint(raw, knobs) {
+    state.picksByName = {};
+    NAMES.forEach(function (n) { state.picksByName[n] = (raw && raw[n]) || {}; });
+    state.knobs = knobs || {};
     recompute();
     if (!state.result.anyPicks) {
       $("status").innerHTML = "Nobody has saved any picks yet. Head to <a href='index.html'>My picks</a> to start.";
+      $("main").hidden = true; $("status").hidden = false;
       return;
     }
     $("status").hidden = true;
@@ -49,8 +50,30 @@
     buildDayTabs();
     buildAdjust();
     renderAll();
+  }
+
+  // Stale-while-revalidate: paint instantly from the last-seen data (if any),
+  // then fetch fresh and repaint only if it changed - and never yank the view out
+  // from under an open action sheet (defer until it closes). Deferred one microtask
+  // so the rest of this file's definitions are ready before the first paint.
+  var cachedP = null, cachedK = null;
+  Promise.resolve().then(function () {
+    cachedP = window.Store.cachedPicks(); cachedK = window.Store.cachedKnobs();
+    if (cachedP) paint(cachedP, cachedK || {});
+    return Promise.all([window.Store.getPicks(), window.Store.getKnobs()]);
+  }).then(function (res) {
+    var fresh = res[0] || {}, freshK = res[1] || {};
+    if (!cachedP) { paint(fresh, freshK); return; }
+    var changed = JSON.stringify([fresh, freshK]) !== JSON.stringify([cachedP, cachedK]);
+    if (!changed) return;
+    var apply = function () {
+      var wasBooted = !$("main").hidden;
+      paint(fresh, freshK);
+      if (wasBooted) showToast("updated with the group's latest", "ok");
+    };
+    if (state._sheet) { state._deferredRefresh = apply; } else { apply(); }
   }).catch(function (e) {
-    $("status").innerHTML = "Could not load data. Reload to try again. <span class='hint'>(" + esc(e.message) + ")</span>";
+    if (!cachedP) $("status").innerHTML = "Could not load data. Reload to try again. <span class='hint'>(" + esc(e.message) + ")</span>";
   });
 
   function recompute() {
@@ -287,7 +310,10 @@
     document.body.appendChild(overlay);
     state._sheet = overlay;
   }
-  function closeBlockMenu() { if (state._sheet) { state._sheet.remove(); state._sheet = null; } }
+  function closeBlockMenu() {
+    if (state._sheet) { state._sheet.remove(); state._sheet = null; }
+    if (state._deferredRefresh) { var f = state._deferredRefresh; state._deferredRefresh = null; f(); }
+  }
 
   // ---------- "Do these together?" - per-activity shared-time locking ----------
   // Togetherness is an explicit, per-activity choice (it pins the chosen instance

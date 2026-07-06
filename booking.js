@@ -55,18 +55,35 @@
   if (window.Store.isLocal) $("localFlag").hidden = false;
   NAMES.forEach(function (n) { var o = el("option"); o.value = n; o.textContent = "Just " + n; $("who").appendChild(o); });
 
-  Promise.all([window.Store.getPicks(), window.Store.getKnobs()]).then(function (res) {
-    var raw = res[0] || {}; var picksByName = {};
-    NAMES.forEach(function (n) { picksByName[n] = raw[n] || {}; });
-    state.knobs = res[1] || {};
+  function paint(raw, knobs) {
+    var picksByName = {};
+    NAMES.forEach(function (n) { picksByName[n] = (raw && raw[n]) || {}; });
+    state.knobs = knobs || {};
     state.result = window.Engine.compute(schedule, picksByName, state.knobs, CONFIG);
     if (!state.result.anyPicks) {
       $("status").innerHTML = "Nobody has saved any picks yet. Start on <a href='index.html'>My picks</a>.";
+      $("main").hidden = true; $("status").hidden = false;
       return;
     }
     $("status").hidden = true; $("main").hidden = false;
     render();
-  }).catch(function (e) { $("status").innerHTML = "Could not load data. Reload to try again. <span class='hint'>(" + esc(e.message) + ")</span>"; });
+  }
+
+  // Stale-while-revalidate: instant paint from last-seen data, then refresh.
+  // Deferred one microtask so later definitions (PHASES etc.) exist before paint.
+  var cachedP = null, cachedK = null;
+  Promise.resolve().then(function () {
+    cachedP = window.Store.cachedPicks(); cachedK = window.Store.cachedKnobs();
+    if (cachedP) paint(cachedP, cachedK || {});
+    return Promise.all([window.Store.getPicks(), window.Store.getKnobs()]);
+  }).then(function (res) {
+    var fresh = res[0] || {}, freshK = res[1] || {};
+    if (!cachedP) { paint(fresh, freshK); return; }
+    if (JSON.stringify([fresh, freshK]) !== JSON.stringify([cachedP, cachedK])) {
+      var wasBooted = !$("main").hidden; paint(fresh, freshK);
+      if (wasBooted) showToast("updated with the group's latest", "ok");
+    }
+  }).catch(function (e) { if (!cachedP) $("status").innerHTML = "Could not load data. Reload to try again. <span class='hint'>(" + esc(e.message) + ")</span>"; });
 
   $("who").addEventListener("change", function () { state.filter = this.value; render(); });
   $("copyBtn").addEventListener("click", copyList);

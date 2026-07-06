@@ -14,6 +14,8 @@
   var isLocal = !url;
   var LS_PICKS = "campvc_picks";
   var LS_KNOBS = "campvc_knobs";
+  var LS_CACHE_PICKS = "campvc_cache_picks";   // last-seen shared data, for instant first paint
+  var LS_CACHE_KNOBS = "campvc_cache_knobs";
 
   function lsGet(key, fallback) {
     try { return JSON.parse(localStorage.getItem(key)) || fallback; }
@@ -81,9 +83,14 @@
       });
       var out = {};
       Object.keys(latest).forEach(function (n) { out[n] = migrate(latest[n].picks || {}); });
+      lsSet(LS_CACHE_PICKS, out);   // stash for instant render next load
       return out;
     });
   }
+
+  // Last-seen values, read synchronously for a stale-while-revalidate first paint.
+  function cachedPicks() { return isLocal ? migrateAll(lsGet(LS_PICKS, {})) : lsGet(LS_CACHE_PICKS, null); }
+  function cachedKnobs() { return isLocal ? lsGet(LS_KNOBS, {}) : lsGet(LS_CACHE_KNOBS, null); }
 
   function sameKeys(a, b) {
     var ka = Object.keys(a || {}), kb = Object.keys(b || {});
@@ -111,7 +118,9 @@
     return jsonp({ action: "getKnobs" }).then(function (rows) {
       var latest = null;
       (rows || []).forEach(function (r) { if (!latest || r.ts > latest.ts) latest = r; });
-      return latest ? (latest.knobs || {}) : {};
+      var k = latest ? (latest.knobs || {}) : {};
+      lsSet(LS_CACHE_KNOBS, k);
+      return k;
     });
   }
 
@@ -129,5 +138,7 @@
     savePicks: savePicks,
     getKnobs: getKnobs,
     saveKnobs: saveKnobs,
+    cachedPicks: cachedPicks,
+    cachedKnobs: cachedKnobs,
   };
 })();
