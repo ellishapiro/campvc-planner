@@ -120,7 +120,17 @@ verify migrations after any change that alters ids.
   "Couldn't book" section (results page) - the sole, always-reversible home for it.
 - **Alternatives popover.** The block action sheet also lists other activities that
   person is interested in running at the same time, each with a one-tap **Pin** -
-  the fine-tuning tool for the free-booking phase.
+  the fine-tuning tool for the free-booking phase. Tapping an **empty slot** opens
+  the same idea for a free gap (`openSlotMenu`): scheduled activities around then
+  (pin to the instance) and drop-ins whose window covers it (pin here).
+- **Window activities (appointments / drop-ins) support book / could-not-book / pin.**
+  Booked window → `solve` synthesises a fixed block from the timeKey (white, others
+  schedule around it); pinned window → earmarked at the chosen time
+  (`placePinnedDropin`); could-not-book on a window = whole thing unavailable. Turn-up
+  drop-ins (booking:false) get pin only. Any block type is now tappable.
+- **SWR dirty-guard.** Once the user saves a knob edit this session (`state.dirty`),
+  the in-flight background refresh no longer applies - it was silently clobbering
+  just-made pins/bookings with the pre-edit server copy.
 - **Pins are per-person, per-instance.** `knobs.pins[id] = { <person>: instanceKey }`
   - so people can pin the same activity to the SAME time (together) or DIFFERENT
   times (solo). Read forward via `pinMap()`: a string form pins

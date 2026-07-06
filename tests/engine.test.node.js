@@ -298,5 +298,25 @@ function check(desc, cond) {
     (r2.byPerson.P.couldNotBook || []).some(c => c.activityId === "X") && !r2.byPerson.P.dropped.some(d => d.activityId === "X"));
 })();
 
+// Scenario N: a booked/pinned WINDOW (appointment/drop-in) is placed at its time.
+(function () {
+  console.log("\n[N] Booked / pinned window activity");
+  const fake = {
+    days: ["D1"],
+    activities: [{ id: "APPT", name: "Massage", location: "TENT", offsite: false, paid: true,
+      booking: true, external: true, categories: [], kind: "dropin", instances: [],
+      windows: [{ day: "D1", start: "09:00", end: "17:00", location: "TENT" }] }],
+  };
+  const picks = { P: { APPT: "want" } };
+  // Booked at 15:00 -> fixed white block in the schedule, not a loose earmark.
+  const rb = Engine.compute(fake, picks, { booked: { APPT: { P: "D1|900" } } }, config);
+  const bk = rb.byPerson.P.all.find(x => x.activityId === "APPT");
+  check("booked appointment is a fixed block at 15:00", bk && bk.start_min === 900 && bk.booked === true);
+  check("booked appointment isn't also earmarked", !rb.byPerson.P.dropins.some(x => x.activityId === "APPT"));
+  // Pinned to a time -> earmarked there.
+  const rp = Engine.compute(fake, picks, { pins: { APPT: { P: "D1|780" } } }, config);
+  check("pinned drop-in earmarked at the pinned time (13:00)", rp.byPerson.P.dropins.some(x => x.activityId === "APPT" && x.start_min === 780));
+})();
+
 console.log("\n" + pass + " passed, " + fail + " failed");
 process.exit(fail ? 1 : 0);

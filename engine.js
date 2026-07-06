@@ -139,10 +139,20 @@
       // everything else must schedule around them.
       var fixed = [], bookedIds = {};
       Object.keys(booked).forEach(function (id) {
-        var key = bookedKey(id, n);
-        if (!key || !acts[id] || !scheduled(acts[id])) return;
-        var inst = acts[id].instances.filter(function (i) { return instanceKey(i) === key; })[0];
-        if (inst) { fixed.push({ a: acts[id], inst: inst, booked: true }); bookedIds[id] = true; }
+        var key = bookedKey(id, n), a = acts[id];
+        if (!key || !a) return;
+        if (scheduled(a)) {
+          var inst = a.instances.filter(function (i) { return instanceKey(i) === key; })[0];
+          if (inst) { fixed.push({ a: a, inst: inst, booked: true }); bookedIds[id] = true; }
+        } else {
+          // Window activity (appointment/drop-in) booked at a chosen time: place a
+          // fixed block there so it's white and everything else schedules around it.
+          var pk = String(key).split("|"), s = +pk[1], slot = config.dropInSlotMinutes || 45;
+          if (pk[0] && !isNaN(s)) {
+            fixed.push({ a: a, inst: { day: pk[0], start_min: s, end_min: s + slot, label: pk[0] + " " + fmt(s) + "-" + fmt(s + slot) }, booked: true });
+            bookedIds[id] = true;
+          }
+        }
       });
 
       // Items in the exact solve: every must/want pick, plus any LOCKED pick of
@@ -321,11 +331,20 @@
       }
       return false;
     }
+    function placePinnedDropin(n, a, key) {
+      var pk = String(key).split("|"), s = +pk[1], slot = config.dropInSlotMinutes || 45;
+      if (!pk[0] || isNaN(s)) return tryPlaceDropin(n, a);
+      earmarks[n].push(makePlacement(a, { day: pk[0], start_min: s, end_min: s + slot, label: pk[0] + " " + fmt(s) + "-" + fmt(s + slot) }, "dropin", picksByName[n][a.id]));
+      return true;
+    }
     var dropins = schedule.activities.filter(function (a) { return a.kind === "dropin"; });
     names.forEach(function (n) {
-      dropins.filter(function (a) { return picksByName[n][a.id]; })
+      dropins.filter(function (a) { return picksByName[n][a.id] && !bookedKey(a.id, n); }) // booked ones already placed as fixed blocks
         .sort(function (x, y) { return weightOf(picksByName[n][y.id]) - weightOf(picksByName[n][x.id]); })
         .forEach(function (a) {
+          if (cnbFor(a.id, n)) { cantBook[n].push({ activityId: a.id, name: a.name, priority: picksByName[n][a.id], all: true }); return; }
+          var pin = pinKeyFor(a.id, n);
+          if (pin) { placePinnedDropin(n, a, pin); return; }   // pinned to a chosen time
           if (!tryPlaceDropin(n, a)) ifTime[n].push({ activityId: a.id, name: a.name, priority: picksByName[n][a.id] });
         });
     });

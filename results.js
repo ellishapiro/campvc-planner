@@ -188,6 +188,15 @@
       var p = state.result.byPerson[n];
       var items = p.all.concat(p.dropins).filter(function (x) { return x.day === day; });
       items.forEach(function (x) { col.appendChild(blockEl(x, startB, n)); });
+      // Tap an empty part of the column -> what's on at that time (for this person).
+      (function (colN, colEl) {
+        colEl.addEventListener("click", function (ev) {
+          if (ev.target.closest && ev.target.closest(".block")) return; // a block handles itself
+          var rect = colEl.getBoundingClientRect();
+          var min = Math.round(((ev.clientY - rect.top) / PX + startB) / 15) * 15; // snap to 15 min
+          openSlotMenu(day, colN, min);
+        });
+      })(n, col);
       cal.appendChild(col);
     });
 
@@ -238,9 +247,8 @@
     if (x.booked) cls += " booked";          // confirmed reservation -> white
     if (x.conflict) cls += " conflict";       // two booked items clash (mis-booking)
     var b = el("div", cls);
-    // Tap a block -> actions for this person (pin / mark booked). Scheduled
-    // bookings only; drop-ins/appointments aren't fixed sessions to lock.
-    if (who != null && !isWindow) {
+    // Tap any block -> actions for this person (pin / book / could-not-book).
+    if (who != null) {
       b.style.cursor = "pointer";
       b.addEventListener("click", function (ev) { ev.stopPropagation(); openBlockMenu(x, who); });
     }
@@ -323,8 +331,11 @@
     // Could-not-book (sold out / missed). Only for things that need booking.
     if (x.booking) {
       var v = cnbOf(id, who);
-      if (v === "*" || (Array.isArray(v) && v.indexOf(key) >= 0)) {
+      var marked = v === "*" || (Array.isArray(v) && v.indexOf(key) >= 0);
+      if (marked) {
         act("↩ Restore (marked couldn't book)", "sheet-cnb", function () { clearCnb(id, who); });
+      } else if (x.kind === "dropin") {
+        act("Couldn't book", "sheet-cnb", function () { setCnbAll(id, who); });   // window = one bookable thing
       } else {
         act("Couldn't book - this time", "sheet-cnb", function () { addCnbInstance(id, who, key); });
         if (x.kind === "repeating") act("Couldn't book - all times", "sheet-cnb", function () { setCnbAll(id, who); });
@@ -357,6 +368,43 @@
     document.body.appendChild(overlay);
     state._sheet = overlay;
   }
+  // Tap a free slot -> what that person is interested in around then, each pinnable.
+  function openSlotMenu(day, who, minute) {
+    closeBlockMenu();
+    var picks = state.picksByName[who] || {}, probe = 60;
+    var overlay = el("div", "sheet-overlay"); overlay.addEventListener("click", closeBlockMenu);
+    var card = el("div", "sheet"); card.addEventListener("click", function (ev) { ev.stopPropagation(); });
+    card.innerHTML = "<div class='sheet-head'><strong>" + esc(who) + "</strong> &middot; free time" +
+      "<div class='hint'>" + esc(day) + " around " + fmt(minute) + "</div></div>";
+    function pinAct(label, aid, k) {
+      var already = pinKeyOf(aid, who) === k;
+      var btn = el("button", already ? "sheet-booked" : "sheet-alt", (already ? "✓ Pinned " : "Pin ") + label);
+      btn.addEventListener("click", function () {
+        if (already) { var m = ensurePinMap(aid); delete m[who]; if (!Object.keys(m).length) delete state.knobs.pins[aid]; }
+        else ensurePinMap(aid)[who] = k;
+        closeBlockMenu(); persistKnobs();
+      });
+      card.appendChild(btn);
+    }
+    var any = false;
+    // Scheduled activities with an instance around this time.
+    schedule.activities.forEach(function (a) {
+      if (!picks[a.id] || (a.kind !== "oneoff" && a.kind !== "repeating")) return;
+      var inst = (a.instances || []).filter(function (i) { return i.day === day && i.start_min < minute + probe && minute - 30 < i.end_min; })
+        .sort(function (p, q) { return Math.abs(p.start_min - minute) - Math.abs(q.start_min - minute); })[0];
+      if (inst) { any = true; pinAct(esc(a.name) + " (" + fmt(inst.start_min) + "-" + fmt(inst.end_min) + ")", a.id, inst.day + "|" + inst.start_min); }
+    });
+    // Drop-ins the person wants, whose window covers this time -> pin here.
+    schedule.activities.forEach(function (a) {
+      if (!picks[a.id] || a.kind !== "dropin") return;
+      var ok = (a.windows || []).some(function (w) { var s = pmin(w.start), e = pmin(w.end); return w.day === day && (s == null || minute >= s) && (e == null || minute < e); });
+      if (ok) { any = true; pinAct(esc(a.name) + " here (" + fmt(minute) + ")", a.id, day + "|" + minute); }
+    });
+    if (!any) card.appendChild(el("div", "hint", "Nothing " + esc(who) + " is interested in around then."));
+    var cancel = el("button", "linkbtn", "Close"); cancel.addEventListener("click", closeBlockMenu); card.appendChild(cancel);
+    overlay.appendChild(card); document.body.appendChild(overlay); state._sheet = overlay;
+  }
+
   function closeBlockMenu() {
     if (state._sheet) { state._sheet.remove(); state._sheet = null; }
     // Run a deferred background refresh, but not if the user has since edited
