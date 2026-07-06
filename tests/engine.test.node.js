@@ -257,5 +257,23 @@ function check(desc, cond) {
   check("clash is flagged on the booked items", got.every(p => p.conflict === true));
 })();
 
+// Scenario L: per-person pins send two people to DIFFERENT instances (solo pins).
+(function () {
+  console.log("\n[L] Per-person pins to different instances");
+  const fake = {
+    days: ["D1"],
+    activities: [{ id: "X", name: "X", location: "", offsite: false, paid: false, categories: [], kind: "repeating",
+      instances: [
+        { day: "D1", start_min: 600, end_min: 650, label: "D1 10:00-10:50" },
+        { day: "D1", start_min: 840, end_min: 890, label: "D1 14:00-14:50" }], windows: [] }],
+  };
+  const picks = { P1: { X: "want" }, P2: { X: "want" } };
+  const r = Engine.compute(fake, picks, { pins: { X: { P1: "D1|600", P2: "D1|840" } } }, config);
+  const a = r.byPerson.P1.all.find(p => p.activityId === "X");
+  const b = r.byPerson.P2.all.find(p => p.activityId === "X");
+  check("P1 pinned to 10:00", a && a.start_min === 600);
+  check("P2 pinned to a DIFFERENT time (14:00)", b && b.start_min === 840);
+})();
+
 console.log("\n" + pass + " passed, " + fail + " failed");
 process.exit(fail ? 1 : 0);

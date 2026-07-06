@@ -110,14 +110,16 @@ verify migrations after any change that alters ids.
   any scheduled block opens an action sheet (Pin / Mark booked, per person). The
   booking-list page's tick writes the same shared `knobs.booked` (no more device-
   local `campvc_booked`), so calendar and checklist always agree.
-- **Locks are per-person.** `knobs.pins[id] = { key, people:[names] }` - the lock
-  binds only the listed people; others schedule freely. An older string-form pin
-  (`pins[id] = "Day|min"`) is read as locking `config.legacyLockPeople` (the
-  original four friends) so friends added later aren't locked retroactively. The
-  engine reads both via `pinInfo()`/`lockedFor()`, `candInsts(a, n)` is
-  person-aware, and `byActivity[id].lock` is exposed to the UI. The "Do these
-  together?" rows have per-person checkboxes (only people who picked it); unticking
-  everyone unlocks. The calendar padlock shows only in a locked person's column.
+- **Pins are per-person, per-instance.** `knobs.pins[id] = { <person>: instanceKey }`
+  - so people can pin the same activity to the SAME time (together) or DIFFERENT
+  times (solo). Read forward via `pinMap()`: a string form pins
+  `config.legacyLockPeople`; a `{key,people}` form pins each listed person to that
+  key. Engine uses `pinKeyFor()`/`lockedFor()`, `candInsts(a, n)` is person-aware,
+  `consensusPinKey()` seeds togetherness, `byActivity[id].lock` = the per-person map.
+  Two entry points, both writing the same map: the "Do these together?" panel (set
+  a shared time for the ticked people) and the calendar tap "Pin this time for X"
+  (touches ONLY X - so re-pinning solo automatically drops X from a shared group
+  time). Padlock shows only in a pinned person's column.
 - **Explicit togetherness UX**: per-activity "Do these together?" in `results.js`
   (`renderShared`, a collapsed `details`), which pins an instance via `knobs.pins`.
   A LOCKED activity is **force-placed** for the locked people: in `solve()` its

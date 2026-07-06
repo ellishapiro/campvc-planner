@@ -8,14 +8,23 @@
   schedule.activities.forEach(function (a) { actById[a.id] = a; });
 
   var $ = function (id) { return document.getElementById(id); };
-  // A lock is per-person: pins[id] = { key, people:[names] }. Read tolerantly:
-  // an older string-form pin locks the original friends (legacyLockPeople), so
-  // people added later aren't locked retroactively.
+  // A pin is per-person: pins[id] = { <person>: instanceKey }. Read tolerantly -
+  // older string / {key,people} forms are read forward (string locks the original
+  // friends). pinMapOf returns { person: key }.
   var LEGACY_LOCK = (CONFIG.legacyLockPeople || NAMES).slice();
-  function pinObj(id) {
+  function pinMapOf(id) {
     var p = state.knobs.pins && state.knobs.pins[id]; if (!p) return null;
-    if (typeof p === "string") return { key: p, people: LEGACY_LOCK.slice() };
-    return { key: p.key, people: (p.people || NAMES).slice() };
+    var m = {};
+    if (typeof p === "string") { LEGACY_LOCK.forEach(function (n) { m[n] = p; }); return m; }
+    if (typeof p.key === "string" && Array.isArray(p.people)) { p.people.forEach(function (n) { m[n] = p.key; }); return m; }
+    return p;
+  }
+  function pinKeyOf(id, who) { var m = pinMapOf(id); return m ? m[who] : null; }
+  // Normalise pins[id] to the per-person shape so we can edit one person's entry.
+  function ensurePinMap(id) {
+    state.knobs.pins = state.knobs.pins || {};
+    state.knobs.pins[id] = Object.assign({}, pinMapOf(id) || {});
+    return state.knobs.pins[id];
   }
   function el(t, c, h) { var e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
@@ -186,9 +195,8 @@
     var cls = "block " + (x.priority || "none");
     if (isWindow) cls += booking ? " appt" : " dropin";
     if (x.paid) cls += " paid";
-    // Locked only for the people the lock applies to (so it shows in their column).
-    var pi = pinObj(x.activityId);
-    var locked = !!(pi && (who == null || pi.people.indexOf(who) >= 0));
+    // Locked only for this person (pins are per-person now).
+    var locked = who != null && !!pinKeyOf(x.activityId, who);
     if (locked) cls += " pinned";
     if (x.booked) cls += " booked";          // confirmed reservation -> white
     if (x.conflict) cls += " conflict";       // two booked items clash (mis-booking)
@@ -235,8 +243,7 @@
     var id = x.activityId, key = x.day + "|" + x.start_min;
     state.knobs.pins = state.knobs.pins || {};
     state.knobs.booked = state.knobs.booked || {};
-    var pi = pinObj(id);
-    var pinnedForWho = !!(pi && pi.people.indexOf(who) >= 0);
+    var pinnedForWho = pinKeyOf(id, who) === key;
     var isBooked = (state.knobs.booked[id] || {})[who] === key;
 
     var overlay = el("div", "sheet-overlay");
@@ -262,19 +269,14 @@
     }
     if (pinnedForWho) {
       act("Unpin this time", null, function () {
-        var p = state.knobs.pins[id]; if (!p) return;
-        if (typeof p === "string") p = { key: p, people: (CONFIG.legacyLockPeople || NAMES).slice() };
-        p.people = p.people.filter(function (nm) { return nm !== who; });
-        if (p.people.length) state.knobs.pins[id] = p; else delete state.knobs.pins[id];
+        var m = ensurePinMap(id); delete m[who];
+        if (!Object.keys(m).length) delete state.knobs.pins[id];
       });
     } else {
+      // Pin ONLY this person to this time. If they were part of a shared group
+      // pin, this moves just them - they leave the group's time automatically.
       act("Pin this time for " + esc(who), null, function () {
-        var p = state.knobs.pins[id];
-        if (typeof p === "string") p = { key: p, people: (CONFIG.legacyLockPeople || NAMES).slice() };
-        if (!p || p.key !== key) p = { key: key, people: (p && p.key === key ? p.people : []).slice() };
-        if (p.people.indexOf(who) < 0) p.people.push(who);
-        p.key = key;
-        state.knobs.pins[id] = p;
+        ensurePinMap(id)[who] = key;
       });
     }
     var cancel = el("button", "linkbtn", "Close");
@@ -322,10 +324,15 @@
       "A 'must do' is never given up to do this."));
 
     acts.forEach(function (a) {
-      var lock = pinObj(a.id);          // { key, people } or null
-      var pinned = !!lock;
+      var pm = pinMapOf(a.id) || {};                 // { person: key }
+      var pinnedPeople = a.people.filter(function (nm) { return pm[nm]; });
+      var pinned = pinnedPeople.length > 0;
       var total = a.people.length;
       var byKey = {}; a.instances.forEach(function (i) { byKey[i.key] = i; });
+      // The panel sets a shared time; default it to the most common pinned key.
+      var keyCount = {}, sharedKey = a.chosenKey, bw = 0;
+      pinnedPeople.forEach(function (nm) { var k = pm[nm]; keyCount[k] = (keyCount[k] || 0) + 1; if (keyCount[k] > bw) { bw = keyCount[k]; sharedKey = k; } });
+      var divergent = Object.keys(keyCount).length > 1;
       var row = el("div", "share" + (pinned ? " locked" : ""));
       var head = el("div", "share-head");
       head.innerHTML = "<strong>" + esc(a.name) + "</strong>" +
@@ -335,14 +342,17 @@
       // Status from ACTUAL placements (exact), not a prediction.
       var status = el("div", "share-status");
       if (pinned) {
-        var pl = (byKey[lock.key] || {}).label || a.chosenLabel;
-        var onIt = (byKey[lock.key] || {}).here || [];
-        var lockMiss = lock.people.filter(function (p) { return onIt.indexOf(p) < 0; });
-        status.innerHTML = '<span class="lock">&#128274; Locked</span> to <strong>' + esc(pl) + "</strong>" +
-          " for " + lock.people.map(esc).join(", ") + " &middot; " +
-          (onIt.length ? "on it: " + onIt.map(esc).join(", ") : "nobody can make it") +
-          (lockMiss.length ? ' &middot; <span class="warn">' + lockMiss.map(esc).join(", ") +
-            " can't make this time (clash)</span> - try another time or drop them below" : "");
+        // who's actually on their pinned instance vs couldn't-make-it
+        var miss = pinnedPeople.filter(function (nm) { var i = byKey[pm[nm]]; return !(i && i.here.indexOf(nm) >= 0); });
+        if (divergent) {
+          var parts = a.instances.filter(function (i) { return pinnedPeople.some(function (nm) { return pm[nm] === i.key; }); })
+            .map(function (i) { return pinnedPeople.filter(function (nm) { return pm[nm] === i.key; }).map(esc).join(", ") + " on " + esc(i.label); });
+          status.innerHTML = '<span class="lock">&#128274; Pinned</span> (different times) - ' + parts.join("; ");
+        } else {
+          var pl = (byKey[sharedKey] || {}).label || a.chosenLabel;
+          status.innerHTML = '<span class="lock">&#128274; Pinned</span> to <strong>' + esc(pl) + "</strong> for " + pinnedPeople.map(esc).join(", ");
+        }
+        if (miss.length) status.innerHTML += ' &middot; <span class="warn">' + miss.map(esc).join(", ") + " can't make their pinned time (clash)</span>";
       } else if (a.groupCount >= total) {
         status.innerHTML = (total === 2 ? "Both" : "All " + total) +
           " are already on the same session (" + esc(a.chosenLabel) + ").";
@@ -351,21 +361,19 @@
           .map(function (i) { return i.here.map(esc).join(", ") + " on " + esc(i.label); });
         status.innerHTML = '<span class="warn">Split</span> - ' + spread.join("; ") +
           (a.notPlaced.length ? "; " + a.notPlaced.map(esc).join(", ") + " not placed" : "") +
-          ". Tick who to lock together and choose a time.";
+          ". Tick who to pin together and choose a time.";
       }
       row.appendChild(status);
 
-      // Per-person checkboxes: only the people who picked this activity can be
-      // locked onto it. Default = the currently-locked people, else everyone
-      // interested (untick anyone you don't want on the shared time).
+      // Per-person checkboxes: only people who picked this activity can be pinned.
+      // Default = currently-pinned people, else everyone interested.
       var ctl = el("div", "share-ctl");
       var people = el("div", "share-people");
       var boxes = {};
       a.people.forEach(function (nm) {
-        var id = "lk-" + a.id + "-" + nm;
         var wrap2 = el("label", "who");
-        var cb = el("input"); cb.type = "checkbox"; cb.id = id;
-        cb.checked = pinned ? lock.people.indexOf(nm) >= 0 : true;
+        var cb = el("input"); cb.type = "checkbox";
+        cb.checked = pinned ? !!pm[nm] : true;
         boxes[nm] = cb;
         wrap2.appendChild(cb); wrap2.appendChild(document.createTextNode(" " + nm));
         people.appendChild(wrap2);
@@ -378,19 +386,24 @@
         var note = i.here.length ? " - on it now: " + i.here.join(", ") : " - nobody yet";
         sel.appendChild(new Option(i.label + note, i.key));
       });
-      sel.value = pinned ? lock.key : a.chosenKey;
+      sel.value = sharedKey;
       pickrow.appendChild(sel);
-      var btn = el("button", null, pinned ? "Update lock" : "Lock this time");
+      var btn = el("button", null, pinned ? "Update pin" : "Pin this time together");
       btn.addEventListener("click", function () {
-        var chosen = a.people.filter(function (nm) { return boxes[nm].checked; });
-        if (!chosen.length) { delete state.knobs.pins[a.id]; }   // nobody ticked = unlock
-        else state.knobs.pins[a.id] = { key: sel.value, people: chosen };
+        var m = ensurePinMap(a.id);
+        a.people.forEach(function (nm) {
+          if (boxes[nm].checked) m[nm] = sel.value; else delete m[nm];
+        });
+        if (!Object.keys(m).length) delete state.knobs.pins[a.id];
         persist();
       });
       pickrow.appendChild(btn);
       if (pinned) {
-        var un = el("button", "linkbtn", "Unlock");
-        un.addEventListener("click", function () { delete state.knobs.pins[a.id]; persist(); });
+        var un = el("button", "linkbtn", "Unpin all");
+        un.addEventListener("click", function () {
+          var m = ensurePinMap(a.id); a.people.forEach(function (nm) { delete m[nm]; });
+          if (!Object.keys(m).length) delete state.knobs.pins[a.id]; persist();
+        });
         pickrow.appendChild(un);
       }
       ctl.appendChild(pickrow);

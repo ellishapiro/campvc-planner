@@ -43,15 +43,26 @@
     var offsiteBuf = config.offsiteBufferMinutes || 0;
     var pins = knobs.pins || {}, forced = knobs.gaps || {};
     var names = Object.keys(picksByName);
-    // A lock is per-person: pins[id] = { key, people:[names] }. An older string
-    // form (whole-group) is read as locking config.legacyLockPeople (the original
-    // friends), so people added later aren't locked retroactively.
-    function pinInfo(id) {
+    // A pin is per-person: pins[id] = { <person>: instanceKey }, so people can pin
+    // the same activity to DIFFERENT times (solo) or the same time (together).
+    // Older forms are read forward: a string (whole-group) pins config.legacyLockPeople
+    // to that instance; a {key,people} object pins each listed person to that key.
+    function pinMap(id) {
       var p = pins[id]; if (!p) return null;
-      if (typeof p === "string") return { key: p, people: (config.legacyLockPeople || names) };
-      return { key: p.key, people: (p.people && p.people.length ? p.people : names) };
+      var m = {};
+      if (typeof p === "string") { (config.legacyLockPeople || names).forEach(function (n) { m[n] = p; }); return m; }
+      if (typeof p.key === "string" && Array.isArray(p.people)) { p.people.forEach(function (n) { m[n] = p.key; }); return m; }
+      return p; // already per-person
     }
-    function lockedFor(id, n) { var pi = pinInfo(id); return !!(pi && pi.people.indexOf(n) >= 0); }
+    function pinKeyFor(id, n) { var m = pinMap(id); return m ? m[n] : null; }
+    function lockedFor(id, n) { return !!pinKeyFor(id, n); }
+    // Seed togetherness consensus for a pinned activity from its most-pinned instance.
+    function consensusPinKey(id) {
+      var m = pinMap(id); if (!m) return null;
+      var c = {}, best = null, bw = 0;
+      for (var n in m) { c[m[n]] = (c[m[n]] || 0) + 1; if (c[m[n]] > bw) { bw = c[m[n]]; best = m[n]; } }
+      return best;
+    }
     // "Booked" is a real external reservation the user has recorded: per person,
     // per activity, at a specific instance. booked[id] = { <person>: instanceKey }.
     // It's a hard fact - pre-placed, never moved, never dropped (see solve()).
@@ -86,9 +97,9 @@
     // (or n omitted, e.g. seeding consensus) restrict to the locked instance;
     // otherwise they choose freely from all instances.
     function candInsts(a, n) {
-      var pi = pinInfo(a.id);
-      if (pi && (n == null || pi.people.indexOf(n) >= 0)) {
-        var p = a.instances.filter(function (i) { return instanceKey(i) === pi.key; });
+      var pk = (n == null) ? consensusPinKey(a.id) : pinKeyFor(a.id, n);
+      if (pk) {
+        var p = a.instances.filter(function (i) { return instanceKey(i) === pk; });
         if (p.length) return p;
       }
       return a.instances.slice().sort(instSort);
@@ -356,7 +367,7 @@
       byActivity[a.id] = {
         id: a.id, name: a.name, kind: a.kind, paid: a.paid, offsite: a.offsite,
         chosenLabel: chosenInst.label, chosenKey: chosenKey,
-        lock: pinInfo(a.id),  // { key, people } or null
+        lock: pinMap(a.id),  // { <person>: instanceKey } or null
         people: people.map(function (p) { return p.name; }),
         notPlaced: people.map(function (p) { return p.name; }).filter(function (n) { return placedSomewhere.indexOf(n) < 0; }),
         groupCount: keys.length ? counts[keys[0]] : 0,
