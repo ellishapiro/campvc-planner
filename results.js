@@ -26,12 +26,22 @@
     state.knobs.pins[id] = Object.assign({}, pinMapOf(id) || {});
     return state.knobs.pins[id];
   }
+  // "Could not book" (sold-out / missed), per person: "*" (all) or [instanceKey].
+  function cnbOf(id, who) { var m = state.knobs.couldNotBook; return m && m[id] ? m[id][who] : null; }
+  function setCnbAll(id, who) { state.knobs.couldNotBook = state.knobs.couldNotBook || {}; (state.knobs.couldNotBook[id] = state.knobs.couldNotBook[id] || {})[who] = "*"; }
+  function addCnbInstance(id, who, key) {
+    state.knobs.couldNotBook = state.knobs.couldNotBook || {};
+    var m = (state.knobs.couldNotBook[id] = state.knobs.couldNotBook[id] || {});
+    var v = m[who]; if (v === "*") return; if (!Array.isArray(v)) v = [];
+    if (v.indexOf(key) < 0) v.push(key); m[who] = v;
+  }
+  function clearCnb(id, who) { var m = state.knobs.couldNotBook; if (m && m[id]) { delete m[id][who]; if (!Object.keys(m[id]).length) delete m[id]; } }
   function el(t, c, h) { var e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   var fmt = window.Engine.fmt;
 
   var PX = 1.1; // pixels per minute
-  var state = { picksByName: {}, knobs: {}, result: null, day: 0, showRef: false };
+  var state = { picksByName: {}, knobs: {}, result: null, day: 0, showRef: false, peopleOpen: {} };
 
   if (window.Store.isLocal) $("localFlag").hidden = false;
 
@@ -281,14 +291,17 @@
       btn.addEventListener("click", function () { fn(); closeBlockMenu(); persistKnobs(); });
       card.appendChild(btn);
     }
-    if (isBooked) {
-      act("✓ Booked - tap to unmark", "sheet-booked", function () {
-        var m = state.knobs.booked[id]; if (m) { delete m[who]; if (!Object.keys(m).length) delete state.knobs.booked[id]; }
-      });
-    } else {
-      act("Mark as booked", "sheet-book", function () {
-        (state.knobs.booked[id] = state.knobs.booked[id] || {})[who] = key;
-      });
+    // Book actions only for things that actually need booking (turn-up events don't).
+    if (x.booking) {
+      if (isBooked) {
+        act("✓ Booked - tap to unmark", "sheet-booked", function () {
+          var m = state.knobs.booked[id]; if (m) { delete m[who]; if (!Object.keys(m).length) delete state.knobs.booked[id]; }
+        });
+      } else {
+        act("Mark as booked", "sheet-book", function () {
+          (state.knobs.booked[id] = state.knobs.booked[id] || {})[who] = key;
+        });
+      }
     }
     if (pinnedForWho) {
       act("Unpin this time", null, function () {
@@ -302,6 +315,36 @@
         ensurePinMap(id)[who] = key;
       });
     }
+
+    // Could-not-book (sold out / missed). Only for things that need booking.
+    if (x.booking) {
+      var v = cnbOf(id, who);
+      if (v === "*" || (Array.isArray(v) && v.indexOf(key) >= 0)) {
+        act("↩ Restore (marked couldn't book)", "sheet-cnb", function () { clearCnb(id, who); });
+      } else {
+        act("Couldn't book - this time", "sheet-cnb", function () { addCnbInstance(id, who, key); });
+        if (x.kind === "repeating") act("Couldn't book - all times", "sheet-cnb", function () { setCnbAll(id, who); });
+      }
+    }
+
+    // Alternatives: other activities WHO is interested in that run at this time.
+    var alts = schedule.activities.filter(function (aa) {
+      if (aa.id === id || (aa.kind !== "oneoff" && aa.kind !== "repeating")) return false;
+      if (!(state.picksByName[who] && state.picksByName[who][aa.id])) return false;
+      return (aa.instances || []).some(function (i) { return i.day === x.day && i.start_min < x.end_min && x.start_min < i.end_min; });
+    });
+    if (alts.length) {
+      card.appendChild(el("div", "sheet-alt-h", "Also on now, that " + esc(who) + " wants:"));
+      alts.forEach(function (aa) {
+        var inst = (aa.instances || []).filter(function (i) { return i.day === x.day && i.start_min < x.end_min && x.start_min < i.end_min; })
+          .sort(function (p, q) { return p.start_min - q.start_min; })[0];
+        var k2 = inst.day + "|" + inst.start_min;
+        act("Pin " + esc(aa.name) + " (" + fmt(inst.start_min) + "-" + fmt(inst.end_min) + ")", "sheet-alt", function () {
+          ensurePinMap(aa.id)[who] = k2;
+        });
+      });
+    }
+
     var cancel = el("button", "linkbtn", "Close");
     cancel.addEventListener("click", closeBlockMenu);
     card.appendChild(cancel);
@@ -444,11 +487,13 @@
     var wrap = $("people"); wrap.innerHTML = "";
     NAMES.forEach(function (n) {
       var p = state.result.byPerson[n];
-      var hasAny = p.all.length || p.dropins.length || p.ifTime.length || p.dropped.length;
+      var cnbItems = cnbItemsFor(n);
+      var hasAny = p.all.length || p.dropins.length || p.ifTime.length || p.dropped.length || cnbItems.length;
       // Collapsible per person, collapsed by default so the section is short;
-      // tap a name to expand. (Counts are in the summary either way.)
+      // tap a name to expand. Expansion is preserved across re-renders.
       var card = el("details", "card");
-      card.open = false;
+      card.open = !!state.peopleOpen[n];
+      card.addEventListener("toggle", function () { state.peopleOpen[n] = card.open; });
       var toBook = p.paid.length + p.free.length;
       var sum = el("summary");
       sum.innerHTML = "<strong>" + esc(n) + "</strong>" +
@@ -492,8 +537,36 @@
         });
         card.appendChild(fd);
       }
+      if (cnbItems.length) {
+        var cb = el("div", "phase"); cb.appendChild(el("h4", null, "Couldn't book (" + cnbItems.length + ")"));
+        cnbItems.forEach(function (x) {
+          var statusTxt = x.mark === "*" ? "all times marked sold-out - not scheduled"
+            : (x.placed ? "sold-out time avoided - rescheduled to " + x.placed.day + " " + fmt(x.placed.start_min)
+                        : (x.mark.length + " time(s) marked sold-out - not scheduled"));
+          var line = el("div", "bk");
+          line.innerHTML = esc(x.name) + '<div class="when">' + esc(statusTxt) + "</div>";
+          var rb = el("button", "linkbtn", "Restore");
+          rb.addEventListener("click", function () { clearCnb(x.id, n); persistKnobs(); });
+          line.appendChild(rb);
+          cb.appendChild(line);
+        });
+        card.appendChild(cb);
+      }
       wrap.appendChild(card);
     });
+  }
+
+  // Every could-not-book mark this person has (placed-elsewhere or not), for the
+  // "Couldn't book" section - so nothing is stranded and each is one tap to undo.
+  function cnbItemsFor(n) {
+    var cnbMap = state.knobs.couldNotBook || {}, out = [];
+    Object.keys(cnbMap).forEach(function (id) {
+      if (!cnbMap[id] || !cnbMap[id][n]) return;
+      var a = actById[id]; if (!a) return;
+      var placed = state.result.byPerson[n].all.filter(function (x) { return x.activityId === id; })[0];
+      out.push({ id: id, name: a.name, mark: cnbMap[id][n], placed: placed });
+    });
+    return out;
   }
 
   // A drop-in row, styled like the other list rows (priority dot + name + tag).

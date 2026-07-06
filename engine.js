@@ -68,6 +68,13 @@
     // It's a hard fact - pre-placed, never moved, never dropped (see solve()).
     var booked = knobs.booked || {};
     function bookedKey(id, n) { var b = booked[id]; return b ? b[n] : null; }
+    // "Could not book": per person. couldNotBook[id][person] = "*" (whole activity
+    // unavailable) or [instanceKey,...] (specific sold-out sessions). Excluded
+    // instances drop out of scheduling; if nothing bookable remains the pick is
+    // reported under couldNotBook (distinct from the engine's couldn't-fit).
+    var cnb = knobs.couldNotBook || {};
+    function cnbFor(id, n) { var m = cnb[id]; return m ? m[n] : null; }
+    function cnbBlocks(id, n, key) { var v = cnbFor(id, n); return v === "*" || (Array.isArray(v) && v.indexOf(key) >= 0); }
     // Togetherness dial. Optimiser weights are must=10000, want=10, iffree=1, so a
     // must is never traded for togetherness. To trade ONE want for one extra person
     // sharing an instance you need dial >= 10. So: 0 = off, 1 = co-locate only when
@@ -102,7 +109,9 @@
         var p = a.instances.filter(function (i) { return instanceKey(i) === pk; });
         if (p.length) return p;
       }
-      return a.instances.slice().sort(instSort);
+      var list = a.instances.slice().sort(instSort);
+      if (n != null && cnbFor(a.id, n)) list = list.filter(function (i) { return !cnbBlocks(a.id, n, instanceKey(i)); });
+      return list;
     }
     function interested(id) {
       var o = []; names.forEach(function (n) { var pr = picksByName[n][id]; if (pr) o.push({ name: n, priority: pr, w: weightOf(pr) }); });
@@ -234,8 +243,8 @@
     assign = assign || {};
 
     // ---- build placements ----
-    var sched = {}, dropped = {}, earmarks = {}, ifTime = {};
-    names.forEach(function (n) { sched[n] = []; dropped[n] = []; earmarks[n] = []; ifTime[n] = []; });
+    var sched = {}, dropped = {}, earmarks = {}, ifTime = {}, cantBook = {};
+    names.forEach(function (n) { sched[n] = []; dropped[n] = []; earmarks[n] = []; ifTime[n] = []; cantBook[n] = []; });
 
     function makePlacement(a, inst, type, priority, isBooked) {
       return {
@@ -262,7 +271,11 @@
       });
       for (var id in picksByName[n]) {
         var a = acts[id];
-        if (scheduled(a) && !got[id]) dropped[n].push({ activityId: id, name: a.name, priority: picksByName[n][id], reason: "" });
+        if (!scheduled(a) || got[id]) continue;
+        // Unplaced because the user marked it sold-out/missed -> "couldn't book";
+        // otherwise it's the engine running out of clash-free time -> "couldn't fit".
+        if (cnbFor(id, n)) cantBook[n].push({ activityId: id, name: a.name, priority: picksByName[n][id], all: cnbFor(id, n) === "*" });
+        else dropped[n].push({ activityId: id, name: a.name, priority: picksByName[n][id], reason: "" });
       }
     });
 
@@ -386,7 +399,7 @@
           paid: need.filter(function (p) { return p.paid; }),
           free: need.filter(function (p) { return !p.paid; }),
           turnup: b.filter(function (p) { return !p.booking; }),
-          all: b, dropins: earmarks[n], ifTime: ifTime[n], dropped: dropped[n],
+          all: b, dropins: earmarks[n], ifTime: ifTime[n], dropped: dropped[n], couldNotBook: cantBook[n],
         };
       });
       return out;

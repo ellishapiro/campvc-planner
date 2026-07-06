@@ -110,6 +110,17 @@ verify migrations after any change that alters ids.
   any scheduled block opens an action sheet (Pin / Mark booked, per person). The
   booking-list page's tick writes the same shared `knobs.booked` (no more device-
   local `campvc_booked`), so calendar and checklist always agree.
+- **Could-not-book (sold-out / missed), per person.** `knobs.couldNotBook[id][person]`
+  = `"*"` (whole activity unbookable → dropped, listed under "Couldn't book") or
+  `[instanceKey,...]` (specific sessions sold-out → `candInsts` drops them and the
+  person reschedules to another session; only if none fits does it drop to the list).
+  Engine reports it in `byPerson[n].couldNotBook`, kept distinct from `dropped`
+  (couldn't-fit = ran out of clash-free time). Set from the calendar tap sheet
+  (only on `booking:true` items); every mark is listed with a **Restore** in the
+  "Couldn't book" section (results page) - the sole, always-reversible home for it.
+- **Alternatives popover.** The block action sheet also lists other activities that
+  person is interested in running at the same time, each with a one-tap **Pin** -
+  the fine-tuning tool for the free-booking phase.
 - **Pins are per-person, per-instance.** `knobs.pins[id] = { <person>: instanceKey }`
   - so people can pin the same activity to the SAME time (together) or DIFFERENT
   times (solo). Read forward via `pinMap()`: a string form pins

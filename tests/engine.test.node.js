@@ -275,5 +275,28 @@ function check(desc, cond) {
   check("P2 pinned to a DIFFERENT time (14:00)", b && b.start_min === 840);
 })();
 
+// Scenario M: could-not-book "this instance" reschedules; "all" drops to couldNotBook.
+(function () {
+  console.log("\n[M] Could-not-book (this instance vs all)");
+  const fake = {
+    days: ["D1"],
+    activities: [{ id: "X", name: "X", location: "", offsite: false, paid: false, categories: [], kind: "repeating",
+      instances: [
+        { day: "D1", start_min: 600, end_min: 650, label: "D1 10:00-10:50" },
+        { day: "D1", start_min: 840, end_min: 890, label: "D1 14:00-14:50" }], windows: [] }],
+  };
+  const picks = { P: { X: "want" } };
+  // "this instance": 10:00 sold out -> should reschedule to 14:00.
+  const r1 = Engine.compute(fake, picks, { couldNotBook: { X: { P: ["D1|600"] } } }, config);
+  const x1 = r1.byPerson.P.all.find(p => p.activityId === "X");
+  check("this-instance sold-out reschedules to another time", x1 && x1.start_min === 840);
+  check("not listed as couldn't-book when rescheduled", (r1.byPerson.P.couldNotBook || []).length === 0);
+  // "all": whole activity unbookable -> not scheduled, listed under couldNotBook.
+  const r2 = Engine.compute(fake, picks, { couldNotBook: { X: { P: "*" } } }, config);
+  check("all-times sold-out is not scheduled", !r2.byPerson.P.all.some(p => p.activityId === "X"));
+  check("all-times listed under couldNotBook (not couldn't-fit)",
+    (r2.byPerson.P.couldNotBook || []).some(c => c.activityId === "X") && !r2.byPerson.P.dropped.some(d => d.activityId === "X"));
+})();
+
 console.log("\n" + pass + " passed, " + fail + " failed");
 process.exit(fail ? 1 : 0);
