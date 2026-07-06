@@ -215,9 +215,13 @@ label.fld { display: flex; flex-direction: column; gap: 3px; font-size: 11px; co
   display: flex; align-items: center; justify-content: center; padding: 20px; }
 .sheet { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
   padding: 16px; width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 8px;
-  box-shadow: 0 12px 40px rgba(0,0,0,.5); }
-.sheet-head { margin-bottom: 4px; font-size: 15px; }
-.sheet button { padding: 11px 12px; text-align: left; font-size: 14px; }
+  box-shadow: 0 12px 40px rgba(0,0,0,.5);
+  max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow-y: auto;
+  -webkit-overflow-scrolling: touch; }
+/* Keep the "what am I acting on" header visible while the actions scroll. */
+.sheet-head { margin: -16px -16px 4px; padding: 14px 16px 8px; font-size: 15px;
+  position: sticky; top: -16px; background: var(--panel); z-index: 1; border-bottom: 1px solid var(--line); }
+.sheet button { padding: 11px 12px; text-align: left; font-size: 14px; flex: 0 0 auto; }
 .sheet .sheet-book { border-color: var(--iffree); color: var(--iffree); }
 .sheet .sheet-booked { border-color: var(--iffree); background: var(--panel-2); }
 .sheet .sheet-cnb { border-color: var(--paid); color: var(--paid); }
