@@ -215,6 +215,7 @@
     $("who").value = d.name;
     if ($("who").value !== d.name) return false; // name no longer in the configured list
     state.name = d.name;
+    if (window.Store.setMe) window.Store.setMe(d.name);
     state.picks = d.picks || {};
     state.savedPicks = d.savedPicks || {};
     $("saveBtn").disabled = false;
@@ -226,6 +227,7 @@
   // Name change -> load that person's saved picks
   $("who").addEventListener("change", function () {
     state.name = this.value;
+    if (state.name && window.Store.setMe) window.Store.setMe(state.name);  // remember identity for change attribution
     if (!state.name) {
       state.picks = {}; state.savedPicks = {};
       sessionStorage.removeItem(DRAFT_KEY);

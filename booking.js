@@ -60,12 +60,6 @@
 
   if (window.Store.isLocal) $("localFlag").hidden = false;
   NAMES.forEach(function (n) { var o = el("option"); o.value = n; o.textContent = "Just " + n; $("who").appendChild(o); });
-  (function initWhoami() {
-    var sel = $("whoami"); if (!sel) return;
-    sel.innerHTML = "<option value=''>Who are you?</option>" + NAMES.map(function (n) { return "<option>" + esc(n) + "</option>"; }).join("");
-    sel.value = window.Store.getMe() || "";
-    sel.addEventListener("change", function () { window.Store.setMe(sel.value); });
-  })();
 
   function paint(raw, knobs) {
     var picksByName = {};

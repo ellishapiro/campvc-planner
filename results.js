@@ -21,6 +21,19 @@
   }
   function pinKeyOf(id, who) { var m = pinMapOf(id); return m ? m[who] : null; }
   function slotLabel(key) { var p = String(key).split("|"); return p.length === 2 ? p[0] + " " + fmt(+p[1]) : key; }
+  // Would pinning `who` into [day,start-end] collide with something they're already
+  // committed to (booked or a must)? A pin can't displace those, so we warn instead
+  // of offering a pin that would silently fail. Returns the blocker's name or null.
+  function committedClash(who, day, start, end, exceptId) {
+    var list = ((state.result && state.result.byPerson[who]) || {}).all || [];
+    for (var i = 0; i < list.length; i++) {
+      var p = list[i];
+      if (p.day !== day || p.activityId === exceptId) continue;
+      if (!(p.booked || p.priority === "must")) continue;
+      if (start < p.end_min && p.start_min < end) return p.name + (p.booked ? " (booked)" : " (must)");
+    }
+    return null;
+  }
   // Plain-language "how do I book this" note - mirrors the picks page.
   function bookingNote(a) {
     if (a.kind === "dropin" && !a.booking) return "Just turn up - no booking needed.";
@@ -56,13 +69,6 @@
   function clone(o) { return JSON.parse(JSON.stringify(o || {})); }
 
   if (window.Store.isLocal) $("localFlag").hidden = false;
-  initWhoami();
-  function initWhoami() {
-    var sel = $("whoami"); if (!sel) return;
-    sel.innerHTML = "<option value=''>Who are you?</option>" + NAMES.map(function (n) { return "<option>" + esc(n) + "</option>"; }).join("");
-    sel.value = window.Store.getMe() || "";
-    sel.addEventListener("change", function () { window.Store.setMe(sel.value); });
-  }
 
   function paint(raw, knobs) {
     state.picksByName = {};
@@ -385,10 +391,13 @@
       alts.forEach(function (aa) {
         var inst = (aa.instances || []).filter(function (i) { return i.day === x.day && i.start_min < x.end_min && x.start_min < i.end_min; })
           .sort(function (p, q) { return p.start_min - q.start_min; })[0];
-        var k2 = inst.day + "|" + inst.start_min;
-        act("Pin " + esc(aa.name) + " (" + fmt(inst.start_min) + "-" + fmt(inst.end_min) + ")", "sheet-alt", function () {
-          ensurePinMap(aa.id)[who] = k2;
-        });
+        var k2 = inst.day + "|" + inst.start_min, when = fmt(inst.start_min) + "-" + fmt(inst.end_min);
+        var cl = committedClash(who, inst.day, inst.start_min, inst.end_min, aa.id);
+        if (cl) {
+          card.appendChild(el("div", "sheet-clash", esc(aa.name) + " (" + when + ") - <span class='warn'>clashes with " + esc(cl) + "</span>"));
+        } else {
+          act("Pin " + esc(aa.name) + " (" + when + ")", "sheet-alt", function () { ensurePinMap(aa.id)[who] = k2; });
+        }
       });
     }
 
@@ -408,8 +417,10 @@
     var card = el("div", "sheet"); card.addEventListener("click", function (ev) { ev.stopPropagation(); });
     card.innerHTML = "<div class='sheet-head'><strong>" + esc(who) + "</strong> &middot; free time" +
       "<div class='hint'>" + esc(day) + " around " + fmt(minute) + "</div></div>";
-    function pinAct(label, aid, k) {
+    function pinAct(label, aid, k, s, e) {
       var already = pinKeyOf(aid, who) === k;
+      var cl = !already && committedClash(who, day, s, e, aid);
+      if (cl) { card.appendChild(el("div", "sheet-clash", label + " - <span class='warn'>clashes with " + esc(cl) + "</span>")); return; }
       var btn = el("button", already ? "sheet-booked" : "sheet-alt", (already ? "✓ Pinned " : "Pin ") + label);
       btn.addEventListener("click", function () {
         if (already) { var m = ensurePinMap(aid); delete m[who]; if (!Object.keys(m).length) delete state.knobs.pins[aid]; }
@@ -418,19 +429,19 @@
       });
       card.appendChild(btn);
     }
-    var any = false;
+    var slot = CONFIG.dropInSlotMinutes || 45, any = false;
     // Scheduled activities with an instance around this time.
     schedule.activities.forEach(function (a) {
       if (!picks[a.id] || (a.kind !== "oneoff" && a.kind !== "repeating")) return;
       var inst = (a.instances || []).filter(function (i) { return i.day === day && i.start_min < minute + probe && minute - 30 < i.end_min; })
         .sort(function (p, q) { return Math.abs(p.start_min - minute) - Math.abs(q.start_min - minute); })[0];
-      if (inst) { any = true; pinAct(esc(a.name) + " (" + fmt(inst.start_min) + "-" + fmt(inst.end_min) + ")", a.id, inst.day + "|" + inst.start_min); }
+      if (inst) { any = true; pinAct(esc(a.name) + " (" + fmt(inst.start_min) + "-" + fmt(inst.end_min) + ")", a.id, inst.day + "|" + inst.start_min, inst.start_min, inst.end_min); }
     });
     // Drop-ins the person wants, whose window covers this time -> pin here.
     schedule.activities.forEach(function (a) {
       if (!picks[a.id] || a.kind !== "dropin") return;
       var ok = (a.windows || []).some(function (w) { var s = pmin(w.start), e = pmin(w.end); return w.day === day && (s == null || minute >= s) && (e == null || minute < e); });
-      if (ok) { any = true; pinAct(esc(a.name) + " here (" + fmt(minute) + ")", a.id, day + "|" + minute); }
+      if (ok) { any = true; pinAct(esc(a.name) + " here (" + fmt(minute) + ")", a.id, day + "|" + minute, minute, minute + slot); }
     });
     if (!any) card.appendChild(el("div", "hint", "Nothing " + esc(who) + " is interested in around then."));
     var cancel = el("button", "linkbtn", "Close"); cancel.addEventListener("click", closeBlockMenu); card.appendChild(cancel);
