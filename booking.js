@@ -30,7 +30,8 @@
 
   // Booked status is SHARED (knobs.booked[activityId][person] = instanceKey), so
   // the calendar and this checklist agree and everyone sees the group's progress.
-  var state = { result: null, filter: "", knobs: {} };
+  var state = { result: null, filter: "", knobs: {}, baseline: {}, picksByName: {} };
+  function clone(o) { return JSON.parse(JSON.stringify(o || {})); }
   function bookedMap() { return state.knobs.booked || (state.knobs.booked = {}); }
   function instKey(p) { return p.day + "|" + p.start_min; }
   function isBooked(name, p) { var m = bookedMap()[p.activityId]; return !!(m && m[name] === instKey(p)); }
@@ -40,7 +41,11 @@
     else if (m[p.activityId]) { delete m[p.activityId][name]; if (!Object.keys(m[p.activityId]).length) delete m[p.activityId]; }
     state.dirty = true;
     showToast("saving...", "busy");
-    window.Store.saveKnobs(state.knobs).then(function (r) {
+    window.Store.saveKnobs(state.knobs, state.baseline, window.Store.getMe()).then(function (r) {
+      if (r.merged) {
+        state.knobs = r.merged; state.baseline = clone(r.merged);
+        state.result = window.Engine.compute(schedule, state.picksByName, state.knobs, CONFIG); render();
+      }
       showToast(r.ok ? "saved" : "saved on this device only (couldn't reach the group sheet)", r.ok ? "ok" : "err");
     });
   }
@@ -55,11 +60,19 @@
 
   if (window.Store.isLocal) $("localFlag").hidden = false;
   NAMES.forEach(function (n) { var o = el("option"); o.value = n; o.textContent = "Just " + n; $("who").appendChild(o); });
+  (function initWhoami() {
+    var sel = $("whoami"); if (!sel) return;
+    sel.innerHTML = "<option value=''>Who are you?</option>" + NAMES.map(function (n) { return "<option>" + esc(n) + "</option>"; }).join("");
+    sel.value = window.Store.getMe() || "";
+    sel.addEventListener("change", function () { window.Store.setMe(sel.value); });
+  })();
 
   function paint(raw, knobs) {
     var picksByName = {};
     NAMES.forEach(function (n) { picksByName[n] = (raw && raw[n]) || {}; });
+    state.picksByName = picksByName;
     state.knobs = knobs || {};
+    state.baseline = clone(state.knobs);
     state.result = window.Engine.compute(schedule, picksByName, state.knobs, CONFIG);
     if (!state.result.anyPicks) {
       $("status").innerHTML = "Nobody has saved any picks yet. Start on <a href='index.html'>My picks</a>.";

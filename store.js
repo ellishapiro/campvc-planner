@@ -124,12 +124,69 @@
     });
   }
 
-  function saveKnobs(knobs) {
-    if (isLocal) { lsSet(LS_KNOBS, knobs); return Promise.resolve({ ok: true }); }
-    return post({ action: "saveKnobs", knobs: knobs, ts: Date.now() })
-      .catch(function () {})
-      .then(function () { return { ok: true }; })
-      .catch(function () { return { ok: false }; });
+  // Who's editing (per device), so saves are attributed in the Knobs history.
+  function getMe() { try { return localStorage.getItem("campvc_me") || ""; } catch (e) { return ""; } }
+  function setMe(n) { try { localStorage.setItem("campvc_me", n || ""); } catch (e) {} }
+
+  // 3-way merge of knobs at the per-person leaf level. base = what this client last
+  // synced; local = its current state; remote = the latest on the server. For each
+  // leaf: if the user changed it (local != base) their value wins (incl. a deletion);
+  // otherwise the server's value is kept. This means a stale client can never wipe
+  // another person's booking/pin - it only writes the leaves it actually touched.
+  function pinNorm(v) {
+    if (v == null) return {};
+    var legacy = (window.CONFIG && window.CONFIG.legacyLockPeople) || [];
+    if (typeof v === "string") { var m = {}; legacy.forEach(function (n) { m[n] = v; }); return m; }
+    if (typeof v.key === "string" && Array.isArray(v.people)) { var o = {}; v.people.forEach(function (n) { o[n] = v.key; }); return o; }
+    return v;
+  }
+  function eq(a, b) { return JSON.stringify(a === undefined ? null : a) === JSON.stringify(b === undefined ? null : b); }
+  function mergeKnobs(base, local, remote) {
+    base = base || {}; local = local || {}; remote = remote || {};
+    var out = {};
+    ["breakMinutes", "togetherness"].forEach(function (k) {
+      var v = eq(local[k], base[k]) ? remote[k] : local[k];
+      if (v != null) out[k] = v;
+    });
+    [["booked", 0], ["pins", 1], ["couldNotBook", 0]].forEach(function (pair) {
+      var cat = pair[0], isPin = pair[1];
+      var B = base[cat] || {}, L = local[cat] || {}, R = remote[cat] || {};
+      var ids = {}; [B, L, R].forEach(function (o) { Object.keys(o).forEach(function (i) { ids[i] = 1; }); });
+      var res = {};
+      Object.keys(ids).forEach(function (id) {
+        var bb = isPin ? pinNorm(B[id]) : (B[id] || {}), ll = isPin ? pinNorm(L[id]) : (L[id] || {}), rr = isPin ? pinNorm(R[id]) : (R[id] || {});
+        var ps = {}; [bb, ll, rr].forEach(function (o) { Object.keys(o).forEach(function (p) { ps[p] = 1; }); });
+        var pm = {};
+        Object.keys(ps).forEach(function (p) {
+          var v = eq(ll[p], bb[p]) ? rr[p] : ll[p];
+          if (v !== undefined && v !== null) pm[p] = v;
+        });
+        if (Object.keys(pm).length) res[id] = pm;
+      });
+      if (Object.keys(res).length) out[cat] = res;
+    });
+    var Bg = base.gaps || {}, Lg = local.gaps || {}, Rg = remote.gaps || {}, gids = {}, gg = {};
+    [Bg, Lg, Rg].forEach(function (o) { Object.keys(o).forEach(function (i) { gids[i] = 1; }); });
+    Object.keys(gids).forEach(function (id) { var v = eq(Lg[id], Bg[id]) ? Rg[id] : Lg[id]; if (v != null) gg[id] = v; });
+    if (Object.keys(gg).length) out.gaps = gg;
+    return out;
+  }
+
+  // Save = merge the client's changes INTO the latest server state, never a
+  // wholesale overwrite. Returns the merged knobs so the caller can adopt it.
+  function saveKnobs(local, baseline, author) {
+    if (isLocal) {
+      var mL = mergeKnobs(baseline, local, lsGet(LS_KNOBS, {}));
+      lsSet(LS_KNOBS, mL); lsSet(LS_CACHE_KNOBS, mL);
+      return Promise.resolve({ ok: true, merged: mL });
+    }
+    return getKnobs().then(function (remote) {
+      var merged = mergeKnobs(baseline || {}, local || {}, remote || {});
+      return post({ action: "saveKnobs", knobs: merged, ts: Date.now(), author: author || getMe() || "" })
+        .catch(function () {})
+        .then(function () { lsSet(LS_CACHE_KNOBS, merged); return { ok: true, merged: merged }; })
+        .catch(function () { return { ok: false, merged: merged }; });
+    }).catch(function () { return { ok: false }; });
   }
 
   window.Store = {
@@ -140,5 +197,7 @@
     saveKnobs: saveKnobs,
     cachedPicks: cachedPicks,
     cachedKnobs: cachedKnobs,
+    getMe: getMe,
+    setMe: setMe,
   };
 })();

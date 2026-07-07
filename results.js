@@ -52,14 +52,23 @@
   var fmt = window.Engine.fmt;
 
   var PX = 1.1; // pixels per minute
-  var state = { picksByName: {}, knobs: {}, result: null, day: 0, showRef: false, peopleOpen: {}, dirty: false };
+  var state = { picksByName: {}, knobs: {}, baseline: {}, result: null, day: 0, showRef: false, peopleOpen: {}, dirty: false };
+  function clone(o) { return JSON.parse(JSON.stringify(o || {})); }
 
   if (window.Store.isLocal) $("localFlag").hidden = false;
+  initWhoami();
+  function initWhoami() {
+    var sel = $("whoami"); if (!sel) return;
+    sel.innerHTML = "<option value=''>Who are you?</option>" + NAMES.map(function (n) { return "<option>" + esc(n) + "</option>"; }).join("");
+    sel.value = window.Store.getMe() || "";
+    sel.addEventListener("change", function () { window.Store.setMe(sel.value); });
+  }
 
   function paint(raw, knobs) {
     state.picksByName = {};
     NAMES.forEach(function (n) { state.picksByName[n] = (raw && raw[n]) || {}; });
     state.knobs = knobs || {};
+    state.baseline = clone(state.knobs);   // what we've synced to, for 3-way merge on save
     recompute();
     if (!state.result.anyPicks) {
       $("status").innerHTML = "Nobody has saved any picks yet. Head to <a href='index.html'>My picks</a> to start.";
@@ -791,7 +800,8 @@
     recompute();
     renderAll();
     showToast("saving...", "busy");
-    window.Store.saveKnobs(state.knobs).then(function (r) {
+    window.Store.saveKnobs(state.knobs, state.baseline, window.Store.getMe()).then(function (r) {
+      if (r.merged) { state.knobs = r.merged; state.baseline = clone(r.merged); recompute(); renderAll(); }
       showToast(r.ok ? "saved" : "saved on this device only (couldn't reach the group sheet)", r.ok ? "ok" : "err");
     });
   }
@@ -811,7 +821,8 @@
     renderCurrentKnobs();
     $("adjust").open = true;
     showToast("saving...", "busy");
-    window.Store.saveKnobs(state.knobs).then(function (r) {
+    window.Store.saveKnobs(state.knobs, state.baseline, window.Store.getMe()).then(function (r) {
+      if (r.merged) { state.knobs = r.merged; state.baseline = clone(r.merged); recompute(); renderAll(); renderCurrentKnobs(); $("adjust").open = true; }
       var st = $("knobStatus"); if (st) { st.textContent = r.ok ? "saved" : "saved locally only"; st.className = "status " + (r.ok ? "ok" : "err"); }
       showToast(r.ok ? "saved" : "saved on this device only (couldn't reach the group sheet)", r.ok ? "ok" : "err");
     });

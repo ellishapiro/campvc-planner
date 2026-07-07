@@ -46,8 +46,8 @@ function doPost(e) {
       .appendRow([body.ts || Date.now(), String(body.name || ''), JSON.stringify(body.picks || {})]);
     ok = true;
   } else if (action === 'saveKnobs') {
-    getSheet_('Knobs', ['ts', 'knobsJson'])
-      .appendRow([body.ts || Date.now(), JSON.stringify(body.knobs || {})]);
+    getSheet_('Knobs', ['ts', 'knobsJson', 'author'])
+      .appendRow([body.ts || Date.now(), JSON.stringify(body.knobs || {}), String(body.author || '')]);
     ok = true;
   }
   return reply_({ ok: ok }, '');
@@ -68,13 +68,13 @@ function readPicks_() {
 }
 
 function readKnobs_() {
-  var sh = getSheet_('Knobs', ['ts', 'knobsJson']);
+  var sh = getSheet_('Knobs', ['ts', 'knobsJson', 'author']);
   var rows = sh.getDataRange().getValues();
   var out = [];
   for (var i = 1; i < rows.length; i++) {
     var knobs = {};
     try { knobs = JSON.parse(rows[i][1]); } catch (err) { knobs = {}; }
-    out.push({ ts: Number(rows[i][0]) || 0, knobs: knobs });
+    out.push({ ts: Number(rows[i][0]) || 0, knobs: knobs, author: String(rows[i][2] || '') });
   }
   return out;
 }

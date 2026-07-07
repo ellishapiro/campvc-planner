@@ -131,6 +131,21 @@ verify migrations after any change that alters ids.
 - **SWR dirty-guard.** Once the user saves a knob edit this session (`state.dirty`),
   the in-flight background refresh no longer applies - it was silently clobbering
   just-made pins/bookings with the pre-edit server copy.
+- **Merge-on-save (critical - prevents whole-blob wipes).** `Store.saveKnobs(local,
+  baseline, author)` no longer overwrites the whole knobs blob. It re-fetches the
+  latest server knobs and does a 3-way merge at the per-person leaf level (booked/
+  pins/couldNotBook keyed by id→person, gaps by id, breakMinutes/togetherness
+  scalar): if the user changed a leaf vs their `baseline` their value wins (incl. a
+  deletion), else the server's is kept. So a stale/empty client can only write the
+  leaves it actually touched - it can never wipe others'. Pins are normalised to
+  per-person during merge (legacy forms migrate). Pages track `state.baseline`
+  (clone of knobs at load / after each save) and adopt the returned `merged`. Guards
+  against the 2026-07-06 13:25 incident where a stale client zeroed all bookings/pins.
+  Tested in `tests/store.test.node.js`.
+- **Author recording.** Saves send `author` (from `Store.getMe()`, a per-device
+  identity set via the "Who are you?" nav picker, `localStorage.campvc_me`). The
+  Apps Script stores it as a 3rd Knobs column and returns it in `readKnobs_`, so the
+  history has attribution. NOTE: needs the updated `apps-script/Code.gs` redeployed.
 - **Pins are per-person, per-instance.** `knobs.pins[id] = { <person>: instanceKey }`
   - so people can pin the same activity to the SAME time (together) or DIFFERENT
   times (solo). Read forward via `pinMap()`: a string form pins
