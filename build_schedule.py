@@ -267,7 +267,7 @@ def build(sched_dir):
         # on-site, a sensible length. Off-site trips may run long. Everything else
         # (long open windows like a massage tent, or junk midnight rows) is a
         # WINDOW - either earmarked (drop-in) or shown as a bookable appointment.
-        crosses_midnight = end_min is not None and end_min <= start_min
+        crosses_midnight = end_min is not None and start_min is not None and end_min <= start_min
         real_slot = (scheduled and start_min is not None and start_min > 0
                      and (offsite or end_min is None or crosses_midnight or (end_min - start_min) < 240))
         if real_slot:

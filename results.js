@@ -750,8 +750,11 @@
     var pinBtn = el("button", null, "Pin");
     pinBtn.addEventListener("click", function () {
       if (!pinAct.value || !pinInst.value) return;
-      state.knobs.pins = state.knobs.pins || {};
-      state.knobs.pins[pinAct.value] = pinInst.value; persist();
+      // Per-person (never a legacy string, which the merge would misread and drop
+      // other people's pins). Pins the chosen time for everyone who wants it.
+      var m = ensurePinMap(pinAct.value);
+      NAMES.forEach(function (n) { if (state.picksByName[n] && state.picksByName[n][pinAct.value]) m[n] = pinInst.value; });
+      persist();
     });
     pinRow.appendChild(pinAct); pinRow.appendChild(pinInst); pinRow.appendChild(pinBtn);
     body.appendChild(pinRow);

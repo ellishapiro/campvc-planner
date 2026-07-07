@@ -380,7 +380,7 @@
     // ---- group view ----
     var byActivity = {};
     schedule.activities.forEach(function (a) {
-      if (a.kind === "dropin") return;
+      if (a.kind === "dropin" || !a.instances.length) return;   // guard: scheduled act with no instances
       var people = interested(a.id); if (!people.length) return;
       var counts = {};
       names.forEach(function (n) { sched[n].forEach(function (p) { if (p.activityId === a.id) counts[instanceKey(p)] = (counts[instanceKey(p)] || 0) + 1; }); });
