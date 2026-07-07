@@ -46,11 +46,68 @@ function doPost(e) {
       .appendRow([body.ts || Date.now(), String(body.name || ''), JSON.stringify(body.picks || {})]);
     ok = true;
   } else if (action === 'saveKnobs') {
-    getSheet_('Knobs', ['ts', 'knobsJson', 'author'])
-      .appendRow([body.ts || Date.now(), JSON.stringify(body.knobs || {}), String(body.author || '')]);
+    saveKnobs_(body);
     ok = true;
   }
   return reply_({ ok: ok }, '');
+}
+
+// Atomic knob save. If the client sent local + baseline, we hold a lock, read the
+// LATEST stored knobs, and 3-way merge server-side - so simultaneous edits by
+// several people can't clobber each other (only the leaves each person changed are
+// written). Falls back to the client-merged blob if local/baseline weren't sent.
+function saveKnobs_(body) {
+  var sh = getSheet_('Knobs', ['ts', 'knobsJson', 'author']);
+  var toStore = body.knobs || {};
+  if (body.local && body.baseline) {
+    var lock = LockService.getScriptLock();
+    try {
+      lock.waitLock(10000);
+      var rows = sh.getDataRange().getValues();
+      var latest = {};
+      for (var i = 1; i < rows.length; i++) { try { latest = JSON.parse(rows[i][1]) || {}; } catch (e) {} }
+      toStore = mergeKnobs_(body.baseline, body.local, latest, body.legacy || []);
+      sh.appendRow([body.ts || Date.now(), JSON.stringify(toStore), String(body.author || '')]);
+    } finally { try { lock.releaseLock(); } catch (e) {} }
+  } else {
+    sh.appendRow([body.ts || Date.now(), JSON.stringify(toStore), String(body.author || '')]);
+  }
+}
+
+// 3-way merge at the per-person leaf level (must mirror store.js mergeKnobs).
+function mergeKnobs_(base, local, remote, legacy) {
+  base = base || {}; local = local || {}; remote = remote || {}; legacy = legacy || [];
+  function pinNorm(v) {
+    if (v == null) return {};
+    if (typeof v === 'string') { var m = {}; for (var i = 0; i < legacy.length; i++) m[legacy[i]] = v; return m; }
+    if (typeof v.key === 'string' && Object.prototype.toString.call(v.people) === '[object Array]') {
+      var o = {}; for (var j = 0; j < v.people.length; j++) o[v.people[j]] = v.key; return o;
+    }
+    return v;
+  }
+  function eq(a, b) { return JSON.stringify(a === undefined ? null : a) === JSON.stringify(b === undefined ? null : b); }
+  var out = {};
+  var scal = ['breakMinutes', 'togetherness'];
+  for (var s = 0; s < scal.length; s++) { var k = scal[s]; var v = eq(local[k], base[k]) ? remote[k] : local[k]; if (v != null) out[k] = v; }
+  var cats = [['booked', false], ['pins', true], ['couldNotBook', false]];
+  for (var c = 0; c < cats.length; c++) {
+    var cat = cats[c][0], isPin = cats[c][1];
+    var B = base[cat] || {}, L = local[cat] || {}, R = remote[cat] || {}, ids = {}, res = {};
+    [B, L, R].forEach(function (o) { for (var id in o) ids[id] = 1; });
+    for (var id in ids) {
+      var bb = isPin ? pinNorm(B[id]) : (B[id] || {}), ll = isPin ? pinNorm(L[id]) : (L[id] || {}), rr = isPin ? pinNorm(R[id]) : (R[id] || {});
+      var ps = {}, pm = {};
+      [bb, ll, rr].forEach(function (o) { for (var p in o) ps[p] = 1; });
+      for (var p in ps) { var val = eq(ll[p], bb[p]) ? rr[p] : ll[p]; if (val !== undefined && val !== null) pm[p] = val; }
+      if (Object.keys(pm).length) res[id] = pm;
+    }
+    if (Object.keys(res).length) out[cat] = res;
+  }
+  var Bg = base.gaps || {}, Lg = local.gaps || {}, Rg = remote.gaps || {}, gids = {}, gg = {};
+  [Bg, Lg, Rg].forEach(function (o) { for (var id in o) gids[id] = 1; });
+  for (var gid in gids) { var gv = eq(Lg[gid], Bg[gid]) ? Rg[gid] : Lg[gid]; if (gv != null) gg[gid] = gv; }
+  if (Object.keys(gg).length) out.gaps = gg;
+  return out;
 }
 
 function readPicks_() {

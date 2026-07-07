@@ -347,6 +347,20 @@
         act("✓ Booked - tap to unmark", "sheet-booked", function () {
           var m = state.knobs.booked[id]; if (m) { delete m[who]; if (!Object.keys(m).length) delete state.knobs.booked[id]; }
         });
+      } else if (x.kind === "dropin") {
+        // Appointment (a window activity): let them enter the REAL booked day+time,
+        // not the arbitrary auto-earmark slot (the Massage case).
+        var wdays = []; (act0.windows || []).forEach(function (w) { if (wdays.indexOf(w.day) < 0) wdays.push(w.day); });
+        if (!wdays.length) wdays = [x.day];
+        var brow = el("div", "sheet-time");
+        var dsel = el("select"); wdays.forEach(function (d) { dsel.appendChild(new Option(d, d)); }); dsel.value = wdays.indexOf(x.day) >= 0 ? x.day : wdays[0];
+        var ti = el("input"); ti.type = "time"; ti.value = fmt(x.start_min);
+        brow.appendChild(dsel); brow.appendChild(ti);
+        card.appendChild(brow);
+        act("Mark as booked at this time", "sheet-book", function () {
+          var mm = pmin(ti.value); if (mm == null) return;
+          (state.knobs.booked[id] = state.knobs.booked[id] || {})[who] = dsel.value + "|" + mm;
+        });
       } else {
         act("Mark as booked", "sheet-book", function () {
           (state.knobs.booked[id] = state.knobs.booked[id] || {})[who] = key;

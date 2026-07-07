@@ -228,6 +228,8 @@ label.fld { display: flex; flex-direction: column; gap: 3px; font-size: 11px; co
 .sheet .sheet-alt { border-color: var(--accent-2); color: var(--accent-2); }
 .sheet .sheet-alt-h { font-size: 12px; color: var(--ink-dim); margin: 6px 0 2px; text-transform: uppercase; letter-spacing: .03em; }
 .sheet .sheet-clash { font-size: 13px; color: var(--ink-dim); padding: 9px 12px; border: 1px dashed var(--line); border-radius: 10px; opacity: .75; }
+.sheet .sheet-time { display: flex; gap: 8px; }
+.sheet .sheet-time select, .sheet .sheet-time input { flex: 1; padding: 9px 10px; }
 .sheet .sheet-info { border-color: var(--line); color: var(--ink-dim); }
 .sheet .sheet-details { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 13px; color: var(--ink-dim); }
 .sheet .sheet-details p { margin: 6px 0 0; color: var(--ink); }

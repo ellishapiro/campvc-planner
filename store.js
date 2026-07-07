@@ -182,7 +182,14 @@
     }
     return getKnobs().then(function (remote) {
       var merged = mergeKnobs(baseline || {}, local || {}, remote || {});
-      return post({ action: "saveKnobs", knobs: merged, ts: Date.now(), author: author || getMe() || "" })
+      // Send `knobs` (client-merged, fallback for the old backend) AND local+baseline
+      // so a merge-capable backend can re-merge atomically under a lock - making
+      // simultaneous edits by several people safe, not just near-simultaneous ones.
+      return post({
+        action: "saveKnobs", knobs: merged, local: local || {}, baseline: baseline || {},
+        legacy: (window.CONFIG && window.CONFIG.legacyLockPeople) || [],
+        ts: Date.now(), author: author || getMe() || "",
+      })
         .catch(function () {})
         .then(function () { lsSet(LS_CACHE_KNOBS, merged); return { ok: true, merged: merged }; })
         .catch(function () { return { ok: false, merged: merged }; });

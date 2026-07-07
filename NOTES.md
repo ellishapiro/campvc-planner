@@ -142,6 +142,15 @@ verify migrations after any change that alters ids.
   (clone of knobs at load / after each save) and adopt the returned `merged`. Guards
   against the 2026-07-06 13:25 incident where a stale client zeroed all bookings/pins.
   Tested in `tests/store.test.node.js`.
+- **Concurrency: atomic server-side merge.** The client sends `local`+`baseline`
+  (+`legacy`) alongside the client-merged `knobs`. A merge-capable Apps Script holds
+  a `LockService` lock, reads the latest, and re-runs the 3-way merge server-side
+  (`mergeKnobs_`, mirrors store.js) - so several people editing at the *same instant*
+  can't clobber each other, not just near-simultaneous ones. Old backend falls back
+  to storing the client-merged `knobs`. Needs the updated `Code.gs` redeployed.
+- **Book at a specific time.** Appointments (window activities, `booking:true`) get a
+  day+time picker in the action sheet, so a real booked slot (e.g. Massage Sat 15:00)
+  is recorded directly instead of the arbitrary auto-earmark time.
 - **Author recording.** Saves send `author` (from `Store.getMe()`, a per-device
   identity set via the "Who are you?" nav picker, `localStorage.campvc_me`). The
   Apps Script stores it as a 3rd Knobs column and returns it in `readKnobs_`, so the
