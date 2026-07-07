@@ -29,8 +29,14 @@
     for (var i = 0; i < list.length; i++) {
       var p = list[i];
       if (p.day !== day || p.activityId === exceptId) continue;
-      if (!(p.booked || p.priority === "must")) continue;
-      if (start < p.end_min && p.start_min < end) return p.name + (p.booked ? " (booked)" : " (must)");
+      // Committed = booked, a must, OR pinned for this person (a deliberate fix that
+      // a new pin can't reliably displace). Anything else (a plain want/if-free) will
+      // yield to a pin, so it's not a blocker.
+      var pinnedHere = pinKeyOf(p.activityId, who) === (p.day + "|" + p.start_min);
+      if (!(p.booked || p.priority === "must" || pinnedHere)) continue;
+      if (start < p.end_min && p.start_min < end) {
+        return p.name + (p.booked ? " (booked)" : p.priority === "must" ? " (must)" : " (pinned)");
+      }
     }
     return null;
   }
