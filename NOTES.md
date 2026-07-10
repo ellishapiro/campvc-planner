@@ -151,6 +151,13 @@ verify migrations after any change that alters ids.
 - **Book at a specific time.** Appointments (window activities, `booking:true`) get a
   day+time picker in the action sheet, so a real booked slot (e.g. Massage Sat 15:00)
   is recorded directly instead of the arbitrary auto-earmark time.
+- **Picks wipe-guard.** A failed/empty picks load used to leave `state.picks = {}`
+  with Save enabled - so a save then overwrote real picks with nothing (wiped a
+  76-pick set on 2026-07-10). Two guards now: `pick.js` keeps Save DISABLED on a
+  load failure (reload instead), and `Store.savePicks` refuses to overwrite an
+  existing non-empty pick set with `{}` unless `force:true` (returns
+  `{ok:false, blocked:true}`). Recovery when it happens: picks are append-only, so
+  re-POST the last non-empty `savePicks` row for that person.
 - **Author recording.** Saves send `author` (from `Store.getMe()`, a per-device
   identity set via the "Who are you?" nav picker, `localStorage.campvc_me`). The
   Apps Script stores it as a 3rd Knobs column and returns it in `readKnobs_`, so the

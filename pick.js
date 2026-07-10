@@ -244,10 +244,11 @@
       updateCount(); render(); saveDraft(); updateDirty();
     }).catch(function () {
       state.loading = false;
-      state.picks = {}; state.savedPicks = {};
-      setStatus("could not load saved picks - starting fresh", "err");
-      $("saveBtn").disabled = false;
-      updateCount(); render(); saveDraft(); updateDirty();
+      // Do NOT start empty + enable Save - a failed load then a save would overwrite
+      // real saved picks with nothing (this is what wiped a full pick set). Keep Save
+      // disabled and ask for a reload; don't cache an empty draft.
+      setStatus("Couldn't load your saved picks - reload the page before editing (not saving, to avoid overwriting them).", "err");
+      $("saveBtn").disabled = true;
     });
   });
 
@@ -265,6 +266,8 @@
         state.savedPicks = clone(state.picks);
         saveDraft(); updateDirty();
         setStatus("saved - your picks are in. You can close this or keep editing.", "ok");
+      } else if (res.blocked) {
+        setStatus("Not saved - that would clear ALL your saved picks. If you truly mean to, that's blocked as a safety net; otherwise reload the page.", "err");
       } else {
         setStatus("NOT saved - check your connection and tap Save again.", "err");
       }

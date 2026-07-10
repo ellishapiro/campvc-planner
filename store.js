@@ -98,18 +98,29 @@
     return ka.every(function (k) { return a[k] === b[k]; });
   }
 
-  function savePicks(name, picks) {
+  // Safety net: an EMPTY save almost always means a failed/empty load, not a real
+  // "clear all my picks". Refuse to overwrite existing non-empty saved picks with
+  // {} - this is what wiped Elli's 76 picks. Pass force:true for a deliberate clear.
+  function savePicks(name, picks, force) {
+    var empty = !picks || !Object.keys(picks).length;
     if (isLocal) {
       var all = lsGet(LS_PICKS, {});
+      if (empty && !force && all[name] && Object.keys(all[name]).length) return Promise.resolve({ ok: false, blocked: true });
       all[name] = picks;
       lsSet(LS_PICKS, all);
       return Promise.resolve({ ok: true });
     }
-    return post({ action: "savePicks", name: name, picks: picks, ts: Date.now() })
-      .catch(function () { /* response may be unreadable cross-origin; verify below */ })
-      .then(function () { return getPicks(); })
-      .then(function (all) { return { ok: !!(all[name] && sameKeys(all[name], picks)) }; })
-      .catch(function () { return { ok: false }; });
+    var guard = (empty && !force)
+      ? getPicks().then(function (a) { return !!(a[name] && Object.keys(a[name]).length); })
+      : Promise.resolve(false);
+    return guard.then(function (wouldWipe) {
+      if (wouldWipe) return { ok: false, blocked: true };
+      return post({ action: "savePicks", name: name, picks: picks, ts: Date.now() })
+        .catch(function () { /* response may be unreadable cross-origin; verify below */ })
+        .then(function () { return getPicks(); })
+        .then(function (all) { return { ok: !!(all[name] && sameKeys(all[name], picks)) || empty }; })
+        .catch(function () { return { ok: false }; });
+    });
   }
 
   // ---- Knobs (shared schedule adjustments) ----
