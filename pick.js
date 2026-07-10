@@ -214,6 +214,9 @@
     if (!d || !d.name) return false;
     $("who").value = d.name;
     if ($("who").value !== d.name) return false; // name no longer in the configured list
+    // An EMPTY draft is almost always stale (e.g. left over from a failed load) - it
+    // must NOT mask real saved picks. Load fresh from the server instead.
+    if (!d.picks || !Object.keys(d.picks).length) { $("who").dispatchEvent(new Event("change")); return true; }
     state.name = d.name;
     if (window.Store.setMe) window.Store.setMe(d.name);
     state.picks = d.picks || {};

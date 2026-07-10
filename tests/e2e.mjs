@@ -124,6 +124,10 @@ async function main() {
     // ---------- PICKS: person 1 ----------
     console.log("\n[picks] Elli");
     await cdp.navigate(base + "/index.html");
+    // Start each run from clean storage so booked/knob state doesn't accumulate
+    // across runs (which otherwise leaves the tap-book test tapping a pre-booked block).
+    await cdp.evalp("(function(){try{localStorage.clear();sessionStorage.clear();}catch(e){}return true;})()");
+    await cdp.navigate(base + "/index.html");
     check("local-mode flag visible", await cdp.evalp("!document.getElementById('localFlag').hidden"));
     await cdp.evalp("(function(){var s=document.getElementById('who');s.value='Elli';s.dispatchEvent(new Event('change'));return true;})()");
     await cdp.waitFor("!document.getElementById('saveBtn').disabled", "Elli picks loaded");
