@@ -142,6 +142,14 @@ verify migrations after any change that alters ids.
   (clone of knobs at load / after each save) and adopt the returned `merged`. Guards
   against the 2026-07-06 13:25 incident where a stale client zeroed all bookings/pins.
   Tested in `tests/store.test.node.js`.
+- **Waitlisted** = like booked but on the waiting list (not confirmed).
+  `knobs.waitlisted[id][person] = instanceKey`, mutually exclusive with booked per
+  person+activity. Engine pre-places it exactly like booked (a fixed held block) via
+  the shared `preplace()` helper, flagged `waitlisted:true`. Calendar renders it
+  amber-striped + dashed with an hourglass (vs booked's solid white + tick). Action
+  sheet: "Mark as waitlisted" alongside booked (day/time picker for appointments),
+  plus "Change to booked/waitlisted". Included in the 3-way merge (`waitlisted` cat
+  in store.js and Code.gs) - **needs Code.gs redeployed** to merge server-side.
 - **Concurrency: atomic server-side merge.** The client sends `local`+`baseline`
   (+`legacy`) alongside the client-merged `knobs`. A merge-capable Apps Script holds
   a `LockService` lock, reads the latest, and re-runs the 3-way merge server-side

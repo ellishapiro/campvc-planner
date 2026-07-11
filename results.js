@@ -34,9 +34,9 @@
       var p = list[i];
       if (p.day !== day || p.activityId === exceptId) continue;
       var pinnedHere = pinKeyOf(p.activityId, who) === (p.day + "|" + p.start_min);
-      if (!(p.booked || p.priority === "must" || pinnedHere)) continue;
+      if (!(p.booked || p.waitlisted || p.priority === "must" || pinnedHere)) continue;
       if (start < p.end_min && p.start_min < end) {
-        var why = p.booked ? "booked" : (pinnedHere ? "pinned" : "must");
+        var why = p.booked ? "booked" : p.waitlisted ? "waitlisted" : (pinnedHere ? "pinned" : "must");
         return { name: p.name, why: why, id: p.activityId };
       }
     }
@@ -57,6 +57,17 @@
     state.knobs.pins = state.knobs.pins || {};
     state.knobs.pins[id] = Object.assign({}, pinMapOf(id) || {});
     return state.knobs.pins[id];
+  }
+  // Booking status: booked / waitlisted, mutually exclusive per person+activity.
+  function bookStatusOf(id, who) {
+    if ((state.knobs.booked || {})[id] && state.knobs.booked[id][who]) return "booked";
+    if ((state.knobs.waitlisted || {})[id] && state.knobs.waitlisted[id][who]) return "waitlisted";
+    return null;
+  }
+  function setBookStatus(kind, id, who, keyVal) {
+    state.knobs.booked = state.knobs.booked || {}; state.knobs.waitlisted = state.knobs.waitlisted || {};
+    [state.knobs.booked, state.knobs.waitlisted].forEach(function (m) { if (m[id]) { delete m[id][who]; if (!Object.keys(m[id]).length) delete m[id]; } });
+    if (kind) (state.knobs[kind][id] = state.knobs[kind][id] || {})[who] = keyVal;
   }
   // "Could not book" (sold-out / missed), per person: "*" (all) or [instanceKey].
   function cnbOf(id, who) { var m = state.knobs.couldNotBook; return m && m[id] ? m[id][who] : null; }
@@ -278,6 +289,7 @@
     var locked = who != null && !!pinKeyOf(x.activityId, who);
     if (locked) cls += " pinned";
     if (x.booked) cls += " booked";          // confirmed reservation -> white
+    if (x.waitlisted) cls += " waitlisted";  // on the waiting list -> striped
     if (x.conflict) cls += " conflict";       // two booked items clash (mis-booking)
     var b = el("div", cls);
     // Tap any block -> actions for this person (pin / book / could-not-book).
@@ -305,10 +317,12 @@
       bm = fmt(x.start_min) + "-" + fmt(x.end_min) + withTxt;
     }
     var mark = x.booked ? '<span class="lockmark" title="Booked (confirmed)">&#10003;</span>'
+                        : x.waitlisted ? '<span class="lockmark" title="Waitlisted">&#8987;</span>'
                         : (locked ? '<span class="lockmark" title="Locked to this time">&#128274;</span>' : "");
     b.innerHTML = '<div class="bt">' + esc(x.name) + tag + mark + '</div><div class="bm">' + bm +
+      (x.waitlisted ? ' &middot; <span class="wlwarn">waitlisted</span>' : "") +
       (x.conflict ? ' &middot; <span class="clashwarn">clashes with another booked item</span>' : "") + "</div>";
-    b.title = (x.booked ? "[Booked] " : locked ? "[Locked] " : "") + x.name + " - " + x.day + " " +
+    b.title = (x.booked ? "[Booked] " : x.waitlisted ? "[Waitlisted] " : locked ? "[Locked] " : "") + x.name + " - " + x.day + " " +
       fmt(x.start_min) + "-" + fmt(x.end_min) + (x.location ? " @ " + x.location : "");
     return b;
   }
@@ -321,8 +335,8 @@
     var id = x.activityId, key = x.day + "|" + x.start_min;
     state.knobs.pins = state.knobs.pins || {};
     state.knobs.booked = state.knobs.booked || {};
+    state.knobs.waitlisted = state.knobs.waitlisted || {};
     var pinnedForWho = pinKeyOf(id, who) === key;
-    var isBooked = (state.knobs.booked[id] || {})[who] === key;
 
     var overlay = el("div", "sheet-overlay");
     overlay.addEventListener("click", closeBlockMenu);
@@ -349,15 +363,17 @@
       btn.addEventListener("click", function () { fn(); closeBlockMenu(); persistKnobs(); });
       card.appendChild(btn);
     }
-    // Book actions only for things that actually need booking (turn-up events don't).
+    // Booking status (booked / waitlisted) - only for things that need booking.
+    // The two are mutually exclusive per person+activity.
     if (x.booking) {
-      if (isBooked) {
-        act("✓ Booked - tap to unmark", "sheet-booked", function () {
-          var m = state.knobs.booked[id]; if (m) { delete m[who]; if (!Object.keys(m).length) delete state.knobs.booked[id]; }
-        });
+      var st = bookStatusOf(id, who);           // 'booked' | 'waitlisted' | null
+      if (st) {
+        var curKey = (state.knobs[st][id] || {})[who];
+        act((st === "booked" ? "✓ Booked" : "⏳ Waitlisted") + " - tap to clear", st === "booked" ? "sheet-booked" : "sheet-waitl", function () { setBookStatus(null, id, who); });
+        var other = st === "booked" ? "waitlisted" : "booked";
+        act("Change to " + other, other === "booked" ? "sheet-book" : "sheet-waitl", function () { setBookStatus(other, id, who, curKey); });
       } else if (x.kind === "dropin") {
-        // Appointment (a window activity): let them enter the REAL booked day+time,
-        // not the arbitrary auto-earmark slot (the Massage case).
+        // Appointment (window activity): enter the real day+time, not the auto-earmark.
         var wdays = []; (act0.windows || []).forEach(function (w) { if (wdays.indexOf(w.day) < 0) wdays.push(w.day); });
         if (!wdays.length) wdays = [x.day];
         var brow = el("div", "sheet-time");
@@ -365,14 +381,11 @@
         var ti = el("input"); ti.type = "time"; ti.value = fmt(x.start_min);
         brow.appendChild(dsel); brow.appendChild(ti);
         card.appendChild(brow);
-        act("Mark as booked at this time", "sheet-book", function () {
-          var mm = pmin(ti.value); if (mm == null) return;
-          (state.knobs.booked[id] = state.knobs.booked[id] || {})[who] = dsel.value + "|" + mm;
-        });
+        act("Mark as booked at this time", "sheet-book", function () { var mm = pmin(ti.value); if (mm != null) setBookStatus("booked", id, who, dsel.value + "|" + mm); });
+        act("Mark as waitlisted at this time", "sheet-waitl", function () { var mm = pmin(ti.value); if (mm != null) setBookStatus("waitlisted", id, who, dsel.value + "|" + mm); });
       } else {
-        act("Mark as booked", "sheet-book", function () {
-          (state.knobs.booked[id] = state.knobs.booked[id] || {})[who] = key;
-        });
+        act("Mark as booked", "sheet-book", function () { setBookStatus("booked", id, who, key); });
+        act("Mark as waitlisted", "sheet-waitl", function () { setBookStatus("waitlisted", id, who, key); });
       }
     }
     if (pinnedForWho) {

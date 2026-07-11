@@ -159,7 +159,7 @@
       var v = eq(local[k], base[k]) ? remote[k] : local[k];
       if (v != null) out[k] = v;
     });
-    [["booked", 0], ["pins", 1], ["couldNotBook", 0]].forEach(function (pair) {
+    [["booked", 0], ["waitlisted", 0], ["pins", 1], ["couldNotBook", 0]].forEach(function (pair) {
       var cat = pair[0], isPin = pair[1];
       var B = base[cat] || {}, L = local[cat] || {}, R = remote[cat] || {};
       var ids = {}; [B, L, R].forEach(function (o) { Object.keys(o).forEach(function (i) { ids[i] = 1; }); });

@@ -68,6 +68,11 @@
     // It's a hard fact - pre-placed, never moved, never dropped (see solve()).
     var booked = knobs.booked || {};
     function bookedKey(id, n) { var b = booked[id]; return b ? b[n] : null; }
+    // "Waitlisted": like booked but you're on the waiting list (not confirmed). Held
+    // the same way (pre-placed at that instance) but flagged/styled differently.
+    var waitl = knobs.waitlisted || {};
+    function waitlKey(id, n) { var b = waitl[id]; return b ? b[n] : null; }
+    function fixedKey(id, n) { return bookedKey(id, n) || waitlKey(id, n); }
     // "Could not book": per person. couldNotBook[id][person] = "*" (whole activity
     // unavailable) or [instanceKey,...] (specific sold-out sessions). Excluded
     // instances drop out of scheduling; if nothing bookable remains the pick is
@@ -133,27 +138,27 @@
     var LOCK_W = 5000;
     function solve(n) {
       var picks = picksByName[n];
-      // BOOKED = hard pre-placements. Whatever this person has recorded as booked
-      // is placed at exactly that instance and never optimised or dropped - it's a
-      // real reservation. Booked activities are excluded from the solve below;
-      // everything else must schedule around them.
+      // BOOKED / WAITLISTED = hard pre-placements. Whatever this person recorded as
+      // booked (a real reservation) or waitlisted (on the waiting list) is placed at
+      // exactly that instance and never optimised or dropped; everything else must
+      // schedule around them. Excluded from the solve below.
       var fixed = [], bookedIds = {};
-      Object.keys(booked).forEach(function (id) {
-        var key = bookedKey(id, n), a = acts[id];
-        if (!key || !a) return;
-        if (scheduled(a)) {
-          var inst = a.instances.filter(function (i) { return instanceKey(i) === key; })[0];
-          if (inst) { fixed.push({ a: a, inst: inst, booked: true }); bookedIds[id] = true; }
-        } else {
-          // Window activity (appointment/drop-in) booked at a chosen time: place a
-          // fixed block there so it's white and everything else schedules around it.
-          var pk = String(key).split("|"), s = +pk[1], slot = config.dropInSlotMinutes || 45;
-          if (pk[0] && !isNaN(s)) {
-            fixed.push({ a: a, inst: { day: pk[0], start_min: s, end_min: s + slot, label: pk[0] + " " + fmt(s) + "-" + fmt(s + slot) }, booked: true });
-            bookedIds[id] = true;
+      function preplace(map, flag) {
+        Object.keys(map).forEach(function (id) {
+          var key = map[id] && map[id][n], a = acts[id];
+          if (!key || !a) return;
+          var inst;
+          if (scheduled(a)) {
+            inst = a.instances.filter(function (i) { return instanceKey(i) === key; })[0];
+          } else {
+            var pk = String(key).split("|"), s = +pk[1], slot = config.dropInSlotMinutes || 45;
+            if (pk[0] && !isNaN(s)) inst = { day: pk[0], start_min: s, end_min: s + slot, label: pk[0] + " " + fmt(s) + "-" + fmt(s + slot) };
           }
-        }
-      });
+          if (inst && !bookedIds[id]) { var e = { a: a, inst: inst }; e[flag] = true; fixed.push(e); bookedIds[id] = true; }
+        });
+      }
+      preplace(booked, "booked");
+      preplace(waitl, "waitlisted");
 
       // Items in the exact solve: every must/want pick, plus any LOCKED pick of
       // any tier (a locked if-free still gets force-placed). If-free that isn't
@@ -256,12 +261,12 @@
     var sched = {}, dropped = {}, earmarks = {}, ifTime = {}, cantBook = {};
     names.forEach(function (n) { sched[n] = []; dropped[n] = []; earmarks[n] = []; ifTime[n] = []; cantBook[n] = []; });
 
-    function makePlacement(a, inst, type, priority, isBooked) {
+    function makePlacement(a, inst, type, priority, isBooked, isWaitlisted) {
       return {
         activityId: a.id, name: a.name, location: a.location, paid: a.paid, offsite: a.offsite,
         booking: !!a.booking, external: !!a.external, kind: a.kind, type: type,
         priority: priority || null, priorityLabel: priority ? PRIORITY_LABEL[priority] : null,
-        booked: !!isBooked, conflict: false,
+        booked: !!isBooked, waitlisted: !!isWaitlisted, conflict: false,
         day: inst.day, dayIndex: dayIdx(inst), start_min: inst.start_min, end_min: inst.end_min,
         label: inst.label || (inst.day + " " + fmt(inst.start_min) + "-" + fmt(inst.end_min)),
         withWhom: [], backups: [],
@@ -270,7 +275,7 @@
 
     names.forEach(function (n) {
       var got = {};
-      assign[n].forEach(function (c) { got[c.a.id] = true; sched[n].push(makePlacement(c.a, c.inst, "booking", picksByName[n][c.a.id], c.booked)); });
+      assign[n].forEach(function (c) { got[c.a.id] = true; sched[n].push(makePlacement(c.a, c.inst, "booking", picksByName[n][c.a.id], c.booked, c.waitlisted)); });
       sched[n].sort(instSort);
       // Flag booked-vs-booked clashes (a real mis-booking) - kept, never dropped.
       sched[n].forEach(function (p) {
@@ -339,7 +344,7 @@
     }
     var dropins = schedule.activities.filter(function (a) { return a.kind === "dropin"; });
     names.forEach(function (n) {
-      dropins.filter(function (a) { return picksByName[n][a.id] && !bookedKey(a.id, n); }) // booked ones already placed as fixed blocks
+      dropins.filter(function (a) { return picksByName[n][a.id] && !fixedKey(a.id, n); }) // booked/waitlisted already placed as fixed blocks
         .sort(function (x, y) { return weightOf(picksByName[n][y.id]) - weightOf(picksByName[n][x.id]); })
         .forEach(function (a) {
           if (cnbFor(a.id, n)) { cantBook[n].push({ activityId: a.id, name: a.name, priority: picksByName[n][a.id], all: true }); return; }

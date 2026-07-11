@@ -89,7 +89,7 @@ function mergeKnobs_(base, local, remote, legacy) {
   var out = {};
   var scal = ['breakMinutes', 'togetherness'];
   for (var s = 0; s < scal.length; s++) { var k = scal[s]; var v = eq(local[k], base[k]) ? remote[k] : local[k]; if (v != null) out[k] = v; }
-  var cats = [['booked', false], ['pins', true], ['couldNotBook', false]];
+  var cats = [['booked', false], ['waitlisted', false], ['pins', true], ['couldNotBook', false]];
   for (var c = 0; c < cats.length; c++) {
     var cat = cats[c][0], isPin = cats[c][1];
     var B = base[cat] || {}, L = local[cat] || {}, R = remote[cat] || {}, ids = {}, res = {};

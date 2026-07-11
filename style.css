@@ -209,6 +209,12 @@ label.fld { display: flex; flex-direction: column; gap: 3px; font-size: 11px; co
 .block.booked.paid::before { background: #10131a; color: #ffd479; }
 .block.conflict { outline: 2px solid var(--must); outline-offset: -2px; }
 .block .clashwarn { color: var(--must); font-weight: 700; }
+/* Waitlisted = on the waiting list: white base like booked but amber-striped +
+   dashed border, so it reads as "held, not yet confirmed". */
+.block.waitlisted { background:
+    repeating-linear-gradient(45deg, #ffffff, #ffffff 7px, #fff3d6 7px, #fff3d6 14px);
+  color: #10131a; border: 2px dashed #b3860f; }
+.block .wlwarn { color: #8a6a1f; font-weight: 700; }
 
 /* Block action sheet (tap a block) - a small centered card, mobile-friendly. */
 .sheet-overlay { position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,.45);
@@ -225,6 +231,7 @@ label.fld { display: flex; flex-direction: column; gap: 3px; font-size: 11px; co
 .sheet .sheet-book { border-color: var(--iffree); color: var(--iffree); }
 .sheet .sheet-booked { border-color: var(--iffree); background: var(--panel-2); }
 .sheet .sheet-cnb { border-color: var(--paid); color: var(--paid); }
+.sheet .sheet-waitl { border-color: #b3860f; color: #b3860f; }
 .sheet .sheet-alt { border-color: var(--accent-2); color: var(--accent-2); }
 .sheet .sheet-alt-h { font-size: 12px; color: var(--ink-dim); margin: 6px 0 2px; text-transform: uppercase; letter-spacing: .03em; }
 .sheet .sheet-clash { font-size: 13px; color: var(--ink-dim); padding: 9px 12px; border: 1px dashed var(--line); border-radius: 10px; opacity: .75; }
