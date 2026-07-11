@@ -24,18 +24,20 @@
   // Would pinning `who` into [day,start-end] collide with something they're already
   // committed to (booked or a must)? A pin can't displace those, so we warn instead
   // of offering a pin that would silently fail. Returns the blocker's name or null.
+  // Does pinning `who` into [day,start-end] collide with something they're committed
+  // to? Returns {name, why, id} or null. why: 'booked' (immovable), 'must' (won't
+  // yield to a pin), or 'pinned' (fixed, but we can offer to move it). A plain
+  // want/if-free isn't a blocker - a pin already displaces + reschedules it.
   function committedClash(who, day, start, end, exceptId) {
     var list = ((state.result && state.result.byPerson[who]) || {}).all || [];
     for (var i = 0; i < list.length; i++) {
       var p = list[i];
       if (p.day !== day || p.activityId === exceptId) continue;
-      // Committed = booked, a must, OR pinned for this person (a deliberate fix that
-      // a new pin can't reliably displace). Anything else (a plain want/if-free) will
-      // yield to a pin, so it's not a blocker.
       var pinnedHere = pinKeyOf(p.activityId, who) === (p.day + "|" + p.start_min);
       if (!(p.booked || p.priority === "must" || pinnedHere)) continue;
       if (start < p.end_min && p.start_min < end) {
-        return p.name + (p.booked ? " (booked)" : p.priority === "must" ? " (must)" : " (pinned)");
+        var why = p.booked ? "booked" : (pinnedHere ? "pinned" : "must");
+        return { name: p.name, why: why, id: p.activityId };
       }
     }
     return null;
@@ -413,8 +415,14 @@
           .sort(function (p, q) { return p.start_min - q.start_min; })[0];
         var k2 = inst.day + "|" + inst.start_min, when = fmt(inst.start_min) + "-" + fmt(inst.end_min);
         var cl = committedClash(who, inst.day, inst.start_min, inst.end_min, aa.id);
-        if (cl) {
-          card.appendChild(el("div", "sheet-clash", esc(aa.name) + " (" + when + ") - <span class='warn'>clashes with " + esc(cl) + "</span>"));
+        if (cl && cl.why === "pinned") {
+          // The blocker is a pin - offer to move it (unpin so the engine reschedules it).
+          act("Pin " + esc(aa.name) + " (" + when + ") - moves " + esc(cl.name), "sheet-alt", function () {
+            var m = ensurePinMap(cl.id); delete m[who]; if (!Object.keys(m).length) delete state.knobs.pins[cl.id];
+            ensurePinMap(aa.id)[who] = k2;
+          });
+        } else if (cl) {
+          card.appendChild(el("div", "sheet-clash", esc(aa.name) + " (" + when + ") - <span class='warn'>clashes with " + esc(cl.name) + " (" + cl.why + ")</span>"));
         } else {
           act("Pin " + esc(aa.name) + " (" + when + ")", "sheet-alt", function () { ensurePinMap(aa.id)[who] = k2; });
         }
@@ -440,7 +448,15 @@
     function pinAct(label, aid, k, s, e) {
       var already = pinKeyOf(aid, who) === k;
       var cl = !already && committedClash(who, day, s, e, aid);
-      if (cl) { card.appendChild(el("div", "sheet-clash", label + " - <span class='warn'>clashes with " + esc(cl) + "</span>")); return; }
+      if (cl && cl.why === "pinned") {
+        var mb = el("button", "sheet-alt", "Pin " + label + " - moves " + esc(cl.name));
+        mb.addEventListener("click", function () {
+          var m0 = ensurePinMap(cl.id); delete m0[who]; if (!Object.keys(m0).length) delete state.knobs.pins[cl.id];
+          ensurePinMap(aid)[who] = k; closeBlockMenu(); persistKnobs();
+        });
+        card.appendChild(mb); return;
+      }
+      if (cl) { card.appendChild(el("div", "sheet-clash", label + " - <span class='warn'>clashes with " + esc(cl.name) + " (" + cl.why + ")</span>")); return; }
       var btn = el("button", already ? "sheet-booked" : "sheet-alt", (already ? "✓ Pinned " : "Pin ") + label);
       btn.addEventListener("click", function () {
         if (already) { var m = ensurePinMap(aid); delete m[who]; if (!Object.keys(m).length) delete state.knobs.pins[aid]; }
