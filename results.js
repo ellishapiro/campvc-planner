@@ -69,6 +69,19 @@
     [state.knobs.booked, state.knobs.waitlisted].forEach(function (m) { if (m[id]) { delete m[id][who]; if (!Object.keys(m[id]).length) delete m[id]; } });
     if (kind) (state.knobs[kind][id] = state.knobs[kind][id] || {})[who] = keyVal;
   }
+  // "I don't want to do this anymore": drop this person's interest (their pick) and
+  // any pin/booked/waitlisted/could-not-book they had on it, so it leaves their plan.
+  function removeInterest(id, who) {
+    if (state.picksByName[who]) delete state.picksByName[who][id];
+    if (state.knobs.pins && state.knobs.pins[id]) { var pm = ensurePinMap(id); delete pm[who]; if (!Object.keys(pm).length) delete state.knobs.pins[id]; }
+    ["booked", "waitlisted", "couldNotBook"].forEach(function (cat) { var m = state.knobs[cat]; if (m && m[id]) { delete m[id][who]; if (!Object.keys(m[id]).length) delete m[id]; } });
+    persistKnobs();  // recompute + render + save knobs
+    // force:true - a deliberate removal may empty their picks; that's intended (the
+    // wipe-guard is only for accidental empty-from-failed-load).
+    window.Store.savePicks(who, state.picksByName[who] || {}, true).then(function (r) {
+      if (!r.ok) showToast("Couldn't save the removal - reload and try again", "err");
+    });
+  }
   // "Could not book" (sold-out / missed), per person: "*" (all) or [instanceKey].
   function cnbOf(id, who) { var m = state.knobs.couldNotBook; return m && m[id] ? m[id][who] : null; }
   function setCnbAll(id, who) { state.knobs.couldNotBook = state.knobs.couldNotBook || {}; (state.knobs.couldNotBook[id] = state.knobs.couldNotBook[id] || {})[who] = "*"; }
@@ -440,6 +453,13 @@
           act("Pin " + esc(aa.name) + " (" + when + ")", "sheet-alt", function () { ensurePinMap(aa.id)[who] = k2; });
         }
       });
+    }
+
+    // Drop it entirely: clears the pick (priority) and removes it from the plan.
+    if (state.picksByName[who] && state.picksByName[who][id]) {
+      var rm = el("button", "sheet-remove", "I don't want to do this anymore");
+      rm.addEventListener("click", function () { removeInterest(id, who); closeBlockMenu(); });
+      card.appendChild(rm);
     }
 
     var cancel = el("button", "linkbtn", "Close");

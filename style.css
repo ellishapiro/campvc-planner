@@ -232,6 +232,7 @@ label.fld { display: flex; flex-direction: column; gap: 3px; font-size: 11px; co
 .sheet .sheet-booked { border-color: var(--iffree); background: var(--panel-2); }
 .sheet .sheet-cnb { border-color: var(--paid); color: var(--paid); }
 .sheet .sheet-waitl { border-color: #b3860f; color: #b3860f; }
+.sheet .sheet-remove { border-color: var(--must); color: var(--must); }
 .sheet .sheet-alt { border-color: var(--accent-2); color: var(--accent-2); }
 .sheet .sheet-alt-h { font-size: 12px; color: var(--ink-dim); margin: 6px 0 2px; text-transform: uppercase; letter-spacing: .03em; }
 .sheet .sheet-clash { font-size: 13px; color: var(--ink-dim); padding: 9px 12px; border: 1px dashed var(--line); border-radius: 10px; opacity: .75; }
